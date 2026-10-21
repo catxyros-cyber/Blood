@@ -329,3 +329,99 @@ test("form encoding and static files", async () => {
   await assert.rejects(serveStatic(dir, "/../../etc/passwd"));
   await assert.rejects(serveStatic(dir, "/%2e%2e/%2e%2e/etc/passwd"));
 });
+
+test("license keys: admin creates keys, one PC redeems, moving is limited to once per 24 h", async () => {
+  const ADMIN = "a-very-long-admin-password-123";
+  const h = await harness({ adminToken: ADMIN });
+  const pcA = "a".repeat(64);
+  const pcB = "b".repeat(64);
+  try {
+    // Admin routes need the password.
+    assert.equal((await h.call("POST", "/v1/admin/keys", { json: { count: 1 } })).status, 401);
+    assert.equal((await h.call("POST", "/v1/admin/keys", { token: "wrong-password-wrong-password", json: { count: 1 } })).status, 401);
+    const made = await h.call("POST", "/v1/admin/keys", { token: ADMIN, json: { count: 2, days: 30, label: "giveaway" } });
+    assert.equal(made.status, 200);
+    assert.equal(made.body.keys.length, 2);
+    const key: string = made.body.keys[0];
+    assert.match(key, /^BLOOD(-[0-9A-HJKMNP-TV-Z]{5}){4}$/);
+    // Only hashes are stored, and the keys never reach the logs.
+    const stored = [...h.store.licenses.values()];
+    assert.ok(stored.every((k) => !k.keyHash.toString("latin1").includes(key.slice(6, 11))));
+    assert.ok(!JSON.stringify(h.logs).includes(key));
+
+    // Bad and unknown keys.
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "BLOOD-NOPE", hwid: pcA } })).status, 400);
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "BLOOD-00000-00000-00000-00000", hwid: pcA } })).body.error.code, "invalid_key");
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: "not-a-hash" } })).status, 400);
+
+    // PC A redeems (lower case, no dashes, O for 0 all accepted).
+    const sloppy = key.toLowerCase().replace(/-/g, " ").replace(/0/g, "o");
+    const a1 = await h.call("POST", "/v1/license/activate", { json: { key: sloppy, hwid: pcA } });
+    assert.equal(a1.status, 200);
+    assert.equal(a1.body.valid, true);
+    assert.equal(a1.body.boundElsewhere, false);
+    assert.ok(a1.body.expiresAt > Date.now() + 29 * 86_400_000);
+    // Re-checking from PC A keeps working.
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.valid, true);
+
+    // PC B (a shared key) gets nothing, and can't take it over within 24 h of activation.
+    const b1 = await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcB } });
+    assert.equal(b1.body.valid, false);
+    assert.equal(b1.body.boundElsewhere, true);
+    assert.ok(b1.body.nextMoveAt > Date.now());
+    const b2 = await h.call("POST", "/v1/license/move", { json: { key, hwid: pcB } });
+    assert.equal(b2.body.valid, false);
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.valid, true);
+
+    // A day later the owner can move it to PC B; PC A loses Premium and must wait 24 h to move back.
+    const rec = [...h.store.licenses.values()].find((k) => k.redeemedAt !== null)!;
+    rec.lastMoveAt = Date.now() - 25 * 3_600_000;
+    const b3 = await h.call("POST", "/v1/license/move", { json: { key, hwid: pcB } });
+    assert.equal(b3.body.valid, true);
+    const a2 = await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } });
+    assert.equal(a2.body.valid, false);
+    assert.equal(a2.body.boundElsewhere, true);
+    assert.equal((await h.call("POST", "/v1/license/move", { json: { key, hwid: pcA } })).body.valid, false);
+
+    // A signed-in player on the PC that holds the key gets server Premium (cloud sync) too; other PCs don't.
+    const token = await h.signIn();
+    assert.equal((await h.call("GET", "/v1/sync", { token })).status, 402);
+    assert.equal((await h.call("GET", "/v1/sync", { token, headers: { "X-Blood-License": key, "X-Blood-Hwid": pcA } })).status, 402);
+    assert.equal((await h.call("GET", "/v1/sync", { token, headers: { "X-Blood-License": key, "X-Blood-Hwid": pcB } })).status, 200);
+    const me = await h.call("GET", "/v1/me", { token, headers: { "X-Blood-License": key, "X-Blood-Hwid": pcB } });
+    assert.equal(me.body.entitlement.premium, true);
+    assert.equal(me.body.entitlement.source, "license");
+
+    // Admin: list, unbind (next PC to activate takes it), revoke, restore.
+    const list = await h.call("GET", "/v1/admin/keys", { token: ADMIN });
+    assert.equal(list.body.keys.length, 2);
+    const info = list.body.keys.find((k: { id: string }) => k.id === rec.id);
+    assert.equal(info.bound, true);
+    assert.equal(info.label, "giveaway");
+    assert.equal(info.hint, key.slice(-5));
+    await h.call("POST", "/v1/admin/keys/update", { token: ADMIN, json: { id: rec.id, action: "unbind" } });
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.valid, true);
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcB } })).body.valid, false);
+    await h.call("POST", "/v1/admin/keys/update", { token: ADMIN, json: { id: rec.id, action: "revoke" } });
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.error.code, "key_revoked");
+    await h.call("POST", "/v1/admin/keys/update", { token: ADMIN, json: { id: rec.id, action: "restore" } });
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.valid, true);
+
+    // Expired keys stop working.
+    rec.expiresAt = Date.now() - 1000;
+    h.store.licenses.get(rec.id)!.expiresAt = Date.now() - 1000;
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: pcA } })).body.valid, false);
+  } finally {
+    await h.close();
+  }
+});
+
+test("admin key routes don't exist without ADMIN_TOKEN", async () => {
+  const h = await harness();
+  try {
+    assert.equal((await h.call("GET", "/v1/admin/keys", { token: "anything-anything-anything" })).status, 404);
+    assert.throws(() => loadConfig({ ADMIN_TOKEN: "short" }), ConfigError);
+  } finally {
+    await h.close();
+  }
+});

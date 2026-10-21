@@ -96,7 +96,7 @@ export function Sidebar() {
   const accounts = useStore(app, (s) => s.accounts);
   const activeId = useStore(app, (s) => s.settings.activeAccountId);
   const runningCount = useStore(app, (s) => Object.keys(s.running).length);
-  const premium = useStore(app, (s) => s.premium.entitlement?.premium === true);
+  const premium = useStore(app, (s) => s.premium.entitlement?.premium === true || s.premium.license?.status === "active");
   const awaiting = useStore(app, (s) => s.premium.awaitingPayment);
   const account = activeAccount();
   void accounts;

@@ -258,6 +258,12 @@ export const Icon = {
       <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
     </Svg>
   ),
+  Key: (p: IconProps) => (
+    <Svg {...p}>
+      <circle cx="8" cy="15" r="4" />
+      <path d="m10.8 12.2 8.7-8.7M16 7l2.5 2.5M13.5 9.5 16 12" />
+    </Svg>
+  ),
   Crown: (p: IconProps) => (
     <Svg {...p}>
       <path d="M4 8.5 8 12l4-6 4 6 4-3.5-1.5 9.5h-13z" />

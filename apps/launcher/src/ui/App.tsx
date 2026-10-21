@@ -9,6 +9,7 @@ import { loadAnnouncements, loadPlans, refreshPremium } from "../services/premiu
 import { useStore } from "../services/store";
 import { pullSync, watchForChanges } from "../services/sync";
 import { startAutoUpdates } from "../services/updater";
+import { startLicenseChecks } from "../services/license";
 import { Button, ConfirmHost, Spinner } from "./components";
 import { BloodMark, Icon, Wordmark } from "./icons";
 import { AccountsPage } from "./pages/Accounts";
@@ -39,6 +40,7 @@ function startServices() {
   void loadPlans();
   void loadAnnouncements();
   startAutoUpdates();
+  startLicenseChecks();
 
   // Refresh Premium whenever the active Minecraft account changes.
   let account = app.get().settings.activeAccountId;

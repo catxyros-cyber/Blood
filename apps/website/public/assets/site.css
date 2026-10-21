@@ -175,3 +175,23 @@ code { font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; font-siz
 .hero.u-pb24 { padding-bottom: 24px; }
 .u-list { padding-left: 1.2em; margin: 0; }
 section.u-pt8 { padding-top: 8px; }
+
+/* Key admin page (admin.html) */
+.admin-form { display: grid; gap: 14px; }
+.admin-form .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.admin-form label { display: grid; gap: 6px; font-size: 0.9rem; color: var(--muted); }
+.admin-form input, .admin-form select {
+  height: 42px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-strong);
+  background: var(--panel-2); color: var(--fg); font: inherit; min-width: 0;
+}
+.admin-form input:focus, .admin-form select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.admin-form .grow { flex: 1 1 220px; }
+.admin-keys { width: 100%; min-height: 120px; padding: 12px; border-radius: 10px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--fg); font: 0.95rem/1.7 "Cascadia Mono", Consolas, ui-monospace, monospace; resize: vertical; }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.admin-table th, .admin-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.admin-table th { color: var(--faint); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.admin-table td .btn { height: 32px; padding: 0 12px; font-size: 0.85rem; }
+.admin-msg { min-height: 1.6em; color: var(--muted); }
+.admin-msg.bad { color: var(--danger); }
+.admin-actions { display: flex; gap: 8px; justify-content: flex-end; }

@@ -52,6 +52,20 @@ export interface Grant {
   expiresAt: number | null;
 }
 
+export interface LicenseKey {
+  id: string;
+  keyHash: Buffer;
+  hint: string;
+  label: string;
+  durationDays: number | null;
+  createdAt: number;
+  redeemedAt: number | null;
+  expiresAt: number | null;
+  hwidHash: Buffer | null;
+  lastMoveAt: number | null;
+  revoked: boolean;
+}
+
 export type SyncPutResult = { ok: true; doc: SyncDocument } | { ok: false; conflict: SyncDocument };
 
 export interface Store {
@@ -93,6 +107,17 @@ export interface Store {
   getSync(userId: string): Promise<SyncDocument | null>;
   /** Write if `baseVersion` matches the stored version (0 = no document yet). */
   putSync(userId: string, baseVersion: number, data: Record<string, unknown>, device: string | null, now: number): Promise<SyncPutResult>;
+
+  createLicense(k: LicenseKey): Promise<void>;
+  getLicense(keyHash: Buffer): Promise<LicenseKey | null>;
+  getLicenseById(id: string): Promise<LicenseKey | null>;
+  /** Bind a never-redeemed key to a PC (this starts the 24 h move cooldown). Returns false if someone redeemed it first. */
+  redeemLicense(keyHash: Buffer, hwidHash: Buffer, now: number, expiresAt: number | null): Promise<boolean>;
+  /** Move a redeemed key to another PC if it wasn't moved after `movedBefore`. Returns false otherwise. */
+  moveLicense(keyHash: Buffer, hwidHash: Buffer, now: number, movedBefore: number): Promise<boolean>;
+  /** Admin: revoke/restore, or clear the PC binding so the key can be activated anywhere. */
+  updateLicense(id: string, patch: { revoked?: boolean; unbind?: boolean }): Promise<boolean>;
+  listLicenses(limit: number): Promise<LicenseKey[]>;
 
   /** Remove expired sessions, challenges and codes. */
   cleanup(now: number): Promise<void>;

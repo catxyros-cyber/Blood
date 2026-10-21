@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Challenge, Grant, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
 const key = (b: Buffer) => b.toString("hex");
 
@@ -14,6 +14,7 @@ export class MemoryStore implements Store {
   subscriptions = new Map<string, SubscriptionRecord>();
   purchases = new Map<string, PurchaseRecord>();
   grants = new Map<string, Grant>();
+  licenses = new Map<string, LicenseKey>();
   events = new Map<string, string>();
   sync = new Map<string, SyncDocument>();
 
@@ -148,4 +149,42 @@ export class MemoryStore implements Store {
     for (const [k, c] of this.webCodes) if (c.expiresAt <= now) this.webCodes.delete(k);
   }
   async close() {}
+
+  async createLicense(k: LicenseKey) {
+    this.licenses.set(k.id, { ...k });
+  }
+  private findLicense(keyHash: Buffer) {
+    for (const k of this.licenses.values()) if (k.keyHash.equals(keyHash)) return k;
+    return null;
+  }
+  async getLicense(keyHash: Buffer) {
+    const k = this.findLicense(keyHash);
+    return k ? { ...k } : null;
+  }
+  async getLicenseById(id: string) {
+    const k = this.licenses.get(id);
+    return k ? { ...k } : null;
+  }
+  async redeemLicense(keyHash: Buffer, hwidHash: Buffer, now: number, expiresAt: number | null) {
+    const k = this.findLicense(keyHash);
+    if (!k || k.redeemedAt !== null || k.revoked) return false;
+    Object.assign(k, { redeemedAt: now, hwidHash, expiresAt, lastMoveAt: now });
+    return true;
+  }
+  async moveLicense(keyHash: Buffer, hwidHash: Buffer, now: number, movedBefore: number) {
+    const k = this.findLicense(keyHash);
+    if (!k || k.redeemedAt === null || k.revoked || (k.lastMoveAt !== null && k.lastMoveAt > movedBefore)) return false;
+    Object.assign(k, { hwidHash, lastMoveAt: now });
+    return true;
+  }
+  async updateLicense(id: string, patch: { revoked?: boolean; unbind?: boolean }) {
+    const k = this.licenses.get(id);
+    if (!k) return false;
+    if (patch.revoked !== undefined) k.revoked = patch.revoked;
+    if (patch.unbind) Object.assign(k, { hwidHash: null, lastMoveAt: null });
+    return true;
+  }
+  async listLicenses(limit: number) {
+    return [...this.licenses.values()].sort((a, b) => b.createdAt - a.createdAt).slice(0, limit).map((k) => ({ ...k }));
+  }
 }

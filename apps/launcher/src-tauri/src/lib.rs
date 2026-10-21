@@ -12,6 +12,7 @@ mod bloomclient;
 mod error;
 mod fsops;
 mod launch;
+mod machine;
 mod net;
 mod paths;
 mod secrets;
@@ -133,6 +134,7 @@ pub fn run() {
             launch::system_info,
             launch::java_probe,
             launch::find_javas,
+            machine::machine_id,
             secrets::secret_set,
             secrets::secret_get,
             secrets::secret_delete,

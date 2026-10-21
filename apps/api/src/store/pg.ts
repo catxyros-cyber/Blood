@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Challenge, Grant, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
 /** The subset of pg.Pool that BLOOD uses (keeps this file free of @types/pg). */
 export interface PgPool {
@@ -75,8 +75,82 @@ interface PurchaseRow {
   status: "paid" | "refunded";
 }
 
+interface LicenseRow {
+  id: string;
+  key_hash: Buffer;
+  key_hint: string;
+  label: string;
+  duration_days: number | null;
+  created_at: Date;
+  redeemed_at: Date | null;
+  expires_at: Date | null;
+  hwid_hash: Buffer | null;
+  last_move_at: Date | null;
+  revoked: boolean;
+}
+const toLicense = (r: LicenseRow): LicenseKey => ({
+  id: r.id,
+  keyHash: r.key_hash,
+  hint: r.key_hint,
+  label: r.label,
+  durationDays: r.duration_days,
+  createdAt: ms(r.created_at)!,
+  redeemedAt: ms(r.redeemed_at),
+  expiresAt: ms(r.expires_at),
+  hwidHash: r.hwid_hash,
+  lastMoveAt: ms(r.last_move_at),
+  revoked: r.revoked,
+});
+
 export class PgStore implements Store {
   constructor(private pool: PgPool) {}
+
+  async createLicense(k: LicenseKey) {
+    await this.pool.query(
+      `INSERT INTO license_keys (id, key_hash, key_hint, label, duration_days, created_at, revoked) VALUES ($1, $2, $3, $4, $5, $6, false)`,
+      [k.id, k.keyHash, k.hint, k.label, k.durationDays, ts(k.createdAt)],
+    );
+  }
+  async getLicense(keyHash: Buffer) {
+    const { rows } = await this.pool.query<LicenseRow>("SELECT * FROM license_keys WHERE key_hash = $1", [keyHash]);
+    return rows[0] ? toLicense(rows[0]) : null;
+  }
+  async getLicenseById(id: string) {
+    const { rows } = await this.pool.query<LicenseRow>("SELECT * FROM license_keys WHERE id = $1", [id]);
+    return rows[0] ? toLicense(rows[0]) : null;
+  }
+  async redeemLicense(keyHash: Buffer, hwidHash: Buffer, now: number, expiresAt: number | null) {
+    const r = await this.pool.query(
+      `UPDATE license_keys SET redeemed_at = $3, hwid_hash = $2, expires_at = $4, last_move_at = $3
+       WHERE key_hash = $1 AND redeemed_at IS NULL AND NOT revoked`,
+      [keyHash, hwidHash, ts(now), ts(expiresAt)],
+    );
+    return (r.rowCount ?? 0) > 0;
+  }
+  async moveLicense(keyHash: Buffer, hwidHash: Buffer, now: number, movedBefore: number) {
+    const r = await this.pool.query(
+      `UPDATE license_keys SET hwid_hash = $2, last_move_at = $3
+       WHERE key_hash = $1 AND redeemed_at IS NOT NULL AND NOT revoked AND (last_move_at IS NULL OR last_move_at <= $4)`,
+      [keyHash, hwidHash, ts(now), ts(movedBefore)],
+    );
+    return (r.rowCount ?? 0) > 0;
+  }
+  async updateLicense(id: string, patch: { revoked?: boolean; unbind?: boolean }) {
+    const sets: string[] = [];
+    const vals: unknown[] = [id];
+    if (patch.revoked !== undefined) {
+      vals.push(patch.revoked);
+      sets.push(`revoked = $${vals.length}`);
+    }
+    if (patch.unbind) sets.push("hwid_hash = NULL", "last_move_at = NULL");
+    if (!sets.length) return false;
+    const r = await this.pool.query(`UPDATE license_keys SET ${sets.join(", ")} WHERE id = $1`, vals);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async listLicenses(limit: number) {
+    const { rows } = await this.pool.query<LicenseRow>("SELECT * FROM license_keys ORDER BY created_at DESC LIMIT $1", [limit]);
+    return rows.map(toLicense);
+  }
 
   async upsertUserByMinecraft(minecraftUuid: string, username: string): Promise<User> {
     const { rows } = await this.pool.query<UserRow>(

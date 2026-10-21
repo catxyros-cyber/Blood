@@ -24,7 +24,7 @@ export type SubscriptionStatus =
 export interface Entitlement {
   premium: boolean;
   /** Where Premium comes from, if anywhere. */
-  source: "subscription" | "lifetime" | "grant" | null;
+  source: "subscription" | "lifetime" | "grant" | "license" | null;
   plan: PlanId | null;
   status: SubscriptionStatus | "lifetime" | null;
   /** Epoch ms. End of the paid period (subscriptions). */

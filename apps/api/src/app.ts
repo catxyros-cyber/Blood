@@ -1,11 +1,22 @@
 /** BLOOD API: routes and request pipeline. `createApp` is pure wiring so tests can inject fakes. */
 
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import {
+  AdminCreateKeys,
+  AdminKeyAction,
   CheckoutRequest,
+  formatKey,
+  KEY_ALPHABET,
+  KEY_LENGTH,
+  keyHint,
+  LICENSE_MOVE_COOLDOWN_MS,
+  LicenseRequest,
+  normalizeKey,
+  type AdminKeyInfo,
+  type LicenseStatus,
   PLAN_NAMES,
   SYNC_MAX_BYTES,
   SyncPutRequest,
@@ -28,7 +39,7 @@ import { computeEntitlement, planForPrice } from "./entitlements";
 import { HttpError, makeCtx, RateLimiter, Router, serializeCookie, writeReply, type Ctx, type Reply } from "./http";
 import { hasJoined, MojangUnavailable } from "./mojang";
 import { serveStatic } from "./static";
-import type { Store, User } from "./store/types";
+import type { LicenseKey, Store, User } from "./store/types";
 import {
   periodEnd,
   Stripe,
@@ -108,6 +119,9 @@ export function createApp(deps: Deps) {
     auth: new RateLimiter(10, 10 / 60),
     billing: new RateLimiter(20, 20 / 60),
     general: new RateLimiter(120, 2),
+    // Key checks: generous enough for a launcher re-checking, far too slow to guess keys.
+    license: new RateLimiter(30, 30 / 60),
+    admin: new RateLimiter(30, 30 / 60),
   };
   const sweeper = setInterval(() => {
     for (const l of Object.values(limits)) l.sweep();
@@ -153,9 +167,18 @@ export function createApp(deps: Deps) {
     return { user, kind: session.kind };
   }
 
-  async function entitlementFor(userId: string): Promise<Entitlement> {
+  /**
+   * Premium for this user. When the launcher sends a license key (X-Blood-License + X-Blood-Hwid)
+   * and that key is active on that PC, the request counts as Premium too, so key holders get
+   * server features like cloud sync on the PC their key is bound to.
+   */
+  async function entitlementFor(userId: string, ctx?: Ctx): Promise<Entitlement> {
     const [subscriptions, purchases, grant] = await Promise.all([store.listSubscriptions(userId), store.listPurchases(userId), store.getGrant(userId)]);
-    return computeEntitlement({ subscriptions, purchases, grant }, now());
+    const ent = computeEntitlement({ subscriptions, purchases, grant }, now());
+    if (ent.premium || !ctx) return ent;
+    const lic = await licenseFromHeaders(ctx);
+    if (!lic) return ent;
+    return { ...ent, premium: true, source: "license", plan: null, status: null, currentPeriodEnd: lic.expiresAt, cancelAtPeriodEnd: false };
   }
 
   function requireStripe(): Stripe {
@@ -377,7 +400,7 @@ export function createApp(deps: Deps) {
   r.get("/v1/me", async (ctx) => {
     limit(ctx, "general");
     const { user } = await authenticate(ctx, { required: true });
-    const body: MeResponse = { user: publicUser(user), entitlement: await entitlementFor(user.id) };
+    const body: MeResponse = { user: publicUser(user), entitlement: await entitlementFor(user.id, ctx) };
     return { status: 200, body, headers: { "Cache-Control": "no-store" } };
   });
 
@@ -495,7 +518,7 @@ export function createApp(deps: Deps) {
   r.get("/v1/sync", async (ctx) => {
     limit(ctx, "general");
     const { user } = await authenticate(ctx, { required: true });
-    if (!(await entitlementFor(user.id)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
+    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
     const doc = await store.getSync(user.id);
     return { status: 200, body: doc ?? { version: 0, updatedAt: 0, data: {} }, headers: { "Cache-Control": "no-store" } };
   });
@@ -503,7 +526,7 @@ export function createApp(deps: Deps) {
   r.put("/v1/sync", async (ctx) => {
     limit(ctx, "general");
     const { user } = await authenticate(ctx, { required: true });
-    if (!(await entitlementFor(user.id)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
+    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
     const req = parse(SyncPutRequest, await ctx.json(SYNC_MAX_BYTES + 4096));
     if (Buffer.byteLength(JSON.stringify(req.data)) > SYNC_MAX_BYTES) throw new HttpError(413, "payload_too_large", "Synced settings are limited to 256 KB.");
     const result = await store.putSync(user.id, req.baseVersion, req.data, req.device ?? null, now());
@@ -518,7 +541,7 @@ export function createApp(deps: Deps) {
 
   r.get("/v1/news", async (ctx) => {
     const auth = await authenticate(ctx, { required: false }).catch(() => null);
-    const premium = auth ? (await entitlementFor(auth.user.id)).premium : false;
+    const premium = auth ? (await entitlementFor(auth.user.id, ctx)).premium : false;
     const items = (await readContent<Announcement[]>("news.json", [])).filter((a) => !a.premiumOnly || premium);
     return { status: 200, body: { announcements: items }, headers: { "Cache-Control": "private, max-age=300" } };
   });
@@ -538,6 +561,157 @@ export function createApp(deps: Deps) {
     const platform = m.platforms[`${key}-nsis`] ?? m.platforms[key];
     if (!platform || compareVersions(m.version, ctx.params.current ?? "0") <= 0) return { status: 204 };
     return { status: 200, body: { version: m.version, notes: m.notes ?? "", pub_date: m.pub_date, url: platform.url, signature: platform.signature } };
+  });
+
+  // --- license keys -------------------------------------------------------------
+  //
+  // A key is bound to the first PC that redeems it. Only that PC gets Premium. The owner can
+  // move it to another PC, but at most once every 24 hours, so passing a key around doesn't work.
+
+  const keyHash = (normalized: string) => sha256(`blood-key:${normalized}`);
+  // The launcher already sends a hash of the machine id; hash again so the stored value isn't
+  // something a launcher could send.
+  const hwidHash = (hwid: string) => sha256(`blood-hwid:${hwid}`);
+
+  function licenseStatus(k: LicenseKey, hw: Buffer | null, at: number): LicenseStatus {
+    const boundHere = Boolean(hw && k.hwidHash && k.hwidHash.equals(hw));
+    const expired = k.expiresAt !== null && k.expiresAt <= at;
+    const next = k.lastMoveAt !== null ? k.lastMoveAt + LICENSE_MOVE_COOLDOWN_MS : null;
+    return {
+      valid: boundHere && !expired && !k.revoked,
+      expiresAt: k.expiresAt,
+      boundElsewhere: Boolean(k.hwidHash) && !boundHere,
+      nextMoveAt: next !== null && next > at ? next : null,
+      hint: k.hint,
+    };
+  }
+
+  async function findKey(raw: string): Promise<LicenseKey> {
+    const norm = normalizeKey(raw);
+    if (!norm) throw new HttpError(400, "invalid_key", "That doesn't look like a BLOOD key. Keys look like BLOOD-XXXXX-XXXXX-XXXXX-XXXXX.");
+    const k = await store.getLicense(keyHash(norm));
+    if (!k) throw new HttpError(404, "invalid_key", "This key doesn't exist. Check it for typos.");
+    if (k.revoked) throw new HttpError(403, "key_revoked", "This key has been disabled.");
+    return k;
+  }
+
+  async function licenseFromHeaders(ctx: Ctx): Promise<LicenseKey | null> {
+    const rawKey = ctx.req.headers["x-blood-license"];
+    const rawHw = ctx.req.headers["x-blood-hwid"];
+    if (typeof rawKey !== "string" || typeof rawHw !== "string" || !/^[0-9a-f]{64}$/.test(rawHw)) return null;
+    const norm = normalizeKey(rawKey);
+    if (!norm) return null;
+    const k = await store.getLicense(keyHash(norm));
+    return k && licenseStatus(k, hwidHash(rawHw), now()).valid ? k : null;
+  }
+
+  r.post("/v1/license/activate", async (ctx) => {
+    limit(ctx, "license");
+    const req = parse(LicenseRequest, await ctx.json());
+    let k = await findKey(req.key);
+    const hw = hwidHash(req.hwid);
+    const at = now();
+    if (k.redeemedAt === null) {
+      const expiresAt = k.durationDays ? at + k.durationDays * 86_400_000 : null;
+      if (await store.redeemLicense(k.keyHash, hw, at, expiresAt)) log({ msg: "license redeemed", key: k.id });
+    } else if (!k.hwidHash) {
+      // Unbound by an admin: the next PC to activate takes it (only one, if two race).
+      await store.moveLicense(k.keyHash, hw, at, at - 1);
+    }
+    k = (await store.getLicense(k.keyHash))!;
+    return { status: 200, body: licenseStatus(k, hw, at) };
+  });
+
+  r.post("/v1/license/move", async (ctx) => {
+    limit(ctx, "license");
+    const req = parse(LicenseRequest, await ctx.json());
+    let k = await findKey(req.key);
+    const hw = hwidHash(req.hwid);
+    const at = now();
+    if (k.redeemedAt === null) throw new HttpError(409, "not_redeemed", "This key hasn't been activated yet. Activate it instead.");
+    if (k.hwidHash?.equals(hw)) return { status: 200, body: licenseStatus(k, hw, at) };
+    if (k.expiresAt !== null && k.expiresAt <= at) throw new HttpError(410, "key_expired", "This key has expired.");
+    const moved = await store.moveLicense(k.keyHash, hw, at, at - LICENSE_MOVE_COOLDOWN_MS);
+    if (moved) log({ msg: "license moved", key: k.id });
+    k = (await store.getLicense(k.keyHash))!;
+    return { status: 200, body: licenseStatus(k, hw, at) };
+  });
+
+  // --- admin (license keys) -----------------------------------------------------
+
+  const adminTokenHash = config.adminToken ? sha256(`admin:${config.adminToken}`) : null;
+  function requireAdmin(ctx: Ctx) {
+    // With no ADMIN_TOKEN the admin routes don't exist.
+    if (!adminTokenHash) throw new HttpError(404, "not_found", "Not found");
+    limit(ctx, "admin");
+    const header = ctx.req.headers.authorization;
+    const given = header?.startsWith("Bearer ") ? header.slice(7).trim() : "";
+    if (!given || !timingSafeEqual(sha256(`admin:${given}`), adminTokenHash)) {
+      log({ msg: "admin auth failed", ip: ctx.ip });
+      throw new HttpError(401, "unauthenticated", "Wrong admin password.");
+    }
+  }
+
+  function newKey(): string {
+    const bytes = randomBytes(KEY_LENGTH);
+    let out = "";
+    // 256 is a multiple of 32, so `byte & 31` is uniform.
+    for (const b of bytes) out += KEY_ALPHABET[b & 31];
+    return out;
+  }
+
+  const adminInfo = (k: LicenseKey): AdminKeyInfo => ({
+    id: k.id,
+    hint: k.hint,
+    label: k.label,
+    durationDays: k.durationDays,
+    createdAt: k.createdAt,
+    redeemedAt: k.redeemedAt,
+    expiresAt: k.expiresAt,
+    bound: Boolean(k.hwidHash),
+    lastMoveAt: k.lastMoveAt,
+    revoked: k.revoked,
+  });
+
+  r.post("/v1/admin/keys", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCreateKeys, await ctx.json());
+    const keys: string[] = [];
+    for (let i = 0; i < req.count; i++) {
+      const norm = newKey();
+      await store.createLicense({
+        id: randomUUID(),
+        keyHash: keyHash(norm),
+        hint: keyHint(norm),
+        label: req.label ?? "",
+        durationDays: req.days ?? null,
+        createdAt: now(),
+        redeemedAt: null,
+        expiresAt: null,
+        hwidHash: null,
+        lastMoveAt: null,
+        revoked: false,
+      });
+      keys.push(formatKey(norm));
+    }
+    log({ msg: "license keys created", count: keys.length, days: req.days ?? null });
+    // The only time the full keys exist anywhere: the server keeps just their hashes.
+    return { status: 200, body: { keys } };
+  });
+
+  r.get("/v1/admin/keys", async (ctx) => {
+    requireAdmin(ctx);
+    const list = await store.listLicenses(500);
+    return { status: 200, body: { keys: list.map(adminInfo) } };
+  });
+
+  r.post("/v1/admin/keys/update", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminKeyAction, await ctx.json());
+    const patch = req.action === "unbind" ? { unbind: true } : { revoked: req.action === "revoke" };
+    if (!(await store.updateLicense(req.id, patch))) throw new HttpError(404, "not_found", "No such key.");
+    log({ msg: "license key updated", key: req.id, action: req.action });
+    return { status: 200, body: adminInfo((await store.getLicenseById(req.id))!) };
   });
 
   // --- pipeline ---------------------------------------------------------------

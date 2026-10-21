@@ -27,13 +27,20 @@ function setPremium(patch: Partial<PremiumState>) {
   app.set((s) => ({ premium: { ...s.premium, ...patch } }));
 }
 
+/** Premium on this PC: bought with the Minecraft account, or a license key redeemed here. */
 export function isPremium(): boolean {
+  const p = app.get().premium;
+  return p.entitlement?.premium === true || p.license?.status === "active";
+}
+
+/** Premium owned by the signed-in BLOOD account (needed for server features like cloud sync). */
+export function hasAccountPremium(): boolean {
   return app.get().premium.entitlement?.premium === true;
 }
 
-async function apiCall<T>(method: HttpRequest["method"], route: string, opts: { token?: string; json?: unknown } = {}): Promise<{ status: number; body: T }> {
+export async function apiCall<T>(method: HttpRequest["method"], route: string, opts: { token?: string; json?: unknown; headers?: Record<string, string> } = {}): Promise<{ status: number; body: T }> {
   if (!API_URL) throw new BloomError("api_unconfigured", "BLOOD's online services aren't configured in this build.");
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { Accept: "application/json", ...opts.headers };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   const res = await P().request({ method, url: `${API_URL}${route}`, headers, json: opts.json, timeoutMs: 20_000 });
   let body: unknown = null;
@@ -110,18 +117,25 @@ async function token(account: Account, fresh = false): Promise<string> {
   return connect(account);
 }
 
+/** Extra headers for signed-in calls: a license key redeemed on this PC (set by services/license). */
+let extraHeaders: () => Promise<Record<string, string>> = async () => ({});
+export function setLicenseHeaders(fn: () => Promise<Record<string, string>>) {
+  extraHeaders = fn;
+}
+
 /** Call an authenticated route, reconnecting once if the BLOOD session expired. */
 async function authed<T>(method: HttpRequest["method"], route: string, json?: unknown): Promise<T> {
   const account = activeAccount();
   if (!account) throw new BloomError("signed_out", "Sign in with your Microsoft account first.");
+  const headers = await extraHeaders().catch(() => ({}));
   let t = await token(account);
   try {
-    return (await apiCall<T>(method, route, { token: t, json })).body;
+    return (await apiCall<T>(method, route, { token: t, json, headers })).body;
   } catch (e) {
     const code = toBloomError(e).code;
     if (code !== "unauthenticated" && code !== "session_expired") throw e;
     t = await token(account, true);
-    return (await apiCall<T>(method, route, { token: t, json })).body;
+    return (await apiCall<T>(method, route, { token: t, json, headers })).body;
   }
 }
 

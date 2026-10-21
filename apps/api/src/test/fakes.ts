@@ -22,6 +22,7 @@ export function testConfig(over: Partial<Config> = {}): Config {
     stripe: { secretKey: "sk_test_123", webhookSecret: WEBHOOK_SECRET, prices: { monthly: "price_month", yearly: "price_year", lifetime: "price_life" }, apiVersion: "2024-06-20" },
     releaseManifest: null,
     sessionDays: 90,
+    adminToken: null,
     ...over,
   };
 }

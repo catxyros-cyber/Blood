@@ -201,6 +201,25 @@ export interface PremiumState {
   /** Show the "Welcome to Premium" message. */
   welcome?: boolean;
   sync: { state: "idle" | "syncing" | "conflict" | "error"; lastSyncAt?: number; error?: string };
+  /** Premium from a license key redeemed on this PC (separate from the Minecraft-account purchase). */
+  license?: LicenseState;
+}
+
+export interface LicenseState {
+  /**
+   * none: no key on this PC · checking · active · elsewhere: the key is in use on another PC ·
+   * expired · revoked · error: the server couldn't be reached and there's no recent check to fall back on.
+   */
+  status: "none" | "checking" | "active" | "elsewhere" | "expired" | "revoked" | "error";
+  /** Last 5 characters of the key. */
+  hint?: string;
+  expiresAt?: number | null;
+  /** When the key may next be moved to another PC (null/undefined = now). */
+  nextMoveAt?: number | null;
+  checkedAt?: number;
+  /** Shown from the last successful check because the server couldn't be reached. */
+  cached?: boolean;
+  error?: string;
 }
 
 export type Route =

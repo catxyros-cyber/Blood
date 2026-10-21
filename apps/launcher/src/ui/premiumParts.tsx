@@ -5,7 +5,7 @@ import { Button, cx } from "./components";
 import { Icon } from "./icons";
 
 export function usePremium(): boolean {
-  return useStore(app, (s) => s.premium.entitlement?.premium === true);
+  return useStore(app, (s) => s.premium.entitlement?.premium === true || s.premium.license?.status === "active");
 }
 
 export function PremiumBadge({ className, label = "Premium" }: { className?: string; label?: string }) {

@@ -27,6 +27,8 @@ export interface Config {
   /** Tauri updater manifest (latest.json) location: an https URL or a file path. */
   releaseManifest: string | null;
   sessionDays: number;
+  /** Bearer token for the admin key tools (ADMIN_TOKEN). null = admin routes are off. */
+  adminToken: string | null;
 }
 
 export class ConfigError extends Error {}
@@ -78,6 +80,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const databaseUrl = env.DATABASE_URL?.trim() || null;
   if (mode === "production" && !databaseUrl) throw new ConfigError("DATABASE_URL is required in production.");
 
+  const adminToken = env.ADMIN_TOKEN?.trim() || null;
+  if (adminToken && adminToken.length < 24) throw new ConfigError("ADMIN_TOKEN must be at least 24 characters (use a long random password).");
+
   return {
     env: mode,
     port: Number(env.PORT ?? 8787),
@@ -90,5 +95,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     stripe,
     releaseManifest: env.RELEASE_MANIFEST?.trim() || null,
     sessionDays: Number(env.SESSION_DAYS ?? 90),
+    adminToken,
   };
 }

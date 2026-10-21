@@ -7,7 +7,8 @@ import { useStore } from "../../services/store";
 import { pullSync, pushSync, resolveConflict } from "../../services/sync";
 import { Badge, Button, Callout, Card, cx, Modal, PageHeader, Spinner, timeAgo, Toggle } from "../components";
 import { BloodMark, Icon } from "../icons";
-import { PremiumBadge } from "../premiumParts";
+import { PremiumBadge, usePremium } from "../premiumParts";
+import { LicenseCard } from "../licenseCard";
 
 const PLAN_COPY: Record<PlanId, { title: string; blurb: string }> = {
   monthly: { title: "Monthly", blurb: "Cancel any time." },
@@ -39,6 +40,7 @@ export function PremiumPage() {
   void accounts;
   const account = activeAccount();
   const ent = premium.entitlement;
+  const hasPremium = usePremium();
 
   useEffect(() => {
     if (!premium.plans) void loadPlans();
@@ -53,7 +55,7 @@ export function PremiumPage() {
 
   return (
     <div className="animate-in">
-      <PageHeader title={<span className="flex items-center gap-3">BLOOD Premium {ent?.premium && <PremiumBadge label="Active" />}</span>} subtitle="Support BLOOD and unlock its advanced tools. Launching and mod management stay free." />
+      <PageHeader title={<span className="flex items-center gap-3">BLOOD Premium {hasPremium && <PremiumBadge label="Active" />}</span>} subtitle="Support BLOOD and unlock its advanced tools. Launching and mod management stay free." />
 
       {!premium.configured && (
         <div className="mb-6">
@@ -89,7 +91,7 @@ export function PremiumPage() {
       <div className="grid grid-cols-[1fr_360px] gap-6 items-start">
         <div className="space-y-6 min-w-0">
           {/* Plans */}
-          {!ent?.premium && (
+          {!hasPremium && (
             <div className="grid grid-cols-3 gap-3">
               {(["monthly", "yearly", "lifetime"] as PlanId[]).map((id) => {
                 const p = plans.find((x) => x.id === id);
@@ -121,7 +123,7 @@ export function PremiumPage() {
               })}
             </div>
           )}
-          {!ent?.premium && premium.configured && !billing && premium.plans && <div className="text-[13px] text-muted">Purchases aren't open on this server yet.</div>}
+          {!hasPremium && premium.configured && !billing && premium.plans && <div className="text-[13px] text-muted">Purchases aren't open on this server yet.</div>}
 
           {/* Features */}
           <Card className="overflow-hidden">
@@ -150,6 +152,7 @@ export function PremiumPage() {
 
         {/* Status column */}
         <div className="space-y-4">
+          <LicenseCard />
           <Card className="p-5">
             <div className="flex items-center gap-3">
               <BloodMark size={36} />
@@ -167,7 +170,7 @@ export function PremiumPage() {
               <div className="mt-4 rounded-xl bg-panel-2 border border-line p-3.5 text-[13px] space-y-1">
                 <div className="flex justify-between">
                   <span className="text-muted">Plan</span>
-                  <span className="font-medium">{ent.premium ? (ent.source === "lifetime" ? "Lifetime" : ent.source === "grant" ? "Complimentary" : ent.plan ? PLAN_COPY[ent.plan].title : "Premium") : "Free"}</span>
+                  <span className="font-medium">{ent.premium ? (ent.source === "lifetime" ? "Lifetime" : ent.source === "grant" ? "Complimentary" : ent.source === "license" ? "Premium key" : ent.plan ? PLAN_COPY[ent.plan].title : "Premium") : "Free"}</span>
                 </div>
                 {ent.status && ent.source !== "lifetime" && (
                   <div className="flex justify-between">
@@ -246,7 +249,7 @@ export function PremiumPage() {
                 {premium.sync.state === "error" && <div className="text-[12px] text-danger">{premium.sync.error}</div>}
               </div>
             ) : (
-              <div className="text-[12.5px] text-faint mt-3">Available with Premium.</div>
+              <div className="text-[12.5px] text-faint mt-3">{hasPremium && !account ? "Sign in with Microsoft to use cloud sync." : "Available with Premium."}</div>
             )}
           </Card>
 

@@ -34,6 +34,12 @@ skyboxes, weather, profiles, Premium).
   **Launch anyway** option.
 - Settings explain which changes apply right away and which apply on the next game start.
 
+## Premium keys (1.0.1)
+
+- **Redeem a key** on the dashboard or the Premium page to unlock Premium on that PC. Each key works
+  on one PC; the owner can move it to another PC once every 24 hours. Admin page at `/admin.html`
+  to create, list, disable and reset keys. See `docs/LICENSE_KEYS.md`.
+
 ## BLOOD Client (`apps/client-mod`, version 0.2.0)
 
 - Menu themes: Crimson (default), Obsidian, Ash, Ember, Monochrome.

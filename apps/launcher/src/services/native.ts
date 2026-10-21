@@ -84,6 +84,8 @@ export const native = {
   autostartGet: () => call<boolean>("autostart_get"),
   autostartSet: (enabled: boolean) => call<void>("autostart_set", { enabled }),
   openLogDir: () => call<void>("open_log_dir"),
+  /** SHA-256 (hex) of this PC's machine id, for binding license keys. */
+  machineId: () => call<string>("machine_id"),
   secretGet: (key: string) => call<string | null>("secret_get", { key }),
   secretSet: (key: string, value: string) => call<void>("secret_set", { key, value }),
   secretDelete: (key: string) => call<void>("secret_delete", { key }),

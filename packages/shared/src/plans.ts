@@ -54,7 +54,7 @@ export const FEATURES: FeatureRow[] = [
   { key: "manual_mods", title: "Your own mods", description: "Drag and drop .jar files, import folders, toggle and remove mods.", free: true, premium: true },
   { key: "basic_presets", title: "Potato and Balanced presets", description: "Reversible video presets with automatic backups.", free: true, premium: true },
   { key: "basic_stats", title: "Process stats", description: "Memory, CPU and launch time for running games.", free: true, premium: true },
-  { key: "standard_themes", title: "Themes & backgrounds", description: "Cherry Blossom, Forest, Lavender, Ocean and Monochrome themes, BLOOD's accent palette and your own background image.", free: true, premium: true },
+  { key: "standard_themes", title: "Themes & backgrounds", description: "Crimson, Obsidian, Ash, Ember and Monochrome themes, BLOOD's accent palette and your own background image.", free: true, premium: true },
   { key: "advanced_presets", title: "Competitive and Extreme FPS presets", description: "Aggressive, fully reversible settings plus a custom preset editor.", free: false, premium: true },
   { key: "advanced_analytics", title: "Advanced performance analytics", description: "Measured heap usage, GC pause times and stutter detection from the JVM's own log.", free: false, premium: true },
   { key: "custom_themes", title: "Any accent colour", description: "Pick any accent colour for the launcher with the colour picker.", free: false, premium: true },

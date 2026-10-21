@@ -12,7 +12,7 @@ import { buildSyncData, fingerprint, planMerge, type SyncData, type SyncedConten
 import { app, endTask, migrateSettings, P, path, startTask, toast, updateSettings, type PremiumState } from "./app";
 import { contentRefs, installRefs } from "./content";
 import { getInstance, instanceGameDir, saveInstance, updateInstance } from "./instances";
-import { isPremium, premiumRequest } from "./premium";
+import { hasAccountPremium, premiumRequest } from "./premium";
 
 interface SyncState {
   version: number;
@@ -50,7 +50,7 @@ let conflictRemote: SyncDocument | null = null;
 
 export function canSync(): boolean {
   const s = app.get();
-  return s.premium.configured && s.settings.cloudSync && isPremium() && s.premium.status === "ready" && !s.premium.cached;
+  return s.premium.configured && s.settings.cloudSync && hasAccountPremium() && s.premium.status === "ready" && !s.premium.cached;
 }
 
 /** Upload this PC's state. With `force`, overwrite the cloud copy after a conflict. */
