@@ -64,7 +64,7 @@ fn io_code(e: &std::io::Error) -> &'static str {
 }
 
 impl Serialize for AppError {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
         use serde::ser::SerializeStruct;
         let mut s = serializer.serialize_struct("AppError", 2)?;
         s.serialize_field("code", self.code())?;
