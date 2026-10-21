@@ -1,6 +1,7 @@
 {
   "key.categories.bloomclient": "BLOOD Client",
   "key.bloomclient.menu": "Open BLOOD menu",
+  "key.bloomclient.visuals_menu": "Open visuals menu",
   "key.bloomclient.hud_editor": "Open HUD editor",
   "key.bloomclient.toggle_visuals": "Turn BLOOD visuals on/off",
   "key.bloomclient.next_profile": "Next visual profile",

@@ -182,7 +182,7 @@ export const MODULES: ModuleInfo[] = [
   {
     id: "visual.particles",
     name: "Ambient particles",
-    description: "Decorative petals, leaves and fireflies. Visual only and off in the Competitive profile.",
+    description: "Decorative petals, leaves and fireflies. Visual only and off in the Clean PvP and Performance presets.",
     category: "visuals",
     kind: "setting",
     setting: { keys: ["leaves.enabled", "petals.enabled", "fireflies.enabled"], on: true, off: false, default: true },
@@ -347,7 +347,7 @@ export const MOD_PRESETS: ModPreset[] = [
   {
     id: "performance",
     name: "Performance",
-    description: "Installs the core performance mods, keeps only an FPS counter and switches BLOOD Client to its Competitive look (no decorative particles or skybox).",
+    description: "Installs the core performance mods, keeps only an FPS counter and switches BLOOD Client to its Clean PvP look (no decorative particles or skybox).",
     hud: { hideOthers: true, widgets: { fps: { visible: true, anchor: "top_left", x: 4, y: 4, options: { colorCoded: true } } } },
     settings: { "hud.enabled": true },
     profile: "competitive",

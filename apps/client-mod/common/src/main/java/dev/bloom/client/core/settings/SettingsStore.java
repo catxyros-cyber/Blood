@@ -149,8 +149,17 @@ public final class SettingsStore {
 
     // ------------------------------------------------------------------ load
 
+    /** Keys that weren't in settings.json at startup (new install, or settings added by an update). */
+    private final Set<String> missingAtLoad = new java.util.HashSet<>();
+
+    public Set<String> keysMissingAtLoad() {
+        return java.util.Collections.unmodifiableSet(missingAtLoad);
+    }
+
     /** Initial load at startup. Creates the file with defaults if it's missing. */
     public void load() {
+        missingAtLoad.clear();
+        missingAtLoad.addAll(byKey.keySet());
         if (!Files.exists(file)) {
             for (Section sec : sections.values()) sec.load(null, false);
             forceSave();
@@ -164,6 +173,8 @@ public final class SettingsStore {
             return;
         }
         apply(root, false, null, null);
+        JsonElement present = root.get("settings");
+        if (present != null && present.isJsonObject()) missingAtLoad.removeAll(present.getAsJsonObject().keySet());
         // Write back if anything was missing or invalid, so the launcher sees full values.
         nextCheckAt = clock.getAsLong() + CHECK_INTERVAL_MS;
     }

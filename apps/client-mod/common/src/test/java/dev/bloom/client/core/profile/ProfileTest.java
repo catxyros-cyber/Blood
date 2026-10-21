@@ -40,6 +40,34 @@ public class ProfileTest {
     }
 
     @Test
+    public void newInstallAndNewSettingsAdoptTheActivePreset() throws Exception {
+        // Fresh install: the default preset (Blood Red) includes its shader look from the first start.
+        assertEquals("blood_moon", pm.active().id());
+        assertTrue(BloomSettings.POST_GLOW.on());
+        assertEquals(1.12f, BloomSettings.POST_CONTRAST.value(), 1e-6);
+        store.flush();
+
+        // An update adds settings: a file without them adopts the preset's values for just those keys,
+        // and keeps everything the player already has.
+        BloomSettings.SKY_BRIGHTNESS.set(1.3f);
+        store.flush();
+        String text = Files.readString(cfg.resolve("settings.json"));
+        com.google.gson.JsonObject root = com.google.gson.JsonParser.parseString(text).getAsJsonObject();
+        com.google.gson.JsonObject settings = root.getAsJsonObject("settings");
+        settings.remove("post.contrast");
+        settings.remove("post.glow");
+        settings.addProperty("post.vignette", 0.0); // already chosen by the player: kept
+        Files.writeString(cfg.resolve("settings.json"), root.toString());
+        BloomSettings.resetAll();
+        boot();
+        assertTrue(BloomSettings.POST_GLOW.on());
+        assertEquals(1.12f, BloomSettings.POST_CONTRAST.value(), 1e-6);
+        assertEquals(0f, BloomSettings.POST_VIGNETTE.value(), 1e-6);
+        assertEquals(1.3f, BloomSettings.SKY_BRIGHTNESS.value(), 1e-6);
+        assertFalse("adopting doesn't count as editing the preset", pm.active().modified());
+    }
+
+    @Test
     public void builtInsUseOnlyKnownValidProfileSettings() {
         for (Profile p : BuiltInProfiles.create()) {
             for (Map.Entry<String, com.google.gson.JsonElement> e : p.values().entrySet()) {
@@ -49,7 +77,7 @@ public class ProfileTest {
                 assertTrue(p.id() + ": invalid " + e.getKey(), s.accepts(e.getValue()));
             }
         }
-        assertEquals(9, BuiltInProfiles.create().size());
+        assertEquals(11, BuiltInProfiles.create().size()); // 9 looks + Performance + Vanilla
     }
 
     @Test

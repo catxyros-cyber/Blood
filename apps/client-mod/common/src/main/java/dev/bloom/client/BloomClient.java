@@ -23,6 +23,7 @@ import dev.bloom.client.gui.HudEditorScreen;
 import dev.bloom.client.hud.HudRenderer;
 import dev.bloom.client.platform.Platform;
 import dev.bloom.client.render.EffectsRenderer;
+import dev.bloom.client.render.PostEffects;
 import dev.bloom.client.render.SkyTextures;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -105,8 +106,18 @@ public final class BloomClient {
             String k = s.key();
             if ((k.startsWith("sky.") && !k.equals("sky.withShaders")) || k.startsWith("world.") || k.startsWith("env.")
                     || k.startsWith("rain.") || k.startsWith("snow.") || k.startsWith("petals.") || k.startsWith("leaves.")
-                    || k.startsWith("fireflies.") || k.startsWith("dust.") || k.startsWith("wind.") || k.startsWith("glow.")) {
+                    || k.startsWith("fireflies.") || k.startsWith("dust.") || k.startsWith("wind.") || k.startsWith("glow.")
+                    || k.startsWith("post.")) {
                 s.setAvailability(shaderReason);
+            }
+        }
+
+        // Shader effects: show load/hook problems under the main toggle, and let a failed shader
+        // chain be retried once the player changes one of its settings.
+        BloomSettings.POST.setAvailability(() -> shaderReason.get() != null ? shaderReason.get() : PostEffects.problem());
+        for (Setting s : BloomSettings.all()) {
+            if (s.key().startsWith("post.") || s == BloomSettings.POST_QUALITY || s == BloomSettings.LITE_MODE) {
+                s.addListener(changed -> PostEffects.retry());
             }
         }
 
@@ -243,7 +254,9 @@ public final class BloomClient {
             env.update(mc.level);
             if (mc.level != null && mc.gameRenderer != null) {
                 Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
-                if (!mc.isPaused()) particles.tick(env, cam.x, cam.y, cam.z, budget.factor());
+                // Performance-friendly mode halves BLOOD's particle budget.
+                float factor = budget.factor() * (BloomSettings.LITE_MODE.on() ? 0.5f : 1f);
+                if (!mc.isPaused()) particles.tick(env, cam.x, cam.y, cam.z, factor);
             } else {
                 particles.clear();
             }
@@ -299,6 +312,9 @@ public final class BloomClient {
         while (BloomKeys.MENU.consumeClick()) {
             if (mc.screen == null) mc.setScreen(new BloomMenuScreen(null));
         }
+        while (BloomKeys.VISUALS_MENU.consumeClick()) {
+            if (mc.screen == null) mc.setScreen(BloomMenuScreen.visuals(null));
+        }
         while (BloomKeys.HUD_EDITOR.consumeClick()) {
             if (mc.screen == null) mc.setScreen(new HudEditorScreen(null));
         }
@@ -351,5 +367,6 @@ public final class BloomClient {
     /** Called when the world (or resource packs) changes: drop cached textures. */
     public void onResourcesReloaded() {
         SkyTextures.invalidateAll();
+        PostEffects.onResourcesReloaded();
     }
 }

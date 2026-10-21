@@ -11,18 +11,20 @@ public final class BloomKeys {
     public static final String CATEGORY = "key.categories.bloomclient";
 
     public static final KeyMapping MENU = new KeyMapping("key.bloomclient.menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, CATEGORY);
+    public static final KeyMapping VISUALS_MENU = new KeyMapping("key.bloomclient.visuals_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_CONTROL, CATEGORY);
     public static final KeyMapping HUD_EDITOR = new KeyMapping("key.bloomclient.hud_editor", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping TOGGLE_VISUALS = new KeyMapping("key.bloomclient.toggle_visuals", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping NEXT_PROFILE = new KeyMapping("key.bloomclient.next_profile", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping TOGGLE_HUD = new KeyMapping("key.bloomclient.toggle_hud", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
 
-    public static final List<KeyMapping> ALL = List.of(MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD);
+    public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD);
 
     private BloomKeys() {
     }
 
     public static String label(KeyMapping k) {
         if (k == MENU) return "Open BLOOD menu";
+        if (k == VISUALS_MENU) return "Open visuals menu";
         if (k == HUD_EDITOR) return "Open HUD editor";
         if (k == TOGGLE_VISUALS) return "Turn BLOOD visuals on/off";
         if (k == NEXT_PROFILE) return "Next visual profile";
@@ -32,6 +34,7 @@ public final class BloomKeys {
 
     public static String description(KeyMapping k) {
         if (k == MENU) return "Opens this menu from anywhere in game. Press it again or Esc to close.";
+        if (k == VISUALS_MENU) return "Skyboxes, shader effects, fog, presets and performance in a compact menu. Press it again to close.";
         if (k == HUD_EDITOR) return "Jumps straight into the HUD editor.";
         if (k == TOGGLE_VISUALS) return "Quickly compare BLOOD's visuals with plain Minecraft.";
         if (k == NEXT_PROFILE) return "Cycles through your visual profiles.";

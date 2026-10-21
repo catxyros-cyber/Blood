@@ -13,3 +13,5 @@ Thumbs.db
 *.p12
 *.key
 apps/launcher/src-tauri/tauri.release.conf.json
+__pycache__/
+*.pyc

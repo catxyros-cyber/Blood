@@ -75,7 +75,30 @@ public final class ProfileManager implements SettingsStore.Section {
 
     /** Call after the settings store finished its initial load. */
     public void ready() {
+        adoptNewSettings();
         ready = true;
+    }
+
+    /**
+     * Settings that weren't in settings.json yet (a new install, or options added by an update)
+     * take their value from the active profile, so e.g. the default "Blood Red" look includes its
+     * shader effects from the first start. Settings the player already has are never touched.
+     */
+    private void adoptNewSettings() {
+        Profile p = profiles.get(active);
+        if (p == null) return;
+        List<String> keys = new ArrayList<>();
+        applyingProfile = true;
+        try {
+            for (Setting s : settings) {
+                if (!s.profileScoped() || !store.keysMissingAtLoad().contains(s.key())) continue;
+                JsonElement v = p.values().get(s.key());
+                if (v != null && s.fromJson(v)) keys.add(s.key());
+            }
+        } finally {
+            applyingProfile = false;
+        }
+        if (!keys.isEmpty()) store.markDirty(keys);
     }
 
     public void addListener(Listener l) {

@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
@@ -27,6 +28,12 @@ public abstract class LevelRendererMixin {
     private void bloom$captureMatrices(DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer,
                                        LightTexture lightTexture, Matrix4f frustumMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
         WorldMatrices.capture(frustumMatrix, projectionMatrix);
+    }
+
+    /** F3+T / resource pack changes: drop cached sky textures and rebuild the shader chain. */
+    @Inject(method = "onResourceManagerReload", at = @At("TAIL"))
+    private void bloom$reload(ResourceManager resourceManager, CallbackInfo ci) {
+        if (BloomClient.ready()) BloomClient.get().onResourcesReloaded();
     }
 
     @Inject(method = "renderSky", at = @At("RETURN"))

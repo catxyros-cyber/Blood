@@ -83,6 +83,11 @@ public final class BloomSettings {
             "How much the game is dimmed behind the BLOOD menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
             "Pause the game while the BLOOD menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final ChoiceSetting VISUALS_POSITION = choice("ui.visualsPosition", GENERAL, "Visuals menu (Right Ctrl)", "Menu position",
+            "Where the Right Ctrl visuals menu opens. At the side, you can watch your changes in the world.", "left",
+            ChoiceSetting.of("left", "Left", "center", "Centre", "right", "Right"), "dock");
+    public static final NumberSetting VISUALS_DIM = num("ui.visualsDim", GENERAL, "Visuals menu (Right Ctrl)", "Backdrop",
+            "How much the world behind the visuals menu is darkened.", 0.1f, 0f, 0.8f, 0.05f, PERCENT, "", "dim");
     public static final BoolSetting TOASTS = bool("ui.toasts", GENERAL, "Interface", "BLOOD notifications",
             "Small notifications from BLOOD, such as a profile switch or a performance tip.", true, "toast", "popup");
 
@@ -258,6 +263,54 @@ public final class BloomSettings {
             "A soft halo around the sun and moon.", true, "bloom", "halo").profile();
     public static final NumberSetting SUN_GLOW_STRENGTH = num("glow.strength", VISUAL_EFFECTS, "Sky glow", "Glow strength",
             "Brightness of the halo.", 0.5f, 0.05f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(SUN_GLOW);
+    // ---------------------------------------------------------------- shader effects (post-processing)
+    public static final BoolSetting POST = bool("post.enabled", VISUAL_EFFECTS, "Shader effects", "Shader effects",
+            "Real GPU post-processing after the world is drawn (the HUD and menus are not affected): colour grading, glow, sharpening and vignette.",
+            true, "shader", "post", "grading", "filter").profile();
+    public static final NumberSetting POST_BRIGHTNESS = num("post.brightness", VISUAL_EFFECTS, "Colour grading", "Brightness",
+            "Exposure of the whole image, in stops (+1 doubles the brightness).", 0f, -1f, 1f, 0.05f, DECIMAL, " EV", "exposure")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_CONTRAST = num("post.contrast", VISUAL_EFFECTS, "Colour grading", "Contrast",
+            "Darker darks and brighter lights above 100%, flatter below.", 1f, 0.6f, 1.5f, 0.02f, PERCENT, "")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_SATURATION = num("post.saturation", VISUAL_EFFECTS, "Colour grading", "Saturation",
+            "Colour intensity. 0% is black and white.", 1f, 0f, 2f, 0.05f, PERCENT, "", "vibrance", "colour")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_WARMTH = num("post.warmth", VISUAL_EFFECTS, "Colour grading", "Colour temperature",
+            "Warmer (orange) above 0, cooler (blue) below.", 0f, -1f, 1f, 0.05f, PERCENT, "", "white balance", "warm", "cool")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final ColorSetting POST_TINT = color("post.tint", VISUAL_EFFECTS, "Colour grading", "Colour filter",
+            "A coloured filter over the whole image. Brightness is kept.", 0xE3192F, "tint", "correction")
+            .<ColorSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_TINT_STRENGTH = num("post.tintStrength", VISUAL_EFFECTS, "Colour grading", "Filter strength",
+            "How much of the colour filter is applied.", 0f, 0f, 0.6f, 0.02f, PERCENT, "")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final BoolSetting POST_SOFT_HIGHLIGHTS = bool("post.softHighlights", VISUAL_EFFECTS, "Colour grading", "Soft highlights",
+            "Bright areas roll off smoothly like film instead of clipping to flat white.", true, "tonemap", "filmic")
+            .<BoolSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_VIGNETTE = num("post.vignette", VISUAL_EFFECTS, "Lens", "Vignette",
+            "Gently darkens the screen corners.", 0f, 0f, 1f, 0.05f, PERCENT, "")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_SHARPEN = num("post.sharpen", VISUAL_EFFECTS, "Lens", "Sharpen",
+            "Crisper block edges and textures. Limited so it doesn't create halos.", 0f, 0f, 1f, 0.05f, PERCENT, "", "clarity")
+            .<NumberSetting>profile().dependsOn(POST);
+    public static final BoolSetting POST_GLOW = bool("post.glow", VISUAL_EFFECTS, "Glow", "Glow",
+            "Bright things (sun, lava, torches, glowing blocks) bleed soft light into their surroundings. Costs a little GPU time; see Performance → Shader quality.",
+            false, "bloom").<BoolSetting>profile().dependsOn(POST);
+    public static final NumberSetting POST_GLOW_STRENGTH = num("post.glowStrength", VISUAL_EFFECTS, "Glow", "Glow strength",
+            "How much light the glow adds.", 0.35f, 0.05f, 1.2f, 0.05f, PERCENT, "")
+            .<NumberSetting>profile().dependsOn(POST_GLOW);
+    public static final NumberSetting POST_GLOW_THRESHOLD = num("post.glowThreshold", VISUAL_EFFECTS, "Glow", "Glow threshold",
+            "Only parts brighter than this glow. Lower = more of the scene glows.", 0.72f, 0.3f, 0.95f, 0.01f, PERCENT, "")
+            .<NumberSetting>profile().dependsOn(POST_GLOW);
+    public static final BoolSetting POST_WEATHER = bool("post.weatherMood", VISUAL_EFFECTS, "Atmosphere", "Weather mood",
+            "Rain and thunder make the colours a little cooler, greyer and flatter.", true, "rain", "storm")
+            .<BoolSetting>profile().dependsOn(POST);
+    public static final MultiChoiceSetting POST_DIMENSIONS = reg(new MultiChoiceSetting("post.dimensions", VISUAL_EFFECTS, "Atmosphere",
+            "Shader effects in", "Dimensions where shader effects run. Other dimensions get plain Minecraft colours.",
+            ChoiceSetting.of("overworld", "Overworld", "nether", "Nether", "end", "The End"), Set.of("overworld", "nether", "end"), "dimension"))
+            .<MultiChoiceSetting>profile().dependsOn(POST);
+
     public static final NumberSetting FIRE_OFFSET = num("fire.offset", VISUAL_EFFECTS, "Overlays", "Fire overlay height",
             "Lowers the burning overlay at the bottom of the screen so it covers less of your view.", 0f, 0f, 0.4f, 0.02f, PERCENT, "", "low fire")
             .profile();
@@ -265,13 +318,26 @@ public final class BloomSettings {
     // =====================================================================
     // World appearance
     // =====================================================================
+    public static final BoolSetting FOG_CUSTOM = bool("world.fogEnabled", WORLD, "Fog", "Custom fog",
+            "BLOOD's fog changes: distance, tint and haze. Off = Minecraft's own fog.", true, "atmospheric", "distance fog").profile();
+    public static final BoolSetting FOG_SMOOTH = bool("world.fogSmooth", WORLD, "Fog", "Smooth fog transitions",
+            "BLOOD's fog distance and colour glide to new values over about a second (presets, sliders, weather) instead of jumping.",
+            true, "transition").profile();
     public static final NumberSetting FOG_DISTANCE = num("world.fogDistance", WORLD, "Fog", "Fog distance",
             "Moves the Overworld's distance fog closer (below 100%) or further away (above 100%). Fog never extends past your render distance.",
-            1f, 0.4f, 1.5f, 0.05f, MULTIPLIER, "", "fog").profile();
+            1f, 0.4f, 1.5f, 0.05f, MULTIPLIER, "", "fog").<NumberSetting>profile().dependsOn(FOG_CUSTOM);
     public static final ColorSetting FOG_TINT = color("world.fogTint", WORLD, "Fog", "Fog tint",
-            "Colour mixed into the distance fog.", 0xC81E32).profile();
+            "Colour mixed into the distance fog.", 0xC81E32).<ColorSetting>profile().dependsOn(FOG_CUSTOM);
     public static final NumberSetting FOG_TINT_STRENGTH = num("world.fogTintStrength", WORLD, "Fog", "Fog tint strength",
-            "How much of the fog tint is applied.", 0f, 0f, 1f, 0.05f, PERCENT, "").profile();
+            "How much of the fog tint is applied.", 0f, 0f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(FOG_CUSTOM);
+    public static final ColorSetting NETHER_FOG_TINT = color("world.netherFogTint", WORLD, "Dimensions", "Nether fog tint",
+            "Colour mixed into the Nether's fog.", 0x6B0F14, "nether").profile();
+    public static final NumberSetting NETHER_FOG_STRENGTH = num("world.netherFogStrength", WORLD, "Dimensions", "Nether fog tint strength",
+            "0% keeps each Nether biome's own fog colour.", 0f, 0f, 1f, 0.05f, PERCENT, "", "nether").profile();
+    public static final ColorSetting END_FOG_TINT = color("world.endFogTint", WORLD, "Dimensions", "End fog tint",
+            "Colour mixed into the End's fog.", 0x3A1F4D, "end").profile();
+    public static final NumberSetting END_FOG_STRENGTH = num("world.endFogStrength", WORLD, "Dimensions", "End fog tint strength",
+            "0% keeps the End's own fog colour.", 0f, 0f, 1f, 0.05f, PERCENT, "", "end").profile();
     public static final ColorSetting SKY_COLOR_TINT = color("world.skyTint", WORLD, "Sky colour", "Vanilla sky tint",
             "Tints Minecraft's own sky colour (visible where the skybox is transparent or off).", 0xC81E32).profile();
     public static final NumberSetting SKY_COLOR_TINT_STRENGTH = num("world.skyTintStrength", WORLD, "Sky colour", "Sky tint strength",
@@ -294,8 +360,17 @@ public final class BloomSettings {
             "Maximum number of BLOOD particles (all effects together).", 1500f, 100f, 6000f, 100f, INTEGER, "", "limit", "count").profile();
     public static final NumberSetting EFFECT_DISTANCE = num("perf.effectDistance", PERFORMANCE, "Effect quality", "Effect distance",
             "Particles beyond this distance are thinned out and then hidden.", 36f, 12f, 72f, 2f, INTEGER, " blocks", "lod", "cull").profile();
+    public static final ChoiceSetting POST_QUALITY = choice("perf.postQuality", PERFORMANCE, "Shader effects", "Shader quality",
+            "Low: colour grading only (one pass, glow off). Medium: adds glow from a 320×180 buffer. High: wider, smoother glow from 480×270 with two blur rounds.",
+            "medium", ChoiceSetting.of("low", "Low", "medium", "Medium", "high", "High"), "glow", "bloom").profile();
+    public static final BoolSetting LITE_MODE = bool("perf.lite", PERFORMANCE, "Shader effects", "Performance-friendly mode",
+            "Keeps colour grading but turns off glow and sharpening, halves BLOOD's particle budget and drops BLOOD's starfield. Your other settings are kept.",
+            false, "fps", "potato", "light").profile();
+    public static final ChoiceSetting SKY_QUALITY = choice("perf.skyQuality", PERFORMANCE, "Shader effects", "Skybox resolution",
+            "Half uses a quarter of the video memory per skybox (256 px faces instead of 512 px), slightly softer.",
+            "full", ChoiceSetting.of("full", "Full", "half", "Half"), "texture", "vram").profile();
     public static final BoolSetting ADAPTIVE = bool("perf.adaptive", PERFORMANCE, "Adaptive effects", "Reduce effects when FPS drops",
-            "Temporarily draws fewer particles while your frame rate is below the target. Your saved settings are not changed.",
+            "While your frame rate is below the target, BLOOD temporarily draws fewer particles and, if needed, skips glow. Your saved settings are not changed.",
             true, "auto", "dynamic");
     public static final NumberSetting ADAPTIVE_TARGET = num("perf.adaptiveTarget", PERFORMANCE, "Adaptive effects", "Target FPS",
             "Frame rate BLOOD tries to protect.", 60f, 30f, 240f, 5f, INTEGER, " FPS").dependsOn(ADAPTIVE);

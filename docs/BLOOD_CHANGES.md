@@ -34,6 +34,18 @@ skyboxes, weather, profiles, Premium).
   **Launch anyway** option.
 - Settings explain which changes apply right away and which apply on the next game start.
 
+## Visuals update
+
+- **Right Ctrl visuals menu**: a compact, docked crimson menu with Visuals, World, Performance and General sections.
+- **Shader effects**: real GLSL post-processing (colour grading, glow, sharpening, vignette, weather mood), with quality levels.
+- **25 new built-in skies** (CC0 "Cloudy Skyboxes" by Screaming Brain Studios), converted seamlessly.
+- **Presets**: Blood Red, Cinematic, Clean PvP, Performance, Vanilla.
+- **Fog**: master switch, smooth transitions, Nether and End fog tints.
+- **Fixes**: skybox faces are now inset by exactly half a texel (no faint seams), and sky textures and
+  shaders now refresh on F3+T / resource pack changes.
+
+See `docs/VISUALS.md`.
+
 ## Premium keys (1.0.1)
 
 - **Redeem a key** on the dashboard or the Premium page to unlock Premium on that PC. Each key works

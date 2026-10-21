@@ -2,7 +2,7 @@
 
 **Built for frames.** A crimson-and-black Minecraft: Java Edition launcher for Windows, focused on
 performance, with **BLOOD Client**: an in-game mod that adds a customizable HUD, a custom
-crosshair, a Right Shift settings menu and optional visuals.
+crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shader effects, and optional visuals.
 
 > BLOOD is not affiliated with Mojang Studios or Microsoft. It ships no Minecraft game
 > files. Players sign in with their own Microsoft account and must own Minecraft.
@@ -12,7 +12,7 @@ crosshair, a Right Shift settings menu and optional visuals.
 | Path | What it is |
 | --- | --- |
 | `apps/launcher` | The desktop launcher (Tauri 2 + React + TypeScript, Rust backend). Builds the Windows `.exe`/`.msi`. |
-| `apps/client-mod` | **BLOOD Client**, the in-game mod (Fabric/Quilt + NeoForge, Minecraft 1.21.1). It adds the HUD modules, the custom crosshair, the Right Shift menu, skyboxes, decorative weather and visual profiles. |
+| `apps/client-mod` | **BLOOD Client**, the in-game mod (Fabric/Quilt + NeoForge, Minecraft 1.21.1). It adds the HUD modules, the custom crosshair, the Right Shift menu, the Right Ctrl visuals menu, shader effects (colour grading, glow, sharpening), 36 skyboxes, decorative weather and visual profiles. |
 | `apps/api` | Node API: Minecraft-verified sign-in, Stripe Premium (server-side only), settings sync, news and releases. It also serves the website. |
 | `apps/website` | Static marketing site: home, pricing, download, account, legal. |
 | `packages/shared` | Shared API types, plan definitions and validation. |
@@ -49,6 +49,7 @@ crosshair, a Right Shift settings menu and optional visuals.
 
 ## BLOOD Client features (in game)
 
+- **Right Ctrl visuals menu.** Presets (Blood Red, Cinematic, Clean PvP, Performance, Vanilla), skybox picker, real GLSL shader effects, fog and performance controls, docked beside the world for live preview. See `docs/VISUALS.md`.
 - **Right Shift menu.** Ten categories, search, every kind of control, per-setting and per-page reset, autosave, and five crimson menu themes.
 - **Skyboxes.**
   - Eleven built-ins, including the default Crimson Dusk and Blood Moon. You can also import your own: 3×2 atlases, 360° panoramas, or OptiFine sky packs.

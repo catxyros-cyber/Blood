@@ -23,6 +23,32 @@ export const BUILT_IN_SKYBOXES: SkyboxInfo[] = [
   ["aurora", "Aurora", "Green and violet aurora curtains above a dark horizon."],
   ["dreamy_pastel", "Dreamy Pastel", "Soft lavender, peach and mint gradients."],
   ["clear_blue", "Clear Blue Sky", "A crisp, cloudless summer sky."],
+  // Cloudy Skyboxes by Screaming Brain Studios (CC0).
+  ["sbs_silver_morning", "Silver Morning", "Soft grey cloud over a rosy horizon with a pale sun."],
+  ["sbs_golden_haze", "Golden Haze", "Bright golden cloud banks lit by a warm sun."],
+  ["sbs_amber_dusk", "Amber Dusk", "Hazy amber clouds over a low evening sun."],
+  ["sbs_summer_blue", "Summer Blue", "Deep summer blue with crisp white clouds."],
+  ["sbs_fair_weather", "Fair Weather", "Light blue sky with scattered fair-weather clouds."],
+  ["sbs_clear_noon", "Clear Noon", "Clear blue sky with a bright noon horizon."],
+  ["sbs_lavender_clouds", "Lavender Clouds", "Lavender and pink clouds drifting over a soft sun."],
+  ["sbs_soft_daylight", "Soft Daylight", "Pale, even daylight under thin cloud."],
+  ["sbs_storm_gold", "Storm Gold", "Dark storm clouds over a burning gold horizon."],
+  ["sbs_overcast", "Overcast", "Flat grey-green overcast. Calm and moody."],
+  ["sbs_violet_night", "Violet Night", "Purple night clouds under a bright moon."],
+  ["sbs_slate_dusk", "Slate Dusk", "Dark slate dusk with a small, distant sun."],
+  ["sbs_sand_fog", "Sand Fog", "Warm, dusty fog with a hidden sun."],
+  ["sbs_emerald_haze", "Emerald Haze", "An eerie green haze, great for spooky worlds."],
+  ["sbs_midnight_glow", "Midnight Glow", "Near-black night with a single glowing light on the horizon."],
+  ["sbs_cloud_tide", "Cloud Tide", "Dramatic blue-white clouds sweeping overhead."],
+  ["sbs_plum_sunset", "Plum Sunset", "Plum and magenta clouds over a red sunset."],
+  ["sbs_steel_horizon", "Steel Horizon", "Steel-blue cloud layers over a bright horizon."],
+  ["sbs_crimson_storm", "Crimson Storm", "A red sky under heavy crimson cloud. Made for BLOOD."],
+  ["sbs_whiteout", "Whiteout", "Bright white fog with a soft glowing sun."],
+  ["sbs_fire_sunset", "Fire Sunset", "Orange fire-lit clouds over a blazing sunset."],
+  ["sbs_rust_sunset", "Rust Sunset", "Rust-brown clouds and a deep orange sunset."],
+  ["sbs_rose_swirl", "Rose Swirl", "Swirling pink and white clouds."],
+  ["sbs_pale_clouds", "Pale Clouds", "Pale cream clouds in soft light."],
+  ["sbs_dream_mist", "Dream Mist", "Lavender-grey mist with gentle cloud."],
 ].map(([id, name, description]) => ({ id: id!, name: name!, description: description!, preview: `/bloomclient/sky/${id}.png` }));
 
 export const VANILLA_SKY = "none";
@@ -36,15 +62,17 @@ export interface ProfileInfo {
 }
 
 export const BUILT_IN_PROFILES: ProfileInfo[] = [
-  ["blood_moon", "Blood Moon", "BLOOD's signature look: crimson dusk, a blood-red moon, drifting red petals and a red haze."],
+  ["blood_moon", "Blood Red", "BLOOD's signature look: crimson dusk, a blood-red moon, red petals and haze, and a dark, dramatic crimson grade with glow."],
   ["cherry_blossom", "Cherry Blossom", "Pink skies, drifting cherry petals and soft pink haze."],
-  ["competitive", "Competitive", "Clean visuals for PvP: no decorative particles or skybox, clear block outline, low fire."],
+  ["competitive", "Clean PvP", "Clear visibility for PvP: crisp, slightly punchier colours, thinner fog, no decorative particles or skybox, a clear block outline and low fire."],
   ["minimal", "Minimal", "Vanilla-like visuals with a light, tidy HUD."],
   ["snowfall", "Snowfall", "Gentle decorative snow everywhere under a cool, pale sky."],
   ["rainy_day", "Rainy Day", "Steady decorative rain, grey-blue sky and closer fog."],
   ["fantasy", "Fantasy", "Pastel clouds, aurora nights, fireflies and petals everywhere."],
   ["night_sky", "Night Sky", "Always night (client-side only): a galaxy sky, dense stars and fireflies."],
-  ["cinematic", "Cinematic", "Golden-hour skies, rich haze and dense ambient particles for screenshots and videos."],
+  ["cinematic", "Cinematic", "Soft golden-hour colours, atmospheric haze, film-like glow and vignette for screenshots and videos."],
+  ["performance", "Performance", "Lightweight: plain sky, no particles or glow, half-size textures, colour grading off. For low-end PCs."],
+  ["vanilla", "Vanilla", "Plain Minecraft visuals: BLOOD's sky, shaders, fog changes, particles and outline are all off. The HUD still works."],
 ].map(([id, name, description]) => ({ id: id!, name: name!, description: description!, builtIn: true }));
 
 /** In-game menu themes (Theme.java); the same ids and names as the launcher's themes. */

@@ -60,7 +60,7 @@ public final class SkyRenderer {
                 drawSkyboxes(pose, timeOfDay, dayW, rain);
                 drawHorizon(pose);
             }
-            if (BloomSettings.SKY_STARS.on()) drawStars(pose, level.getStarBrightness(partialTick) * (1f - rain), timeOfDay);
+            if (BloomSettings.SKY_STARS.on() && !BloomSettings.LITE_MODE.on()) drawStars(pose, level.getStarBrightness(partialTick) * (1f - rain), timeOfDay);
             boolean covered = BloomSettings.SKY_ENABLED.on() && !BloomSettings.SKY_DAY.is(SkyboxCatalog.NONE);
             if (BloomSettings.SKY_ENABLED.on() && BloomSettings.SKY_SUN_MOON.on() && covered) drawSunMoon(pose, level, timeOfDay, rain);
             if (BloomSettings.SUN_GLOW.on()) drawGlow(pose, timeOfDay, rain, raw);
@@ -155,11 +155,13 @@ public final class SkyRenderer {
         float c = dimming * (additive ? alpha : 1f);
         float a = additive ? 1f : alpha;
         BufferBuilder b = Draw.beginTexColor();
-        // Half-texel inset per face stops neighbouring faces of the atlas bleeding into each other.
-        float inset = 0.5f / 512f;
+        // Inset each face by exactly half a texel: neighbouring faces of the atlas can't bleed into
+        // each other, and edge texels (which lie on the cube edge) meet their neighbours seamlessly.
+        int faceSize = SkyTextures.faceSize(id);
+        float insetU = 0.5f / (3f * faceSize), insetV = 0.5f / (2f * faceSize);
         for (int face = 0; face < 6; face++) {
             float[] uv = CubeLayout.UV[face];
-            float u0 = uv[0] + inset, v0 = uv[1] + inset, u1 = uv[2] - inset, v1 = uv[3] - inset;
+            float u0 = uv[0] + insetU, v0 = uv[1] + insetV, u1 = uv[2] - insetU, v1 = uv[3] - insetV;
             pose.pushPose();
             rotateFace(pose, face);
             Matrix4f m = pose.last().pose();

@@ -3,33 +3,75 @@ package dev.bloom.client.render;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.settings.BloomSettings;
+import dev.bloom.client.core.visual.Smoother;
 import dev.bloom.client.game.GameEnv;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
 
-/** Overworld fog distance/tint, atmospheric haze and the vanilla sky colour tint. Visual only. */
+/**
+ * Fog distance/tint and atmospheric haze in the Overworld, fog tints in the Nether and the End,
+ * and the vanilla sky colour tint. Visual only.
+ *
+ * <p>With "Smooth fog transitions" on, BLOOD's own fog changes glide to new values over about a
+ * second (switching presets, dragging sliders, leaving water) instead of jumping. Minecraft's own
+ * fog changes (weather, biomes) are left exactly as vanilla does them.
+ */
 public final class FogTweaks {
+    private static final float SMOOTH_SECONDS = 0.45f;
+    // distance multiplier, haze, tint strength, tint rgb, haze rgb
+    private static final Smoother OVERWORLD = new Smoother(9);
+    private static final float[] TARGET = new float[9];
+    // tint strength, tint rgb (Nether / End)
+    private static final Smoother DIMENSION = new Smoother(4);
+    private static final float[] DIM_TARGET = new float[4];
+    private static Object lastDimension;
+
     private FogTweaks() {
     }
 
-    private static boolean applies(Camera camera) {
+    private static boolean visualsOn() {
         BloomClient bc = BloomClient.get();
-        if (bc == null || !bc.skyActive()) return false;
-        Minecraft mc = Minecraft.getInstance();
-        if (!GameEnv.normalSky(mc.level)) return false;
+        return bc != null && bc.skyActive() && BloomSettings.FOG_CUSTOM.on();
+    }
+
+    private static boolean clearView(Camera camera) {
         if (camera.getFluidInCamera() != FogType.NONE) return false;
         return !(camera.getEntity() instanceof LivingEntity le && (le.hasEffect(MobEffects.BLINDNESS) || le.hasEffect(MobEffects.DARKNESS)));
     }
 
+    /** Smoothed Overworld values; heads back to neutral while BLOOD's fog doesn't apply. */
+    private static float[] overworld(boolean applies) {
+        int tint = BloomSettings.FOG_TINT.rgb(), hz = BloomSettings.HAZE_COLOR.rgb();
+        TARGET[0] = applies ? BloomSettings.FOG_DISTANCE.value() : 1f;
+        TARGET[1] = applies ? BloomSettings.HAZE.value() : 0f;
+        TARGET[2] = applies ? BloomSettings.FOG_TINT_STRENGTH.value() : 0f;
+        TARGET[3] = Draw.r(tint);
+        TARGET[4] = Draw.g(tint);
+        TARGET[5] = Draw.b(tint);
+        TARGET[6] = Draw.r(hz);
+        TARGET[7] = Draw.g(hz);
+        TARGET[8] = Draw.b(hz);
+        return OVERWORLD.update(TARGET, smoothing(), System.nanoTime());
+    }
+
+    private static float smoothing() {
+        return BloomSettings.FOG_SMOOTH.on() && !BloomSettings.REDUCE_MOTION.on() ? SMOOTH_SECONDS : 0f;
+    }
+
     /** After FogRenderer#setupFog for terrain fog. */
     public static void adjustFogDistance(Camera camera, float farPlane, boolean thickFog) {
-        if (thickFog || !applies(camera)) return;
-        float mult = BloomSettings.FOG_DISTANCE.value();
-        float haze = BloomSettings.HAZE.value();
+        Minecraft mc = Minecraft.getInstance();
+        boolean applies = !thickFog && visualsOn() && GameEnv.normalSky(mc.level) && clearView(camera);
+        float[] v = overworld(applies);
+        if (!applies) return;
+        float mult = v[0];
+        float haze = v[1];
         if (Math.abs(mult - 1f) < 1e-3 && haze < 1e-3) return;
         float start = RenderSystem.getShaderFogStart();
         float end = RenderSystem.getShaderFogEnd();
@@ -47,14 +89,46 @@ public final class FogTweaks {
         RenderSystem.setShaderFogEnd(end);
     }
 
-    /** Returns the fog colour after tint and haze (r, g, b written into {@code rgb}). */
+    /** Returns true and writes the fog colour after tint and haze into {@code rgb}. */
     public static boolean tintFogColor(Camera camera, float[] rgb) {
-        if (!applies(camera)) return false;
-        float ts = BloomSettings.FOG_TINT_STRENGTH.value();
-        float haze = BloomSettings.HAZE.value() * 0.35f;
-        if (ts < 1e-3 && haze < 1e-3) return false;
-        mix(rgb, BloomSettings.FOG_TINT.rgb(), ts * 0.8f);
-        mix(rgb, BloomSettings.HAZE_COLOR.rgb(), haze);
+        Minecraft mc = Minecraft.getInstance();
+        ClientLevel level = mc.level;
+        if (level == null) return false;
+        boolean on = visualsOn() && clearView(camera);
+        if (GameEnv.normalSky(level)) {
+            float[] v = overworld(on);
+            if (!on) return false;
+            float ts = v[2];
+            float haze = v[1] * 0.35f;
+            if (ts < 1e-3 && haze < 1e-3) return false;
+            mix(rgb, v[3], v[4], v[5], ts * 0.8f);
+            mix(rgb, v[6], v[7], v[8], haze);
+            return true;
+        }
+        // Nether / End: an optional tint on top of the dimension's own fog colour.
+        Object dim = level.dimension();
+        if (dim != lastDimension) {
+            lastDimension = dim;
+            DIMENSION.reset();
+        }
+        int c;
+        float strength;
+        if (Level.NETHER.equals(level.dimension())) {
+            c = BloomSettings.NETHER_FOG_TINT.rgb();
+            strength = BloomSettings.NETHER_FOG_STRENGTH.value();
+        } else if (Level.END.equals(level.dimension())) {
+            c = BloomSettings.END_FOG_TINT.rgb();
+            strength = BloomSettings.END_FOG_STRENGTH.value();
+        } else {
+            return false;
+        }
+        DIM_TARGET[0] = on ? strength : 0f;
+        DIM_TARGET[1] = Draw.r(c);
+        DIM_TARGET[2] = Draw.g(c);
+        DIM_TARGET[3] = Draw.b(c);
+        float[] v = DIMENSION.update(DIM_TARGET, smoothing(), System.nanoTime());
+        if (!on || v[0] < 1e-3) return false;
+        mix(rgb, v[1], v[2], v[3], v[0]);
         return true;
     }
 
@@ -72,10 +146,10 @@ public final class FogTweaks {
                 original.z + (Math.min(1, tb) - original.z) * s);
     }
 
-    private static void mix(float[] rgb, int c, float t) {
+    private static void mix(float[] rgb, float r, float g, float b, float t) {
         if (t <= 0) return;
-        rgb[0] += (Draw.r(c) - rgb[0]) * t;
-        rgb[1] += (Draw.g(c) - rgb[1]) * t;
-        rgb[2] += (Draw.b(c) - rgb[2]) * t;
+        rgb[0] += (r - rgb[0]) * t;
+        rgb[1] += (g - rgb[1]) * t;
+        rgb[2] += (b - rgb[2]) * t;
     }
 }

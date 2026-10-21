@@ -30,18 +30,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
- * The Right Shift menu. A sidebar of categories, a searchable, scrolling page of settings and
- * popups for dropdowns, colours and dialogs. Every change applies immediately and is saved
- * automatically; the game keeps running behind the menu (unless "Pause singleplayer" is on).
+ * BLOOD's menus. A sidebar of sections, a searchable, scrolling page of settings and popups for
+ * dropdowns, colours and dialogs. Every change applies immediately and is saved automatically;
+ * the game keeps running behind the menu (unless "Pause singleplayer" is on).
+ *
+ * <p>Two variants share this screen:
+ * <ul>
+ *   <li>the full <b>Right Shift</b> menu: one section per {@link Category};</li>
+ *   <li>the compact <b>Right Ctrl</b> visuals menu ({@link #visuals}): Visuals, World, Performance and
+ *       General, docked to the side of the screen so changes can be watched live in the world.</li>
+ * </ul>
  */
 public class BloomMenuScreen extends Screen implements Host {
     private static final ResourceLocation ATLAS = ResourceLocation.fromNamespaceAndPath(BloomClient.MOD_ID, "textures/effects/atlas.png");
     private static Category lastCategory = Category.GENERAL;
+    private static int lastVisualsIndex;
+
+    /** One sidebar entry. {@code category} is null for sections that aren't a settings category. */
+    public record Nav(String label, String icon, Function<BloomMenuScreen, Page> page, Category category) {
+    }
 
     private final Screen parent;
-    private Category category;
+    private final boolean visualsMenu;
+    private final List<Nav> nav;
+    private int navIndex;
     private final ScrollList list = new ScrollList();
     private TextField search;
     private final List<Popup> popups = new ArrayList<>();
@@ -54,17 +69,37 @@ public class BloomMenuScreen extends Screen implements Host {
     private final float[][] petals = new float[26][6];
     private boolean closing;
     private long closeStart;
-    private final float[] navHover = new float[Category.values().length];
+    private final float[] navHover;
     private String lastQuery = "";
+    private String layoutPos;
 
     public BloomMenuScreen(Screen parent) {
         this(parent, lastCategory);
     }
 
     public BloomMenuScreen(Screen parent, Category start) {
-        super(Component.literal("BLOOD"));
+        this(parent, false, fullNav(), start.ordinal());
+    }
+
+    /** The compact Right Ctrl visuals menu. */
+    public static BloomMenuScreen visuals(Screen parent) {
+        List<Nav> nav = dev.bloom.client.gui.page.VisualsPages.nav();
+        return new BloomMenuScreen(parent, true, nav, Math.min(lastVisualsIndex, nav.size() - 1));
+    }
+
+    private static List<Nav> fullNav() {
+        List<Nav> out = new ArrayList<>();
+        for (Category c : Category.values()) out.add(new Nav(c.label(), c.icon(), s -> Pages.create(c, s), c));
+        return out;
+    }
+
+    private BloomMenuScreen(Screen parent, boolean visualsMenu, List<Nav> nav, int start) {
+        super(Component.literal(visualsMenu ? "BLOOD Visuals" : "BLOOD"));
         this.parent = parent;
-        this.category = start;
+        this.visualsMenu = visualsMenu;
+        this.nav = nav;
+        this.navIndex = Math.max(0, Math.min(start, nav.size() - 1));
+        this.navHover = new float[nav.size()];
         Random r = new Random();
         for (float[] p : petals) {
             p[0] = r.nextFloat();
@@ -80,11 +115,22 @@ public class BloomMenuScreen extends Screen implements Host {
 
     @Override
     protected void init() {
-        ww = Math.min(width - 16, 480);
-        wh = Math.min(height - 16, 320);
-        wx = (width - ww) / 2;
-        wy = (height - wh) / 2;
-        sidebar = ww >= 400 ? 116 : 30;
+        if (visualsMenu) {
+            layoutPos = BloomSettings.VISUALS_POSITION.id();
+            // Compact and docked to one side, so most of the world stays visible for live previews.
+            ww = Math.min(width - 16, 400);
+            wh = Math.min(height - 16, 360);
+            String pos = BloomSettings.VISUALS_POSITION.id();
+            wx = "right".equals(pos) ? width - ww - 8 : "center".equals(pos) ? (width - ww) / 2 : 8;
+            wy = (height - wh) / 2;
+            sidebar = ww >= 340 ? 100 : 30;
+        } else {
+            ww = Math.min(width - 16, 480);
+            wh = Math.min(height - 16, 320);
+            wx = (width - ww) / 2;
+            wy = (height - wh) / 2;
+            sidebar = ww >= 400 ? 116 : 30;
+        }
         if (search == null) {
             search = new TextField(this, "Search settings", 40).icon("search").onChange(s -> needsRebuild = true);
         }
@@ -111,7 +157,7 @@ public class BloomMenuScreen extends Screen implements Host {
             }
             page = null;
         } else {
-            page = Pages.create(category, this);
+            page = nav.get(navIndex).page().apply(this);
             rows.addAll(page.build());
         }
         lastQuery = q;
@@ -130,12 +176,28 @@ public class BloomMenuScreen extends Screen implements Host {
     }
 
     public void switchTo(Category c) {
-        if (c == category && search.value().isEmpty()) return;
-        category = c;
-        lastCategory = c;
+        for (int i = 0; i < nav.size(); i++) {
+            if (nav.get(i).category() == c) {
+                switchTo(i);
+                return;
+            }
+        }
+        // Not a section of this menu (e.g. Profiles from the visuals menu): open the full menu there.
+        if (minecraft != null) minecraft.setScreen(new BloomMenuScreen(parent, c));
+    }
+
+    public void switchTo(int index) {
+        if (index == navIndex && search.value().isEmpty()) return;
+        navIndex = Math.max(0, Math.min(index, nav.size() - 1));
+        if (visualsMenu) lastVisualsIndex = navIndex;
+        else if (nav.get(navIndex).category() != null) lastCategory = nav.get(navIndex).category();
         search.setValue("");
         lastQuery = "\u0000";
         rebuild();
+    }
+
+    public boolean isVisualsMenu() {
+        return visualsMenu;
     }
 
     // ------------------------------------------------------------------ Host
@@ -193,6 +255,7 @@ public class BloomMenuScreen extends Screen implements Host {
         long now = System.nanoTime();
         float dt = Math.min(0.1f, (now - lastFrame) / 1_000_000_000f);
         lastFrame = now;
+        if (visualsMenu && !BloomSettings.VISUALS_POSITION.id().equals(layoutPos)) init(); // "Menu position" changed
         if (needsRebuild) rebuild();
         if (closing && openProgress() <= 0.001f) {
             finishClose();
@@ -203,10 +266,10 @@ public class BloomMenuScreen extends Screen implements Host {
         float t = openProgress();
 
         // Backdrop
-        float dim = BloomSettings.MENU_DIM.value();
+        float dim = visualsMenu ? BloomSettings.VISUALS_DIM.value() : BloomSettings.MENU_DIM.value();
         if (minecraft != null && minecraft.level == null) dim = 1f;
         g.fillGradient(0, 0, width, height, Theme.alpha(0xFF0C080B, dim * t), Theme.alpha(0xFF1A0E15, dim * t));
-        if (Anim.decorations()) drawPetals(g, dt, t);
+        if (Anim.decorations() && !visualsMenu) drawPetals(g, dt, t);
 
         boolean blockedByModal = !popups.isEmpty() && popups.get(popups.size() - 1).modal();
         boolean overPopup = false;
@@ -216,7 +279,9 @@ public class BloomMenuScreen extends Screen implements Host {
         g.pose().pushPose();
         if (Anim.motion()) {
             float s = 0.96f + 0.04f * t;
-            g.pose().translate(width / 2f, height / 2f + (1 - t) * 10f, 0);
+            // The docked visuals menu slides in from its side; the full menu rises from below.
+            float slide = visualsMenu && wx < width / 3 ? -(1 - t) * 16f : visualsMenu && wx > width / 3 ? (1 - t) * 16f : 0f;
+            g.pose().translate(width / 2f + slide, height / 2f + (visualsMenu ? 0 : (1 - t) * 10f), 0);
             g.pose().scale(s, s, 1);
             g.pose().translate(-width / 2f, -height / 2f, 0);
         }
@@ -228,9 +293,10 @@ public class BloomMenuScreen extends Screen implements Host {
         g.fill(wx + sidebar - 1, wy + 6, wx + sidebar, wy + wh - 6, Theme.alpha(p.border(), t));
         renderSidebar(g, mx, my, dt, t);
         // Header
-        String title = search.value().isBlank() ? category.label() : "Search";
+        String title = search.value().isBlank() ? nav.get(navIndex).label() : "Search";
         Ui.text(g, title, contentX() + 10, wy + 12, Theme.alpha(p.text(), t));
-        int sw = Math.min(140, ww - sidebar - 120);
+        int sw = Math.min(visualsMenu ? 110 : 140, ww - sidebar - 120);
+        if (visualsMenu) renderShaderStatus(g, contentX() + 16 + Ui.font().width(title), wy + 9, wx + ww - sw - 16, t);
         search.layout(wx + ww - sw - 10, wy + 7, sw);
         search.render(g, mx, my, dt);
         g.fill(contentX() + 6, wy + 30, wx + ww - 6, wy + 31, Theme.alpha(p.border(), 0.6f * t));
@@ -250,6 +316,19 @@ public class BloomMenuScreen extends Screen implements Host {
         if (popups.isEmpty()) renderTooltip(g, mouseX, mouseY);
     }
 
+    /** Live indicator in the visuals menu header: what the shader effects are doing right now. */
+    private void renderShaderStatus(GuiGraphics g, int x, int y, int maxX, float t) {
+        Theme.Palette p = Theme.palette();
+        String status = dev.bloom.client.render.PostEffects.status();
+        boolean on = !"Off".equals(status);
+        String text = Ui.ellipsize(on ? status : "Shaders off", maxX - x - 14);
+        int w = Ui.font().width(text) + 14;
+        if (x + w > maxX || w < 30) return;
+        Ui.pill(g, x, y, w, 13, Theme.alpha(on ? Theme.accentArgb() : p.surface(), (on ? 0.22f : 1f) * t));
+        Ui.circle(g, x + 6, y + 6, 2, on ? Theme.accentArgb() : p.textFaint());
+        Ui.text(g, text, x + 11, y + 3, Theme.alpha(on ? p.text() : p.textDim(), t));
+    }
+
     private void renderSidebar(GuiGraphics g, int mx, int my, float dt, float t) {
         Theme.Palette p = Theme.palette();
         boolean compact = sidebar < 60;
@@ -257,22 +336,22 @@ public class BloomMenuScreen extends Screen implements Host {
         Ui.spriteTinted(g, "logo", wx + (compact ? 7 : 9), y, 16, 16, 0xFFFFFFFF);
         if (!compact) {
             Ui.text(g, "BLOOD", wx + 29, y + 4, Theme.alpha(p.text(), t));
-            Ui.text(g, "Client", wx + 29 + Ui.font().width("BLOOD "), y + 4, Theme.alpha(Theme.accentArgb(), t));
+            String sub = visualsMenu ? "Visuals" : "Client";
+            Ui.text(g, sub, wx + 29 + Ui.font().width("BLOOD "), y + 4, Theme.alpha(Theme.accentArgb(), t));
         }
         y += 26;
-        Category[] cats = Category.values();
-        int itemH = Math.min(20, (wh - 70) / cats.length);
-        for (int i = 0; i < cats.length; i++) {
-            Category c = cats[i];
+        int itemH = itemHeight();
+        for (int i = 0; i < nav.size(); i++) {
+            Nav c = nav.get(i);
             int ix = wx + 4, iw = sidebar - 9;
-            boolean sel = c == category && search.value().isBlank();
+            boolean sel = i == navIndex && search.value().isBlank();
             boolean over = Ui.inside(mx, my, ix, y, iw, itemH);
             navHover[i] = Anim.approach(navHover[i], sel ? 1f : over ? 0.5f : 0f, 16f, dt);
             if (navHover[i] > 0.01f) Ui.smallPanel(g, ix, y, iw, itemH, Theme.alpha(sel ? p.surfaceActive() : p.surfaceHover(), navHover[i] * t));
             if (sel) g.fill(ix, y + 3, ix + 2, y + itemH - 3, Theme.accentArgb());
             int col = sel ? Theme.accentArgb() : over ? p.text() : p.textDim();
             Ui.icon(g, c.icon(), ix + (compact ? 3 : 6), y + (itemH - 14) / 2, 14, Theme.alpha(col, t));
-            if (!compact) Ui.text(g, c.label(), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));
+            if (!compact) Ui.text(g, Ui.ellipsize(c.label(), iw - 30), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));
             y += itemH + 1;
         }
         // Active profile chip at the bottom
@@ -284,6 +363,10 @@ public class BloomMenuScreen extends Screen implements Host {
             Ui.icon(g, "profiles", wx + 8, by + 3, 10, Theme.accentArgb());
             Ui.text(g, Ui.ellipsize(prof.name(), sidebar - 32), wx + 21, by + 4, p.textDim());
         }
+    }
+
+    private int itemHeight() {
+        return Math.min(visualsMenu ? 22 : 20, (wh - 70) / nav.size());
     }
 
     private void drawPetals(GuiGraphics g, float dt, float t) {
@@ -345,20 +428,21 @@ public class BloomMenuScreen extends Screen implements Host {
         focus(null);
         if (search.mouseClicked(mx, my, button)) return true;
         // sidebar
-        Category[] cats = Category.values();
         int y = wy + 34;
-        int itemH = Math.min(20, (wh - 70) / cats.length);
-        for (Category c : cats) {
+        int itemH = itemHeight();
+        for (int i = 0; i < nav.size(); i++) {
             if (Ui.inside(mx, my, wx + 4, y, sidebar - 9, itemH)) {
                 Ui.click();
-                switchTo(c);
+                switchTo(i);
                 return true;
             }
             y += itemH + 1;
         }
         if (sidebar >= 60 && Ui.inside(mx, my, wx + 4, wy + wh - 22, sidebar - 9, 16)) {
             Ui.click();
-            switchTo(Category.PROFILES);
+            // The visuals menu's first section holds the presets.
+            if (visualsMenu) switchTo(0);
+            else switchTo(Category.PROFILES);
             return true;
         }
         if (list.mouseClicked(mx, my, button)) return true;
@@ -410,8 +494,15 @@ public class BloomMenuScreen extends Screen implements Host {
             onClose();
             return true;
         }
-        if (BloomKeys.MENU.matches(key, scan)) {
+        if ((visualsMenu ? BloomKeys.VISUALS_MENU : BloomKeys.MENU).matches(key, scan)) {
             onClose();
+            return true;
+        }
+        if (key == GLFW.GLFW_KEY_TAB && focused == null) {
+            // Tab / Shift+Tab: next / previous section.
+            int n = nav.size();
+            switchTo((navIndex + (hasShiftDown() ? n - 1 : 1)) % n);
+            Ui.click();
             return true;
         }
         if (hasControlDown() && key == GLFW.GLFW_KEY_F) {

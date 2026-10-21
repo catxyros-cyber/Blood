@@ -35,14 +35,14 @@ public final class SkyTextures {
     private static final int MAX_CACHED = 3;
     private static final long REPROCESS_INTERVAL_MS = 120;
 
-    private record Look(float brightness, float saturation, int tint, float tintStrength) {
+    private record Look(float brightness, float saturation, int tint, float tintStrength, boolean half) {
         boolean neutral() {
-            return Math.abs(brightness - 1f) < 1e-3 && Math.abs(saturation - 1f) < 1e-3 && tintStrength < 1e-3;
+            return Math.abs(brightness - 1f) < 1e-3 && Math.abs(saturation - 1f) < 1e-3 && tintStrength < 1e-3 && !half;
         }
 
         static Look current() {
             return new Look(BloomSettings.SKY_BRIGHTNESS.value(), BloomSettings.SKY_SATURATION.value(),
-                    BloomSettings.SKY_TINT.rgb(), BloomSettings.SKY_TINT_STRENGTH.value());
+                    BloomSettings.SKY_TINT.rgb(), BloomSettings.SKY_TINT_STRENGTH.value(), BloomSettings.SKY_QUALITY.is("half"));
         }
     }
 
@@ -102,7 +102,22 @@ public final class SkyTextures {
                 && now - entry.lastRequest >= REPROCESS_INTERVAL_MS) {
             request(entry, look);
         }
-        return entry.texture != null ? entry.location : null;
+        if (entry.texture != null) return entry.location;
+        // Built-ins: show the bundled texture until the processed one is ready, so the sky never blinks.
+        return e.builtIn() ? builtIn(id) : null;
+    }
+
+    /** Built-in atlases ship with 512 px faces (see tools/gen_skyboxes.py, tools/import_sbs_skies.py). */
+    public static final int BUILT_IN_FACE = 512;
+
+    /** Face size (px) of the texture {@link #get} currently returns for this skybox. */
+    public static int faceSize(String id) {
+        Entry e = CACHE.get(id);
+        if (e != null && e.texture != null && e.faceSize > 0 && !(SkyboxCatalog.find(id) != null
+                && SkyboxCatalog.find(id).builtIn() && Look.current().neutral())) {
+            return e.faceSize;
+        }
+        return BUILT_IN_FACE;
     }
 
     private static void request(Entry entry, Look look) {
@@ -165,8 +180,13 @@ public final class SkyTextures {
         }
     }
 
-    /** Applies brightness, saturation and tint. Input/output pixels are NativeImage ABGR. */
+    /**
+     * Applies brightness, saturation and tint, and halves the resolution for "Skybox resolution:
+     * Half" (2×2 box filter; each face stays square because faces are an even number of pixels).
+     * Input/output pixels are NativeImage ABGR.
+     */
     private static NativeImage process(int[] src, Look look) {
+        if (look.half() && src[0] % 6 == 0 && src[1] % 4 == 0 && src[0] >= 96) src = halve(src);
         int w = src[0], h = src[1];
         NativeImage out = new NativeImage(w, h, false);
         float tr = ((look.tint() >> 16) & 255) / 255f, tg = ((look.tint() >> 8) & 255) / 255f, tb = (look.tint() & 255) / 255f;
@@ -191,6 +211,26 @@ public final class SkyTextures {
                 b *= br;
                 int ir = clamp(r), ig = clamp(g), ib = clamp(b);
                 out.setPixelRGBA(x, y, (a << 24) | (ib << 16) | (ig << 8) | ir);
+            }
+        }
+        return out;
+    }
+
+    private static int[] halve(int[] src) {
+        int w = src[0], h = src[1], hw = w / 2, hh = h / 2;
+        int[] out = new int[2 + hw * hh];
+        out[0] = hw;
+        out[1] = hh;
+        for (int y = 0; y < hh; y++) {
+            for (int x = 0; x < hw; x++) {
+                int i = 2 + (y * 2) * w + x * 2;
+                int a = src[i], b = src[i + 1], c = src[i + w], d = src[i + w + 1];
+                int px = 0;
+                for (int sh = 0; sh < 32; sh += 8) {
+                    int sum = ((a >>> sh) & 255) + ((b >>> sh) & 255) + ((c >>> sh) & 255) + ((d >>> sh) & 255);
+                    px |= ((sum + 2) / 4) << sh;
+                }
+                out[2 + y * hw + x] = px;
             }
         }
         return out;
