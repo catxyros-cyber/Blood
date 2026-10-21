@@ -1,0 +1,15 @@
+node_modules/
+dist/
+target/
+apps/launcher/src-tauri/gen/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+# Signing material must never be committed
+*.pfx
+*.p12
+*.key
+apps/launcher/src-tauri/tauri.release.conf.json

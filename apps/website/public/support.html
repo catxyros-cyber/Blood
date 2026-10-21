@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BLOOD support and troubleshooting</title>
+  <meta name="description" content="BLOOD is a performance-focused Minecraft: Java Edition launcher for Windows." />
+  <meta name="theme-color" content="#130d11" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/assets/site.css" />
+  <script src="/assets/site.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/img/blood-mark.svg" alt="" width="30" height="30" />BLOOD</a>
+      <nav class="nav" aria-label="Main">
+        <a href="/">Home</a>
+        <a href="/download.html">Download</a>
+        <a href="/pricing.html">Premium</a>
+        <a href="/releases.html" class="opt">Release notes</a>
+        <a href="/support.html" class="opt">Support</a>
+        <a href="/account.html">Account</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section>
+      <div class="wrap prose">
+        <h1>Support</h1>
+        <p>Most problems are covered below. If you're still stuck, email <a href="mailto:support@bloomlauncher.example">support@bloomlauncher.example</a> with a description and your launcher log (see the last question).</p>
+
+        <h2>Signing in</h2>
+        <details><summary>“This Microsoft account doesn't own Minecraft: Java Edition”</summary><p>BLOOD checks ownership with Minecraft's services. Make sure you're using the account that bought the game. Game Pass players must launch Java Edition once from the official launcher to create a profile.</p></details>
+        <details><summary>“Please accept the Xbox Terms of Service” / “child account” / “no Xbox profile”</summary><p>These come from Xbox Live. Sign in at xbox.com once to accept the terms or create a profile. Child accounts must be added to a Microsoft family by an adult who allows online play.</p></details>
+        <details><summary>“Minecraft rejected this launcher's sign-in”</summary><p>The build you're using was made with a Microsoft app registration that Mojang hasn't approved. Download BLOOD from this site.</p></details>
+        <details><summary>Can I play offline?</summary><p>Yes, for singleplayer, once your account has been verified online at least once. Multiplayer needs an online session.</p></details>
+
+        <h2>Launching</h2>
+        <details><summary>Minecraft crashes right after starting</summary><p>Open the installation's <strong>Logs</strong> tab. The most common cause is a mod for a different Minecraft version or loader — the <strong>Content</strong> tab marks those in red. Disable recently added mods to narrow it down.</p></details>
+        <details><summary>The first Forge or NeoForge launch takes a long time</summary><p>BLOOD runs the loader's official installer steps (patching the game) on the first launch. This takes one to three minutes and only happens once per version.</p></details>
+        <details><summary>“Java was not found” or “needs Java 21”</summary><p>BLOOD downloads the Java version each Minecraft release needs. If you set a custom Java path, remove it in the installation's settings so BLOOD can use the right one.</p></details>
+        <details><summary>“A downloaded file was corrupted” or the game won't start after an update</summary><p>Use <strong>Repair</strong> in the installation menu. BLOOD re-checks every file against its checksum and downloads anything damaged.</p></details>
+        <details><summary>Not enough disk space</summary><p>BLOOD checks free space before downloading. Free some space, or move installations to another drive with a custom game directory.</p></details>
+        <details><summary>My antivirus flagged BLOOD or a mod</summary><p>Official BLOOD installers are code-signed. BLOOD never runs code from mods itself; mods only run inside Minecraft. Only install mods you trust — Modrinth reviews uploads, files from elsewhere are your responsibility.</p></details>
+
+        <h2>Performance</h2>
+        <details><summary>Will BLOOD double my FPS?</summary><p>No launcher can promise that. Performance mods like Sodium often help a lot, but results depend on your PC, settings, world and mods. BLOOD shows measured data instead of estimates.</p></details>
+        <details><summary>How much memory should I allocate?</summary><p>BLOOD recommends a value based on your RAM and mod count. More isn't better: oversized heaps cause longer garbage-collection pauses.</p></details>
+        <details><summary>How do I undo a preset?</summary><p>Performance → Backups. Every preset change is backed up first and can be restored.</p></details>
+
+        <h2>Premium and billing</h2>
+        <details><summary>I paid but Premium isn't active</summary><p>It usually activates within seconds. Press <strong>Refresh</strong> on BLOOD's Premium page, or <strong>Restore purchases</strong> on your account page.</p></details>
+        <details><summary>How do I cancel or change my plan?</summary><p>BLOOD → Premium → <strong>Manage subscription</strong> opens Stripe's billing portal, where you can cancel, switch plans, update your card and download invoices.</p></details>
+
+        <h2>Where are my files and logs?</h2>
+        <p>Installations, worlds and mods: <code>%APPDATA%\com.bloomlauncher.desktop\instances</code>. Launcher logs: <code>%LOCALAPPDATA%\com.bloomlauncher.desktop\logs</code>. Game logs: each installation's <code>logs</code> folder (also shown in the Logs tab). Logs never contain your passwords or tokens.</p>
+      </div>
+    </section>
+
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <div>
+        <div>© <span data-year>2026</span> BLOOD. Built for frames.</div>
+        <div class="small">Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</div>
+      </div>
+      <nav aria-label="Footer">
+        <a href="/download.html">Download</a>
+        <a href="/pricing.html">Premium</a>
+        <a href="/releases.html">Release notes</a>
+        <a href="/support.html">Support</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

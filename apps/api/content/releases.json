@@ -1,0 +1,7 @@
+[
+  {
+    "version": "0.1.0",
+    "date": "2026-10-19",
+    "notes": "First public build of BLOOD.\n\n- Microsoft sign-in with ownership checks\n- Vanilla, Fabric, Quilt, Forge and NeoForge installations\n- Modrinth browser for mods, resource packs, shaders and modpacks\n- Drag-and-drop mods, compatibility checks and dependency resolution\n- BLOOD Performance: reversible presets, performance-mod recommendations, measured GC analytics\n- BLOOD Premium and cloud sync"
+  }
+]

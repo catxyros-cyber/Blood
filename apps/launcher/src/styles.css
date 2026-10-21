@@ -1,0 +1,411 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--bloom-accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-2: var(--accent-2);
+  --color-glass: var(--glass);
+  --color-danger: #f87171;
+  --color-warn: #fbbf24;
+  --color-info: #7dd3fc;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------- Themes
+   Crimson is the default BLOOD look. Each theme sets surfaces, text and its own accent
+   (--accent-base). A custom accent (Settings → Appearance) overrides --accent-base inline.
+   --intensity (0..1, Settings → Appearance → Accent intensity) mixes the accent towards a
+   muted tone and scales every glow, so the whole UI can go from flat to vivid. */
+:root {
+  --intensity: 0.7;
+  --accent-muted: #6b5557;
+  --bloom-accent: color-mix(in oklab, var(--accent-base) calc(55% + var(--intensity) * 45%), var(--accent-muted));
+  --glow: calc(var(--intensity) * 1);
+}
+:root,
+:root[data-theme="crimson"] {
+  --bg: #0a0708;
+  --panel: #120d0e;
+  --panel-2: #171112;
+  --raised: #201718;
+  --line: #251b1c;
+  --line-strong: #3b2b2d;
+  --fg: #f6efef;
+  --muted: #b8a9aa;
+  --faint: #7c6d6f;
+  --accent-base: #e3192f;
+  --accent-2: #ff4a3d;
+  --accent-ink: #ffffff;
+  --glass: rgb(16 11 12 / 0.74);
+  color-scheme: dark;
+}
+:root[data-theme="obsidian"] {
+  --bg: #030303;
+  --panel: #0a0a0a;
+  --panel-2: #0e0e0e;
+  --raised: #161515;
+  --line: #1b1a1a;
+  --line-strong: #2d2b2b;
+  --fg: #f4f1f1;
+  --muted: #aaa4a4;
+  --faint: #6f6969;
+  --accent-base: #ff1f3d;
+  --accent-2: #ff5468;
+  --accent-ink: #ffffff;
+  --glass: rgb(8 8 8 / 0.78);
+  --accent-muted: #5a4f50;
+}
+:root[data-theme="ash"] {
+  --bg: #111213;
+  --panel: #17181a;
+  --panel-2: #1c1d1f;
+  --raised: #252628;
+  --line: #2a2b2e;
+  --line-strong: #3d3f42;
+  --fg: #f1f1f2;
+  --muted: #b1b3b6;
+  --faint: #76787c;
+  --accent-base: #dc2f3c;
+  --accent-2: #f2655a;
+  --accent-ink: #ffffff;
+  --glass: rgb(23 24 26 / 0.76);
+  --accent-muted: #66595a;
+}
+:root[data-theme="ember"] {
+  --bg: #0c0806;
+  --panel: #140e0b;
+  --panel-2: #19120e;
+  --raised: #241913;
+  --line: #2a1d16;
+  --line-strong: #412c21;
+  --fg: #f8f0ea;
+  --muted: #c2ac9e;
+  --faint: #846f61;
+  --accent-base: #ff4a1f;
+  --accent-2: #ffad33;
+  --accent-ink: #1f0a03;
+  --glass: rgb(20 14 11 / 0.74);
+  --accent-muted: #6e5a4e;
+}
+:root[data-theme="mono"] {
+  --bg: #0b0b0b;
+  --panel: #121212;
+  --panel-2: #171717;
+  --raised: #1f1f1f;
+  --line: #232323;
+  --line-strong: #353535;
+  --fg: #f2f2f2;
+  --muted: #b0b0b0;
+  --faint: #777777;
+  --accent-base: #ececec;
+  --accent-2: #a8a8a8;
+  --accent-ink: #111111;
+  --glass: rgb(18 18 18 / 0.75);
+  --accent-muted: #7a7a7a;
+}
+
+@layer base {
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+input,
+textarea,
+.selectable {
+  user-select: text;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--bloom-accent) 35%, transparent);
+}
+
+/* Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bloom-accent);
+  outline-offset: 2px;
+}
+}
+
+/* Motion */
+@keyframes bloom-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bloom-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bloom-shimmer {
+  from {
+    background-position: -200px 0;
+  }
+  to {
+    background-position: 200px 0;
+  }
+}
+@keyframes bloom-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+@keyframes bloom-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bloom-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 45%), transparent);
+  }
+  50% {
+    box-shadow: 0 0 32px 2px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 34%), transparent);
+  }
+}
+
+.animate-in {
+  animation: bloom-fade-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.animate-pop {
+  animation: bloom-pop 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--panel-2) 0, var(--raised) 60px, var(--panel-2) 120px) no-repeat;
+  background-size: 400px 100%;
+  background-color: var(--panel-2);
+  animation: bloom-shimmer 1.2s linear infinite;
+}
+.play-glow {
+  animation: bloom-breathe 3.2s ease-in-out infinite;
+}
+
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Range slider */
+input[type="range"].bloom-range {
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--bloom-accent) var(--fill, 50%), var(--line-strong) var(--fill, 50%));
+  outline: none;
+}
+input[type="range"].bloom-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--fg);
+  border: 4px solid var(--bloom-accent);
+  cursor: pointer;
+  transition: transform 120ms;
+}
+input[type="range"].bloom-range::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+/* Rendered Modrinth descriptions / patch notes */
+.prose-bloom {
+  line-height: 1.65;
+  color: var(--fg);
+  user-select: text;
+}
+.prose-bloom > :first-child {
+  margin-top: 0;
+}
+.prose-bloom h1,
+.prose-bloom h2,
+.prose-bloom h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 1.4em 0 0.5em;
+  line-height: 1.25;
+}
+.prose-bloom h1 {
+  font-size: 1.5em;
+}
+.prose-bloom h2 {
+  font-size: 1.25em;
+}
+.prose-bloom h3 {
+  font-size: 1.08em;
+}
+.prose-bloom p,
+.prose-bloom ul,
+.prose-bloom ol,
+.prose-bloom blockquote,
+.prose-bloom pre,
+.prose-bloom table {
+  margin: 0.7em 0;
+}
+.prose-bloom ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.prose-bloom ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.prose-bloom a {
+  color: var(--bloom-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.prose-bloom img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: inline-block;
+}
+.prose-bloom code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--raised);
+  padding: 0.1em 0.35em;
+  border-radius: 5px;
+}
+.prose-bloom pre {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  padding: 12px;
+  border-radius: 10px;
+  overflow: auto;
+}
+.prose-bloom pre code {
+  background: none;
+  padding: 0;
+}
+.prose-bloom blockquote {
+  border-left: 3px solid var(--line-strong);
+  padding-left: 12px;
+  color: var(--muted);
+}
+.prose-bloom table {
+  border-collapse: collapse;
+}
+.prose-bloom td,
+.prose-bloom th {
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+}
+.prose-bloom hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.5em 0;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* ---------------------------------------------------------------- BLOOD look */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+.accent-gradient {
+  background: linear-gradient(135deg, var(--bloom-accent), var(--accent-2));
+}
+.text-gradient {
+  background: linear-gradient(120deg, var(--fg) 15%, var(--bloom-accent) 55%, var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.backdrop-art {
+  transition: opacity 600ms ease, filter 600ms ease;
+}
+.hero-fade {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 25%, transparent) 0%, transparent 18%, transparent 55%, color-mix(in srgb, var(--bg) 70%, transparent) 82%, var(--bg) 100%);
+}
+/* Sharp, slightly angular primary action. */
+.play-button {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--bloom-accent) 86%, white) 0%, var(--bloom-accent) 50%, color-mix(in oklab, var(--bloom-accent) 78%, black) 100%);
+  color: var(--accent-ink);
+  box-shadow:
+    0 12px 40px -10px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 85%), transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+}
+.play-button:hover {
+  filter: brightness(1.08) saturate(1.05);
+}
+/* clip-path hides box-shadow, so the glow sits on a wrapper. */
+.play-glow-wrap {
+  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 55%), transparent));
+}
+.chip {
+  background: rgb(255 255 255 / 0.05);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(10px);
+}
+/* Accent glow helpers: scale with Accent intensity and disappear at 0. */
+.glow-accent {
+  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 70%), transparent);
+}
+.glow-text {
+  text-shadow: 0 0 18px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 60%), transparent);
+}
+.nav-active-bar {
+  box-shadow: 0 0 12px 1px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 90%), transparent);
+}
+.accent-rule {
+  background: linear-gradient(90deg, var(--bloom-accent), transparent);
+}
+/* Angled corner cut used on cards that deserve emphasis. */
+.cut-corner {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+}
+.wordmark {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 35%), transparent));
+}

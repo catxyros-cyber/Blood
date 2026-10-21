@@ -1,0 +1,42 @@
+// Copies the built BLOOD Client jars into the launcher's bundled resources and
+// writes manifest.json (version, Minecraft versions, file names, sha1, size).
+//
+//   node apps/client-mod/tools/bundle.mjs            (after ./gradlew build)
+//
+// The launcher reads this manifest (src-tauri/src/bloomclient.rs) and checks
+// every jar's sha1 before installing it into an instance's mods folder.
+import { createHash } from "node:crypto";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const modRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const out = resolve(modRoot, "../launcher/src-tauri/resources/bloomclient");
+
+const props = Object.fromEntries(
+  readFileSync(join(modRoot, "gradle.properties"), "utf8")
+    .split(/\r?\n/)
+    .filter((l) => l.includes("=") && !l.trimStart().startsWith("#"))
+    .map((l) => [l.slice(0, l.indexOf("=")).trim(), l.slice(l.indexOf("=") + 1).trim()]),
+);
+const { version, minecraft_version: mc, mod_id: modId } = props;
+if (!version || !mc || !modId) throw new Error("gradle.properties is missing version, minecraft_version or mod_id");
+
+const loaders = ["fabric", "neoforge"];
+const files = [];
+mkdirSync(out, { recursive: true });
+// Remove jars from an earlier bundle, never anything else (README.md stays).
+for (const f of readdirSync(out)) if (f.endsWith(".jar") || f === "manifest.json") rmSync(join(out, f));
+
+for (const loader of loaders) {
+  const name = `${modId}-${loader}-${mc}-${version}.jar`;
+  const src = join(modRoot, loader, "build", "libs", name);
+  if (!existsSync(src)) throw new Error(`Missing ${src}. Run ./gradlew build first.`);
+  const bytes = readFileSync(src);
+  copyFileSync(src, join(out, name));
+  files.push({ loader, file: name, sha1: createHash("sha1").update(bytes).digest("hex"), size: statSync(src).size });
+  console.log(`bundled ${name} (${bytes.length} bytes)`);
+}
+
+writeFileSync(join(out, "manifest.json"), JSON.stringify({ version, minecraft: [mc], files }, null, 2) + "\n");
+console.log(`wrote ${join(out, "manifest.json")}`);

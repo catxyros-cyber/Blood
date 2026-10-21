@@ -1,0 +1,33 @@
+# Local or single-server deployment of the BLOOD API, website and PostgreSQL.
+#   cp apps/api/.env.example apps/api/.env   # fill in Stripe keys etc.
+#   docker compose up --build
+# Put a TLS-terminating reverse proxy (Caddy, nginx, a load balancer) in front for production
+# and set TRUST_PROXY=1 and PUBLIC_URL=https://your-domain in apps/api/.env.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bloom
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: bloom
+    volumes:
+      - bloom-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bloom"]
+      interval: 5s
+      retries: 10
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: apps/api/.env
+    environment:
+      DATABASE_URL: postgres://bloom:${POSTGRES_PASSWORD:-change-me}@db:5432/bloom
+      HOST: 0.0.0.0
+    ports:
+      - "8787:8787"
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  bloom-db:

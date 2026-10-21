@@ -1,0 +1,29 @@
+{
+  "name": "@bloom/api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "BLOOD accounts, Premium entitlements (Stripe), settings sync, release metadata and the website host.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "esbuild src/server.ts src/cli.ts --bundle --platform=node --format=esm --target=node20 --external:pg --outdir=dist --out-extension:.js=.mjs",
+    "start": "node --env-file-if-exists=.env dist/server.mjs",
+    "migrate": "tsx --env-file-if-exists=.env src/cli.ts migrate",
+    "grant": "tsx --env-file-if-exists=.env src/cli.ts grant",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@bloom/shared": "0.1.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

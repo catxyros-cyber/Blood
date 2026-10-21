@@ -1,0 +1,17 @@
+{
+  "name": "@bloom/shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Types, plan definitions and validation shared by the BLOOD launcher, API and website.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

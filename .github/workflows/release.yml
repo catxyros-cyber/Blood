@@ -1,0 +1,137 @@
+name: Release
+
+# Push a tag like v1.0.1 (made by `npm run release -- 1.0.1`) to build, sign and PUBLISH a
+# GitHub release with the Windows installer and the signed updater manifest (latest.json).
+# Every installed BLOOD launcher checks
+#   https://github.com/<this repo>/releases/latest/download/latest.json
+# and installs the new version automatically (see docs/RELEASE.md).
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  client-mod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build BLOOD Client jars and run core tests
+        working-directory: apps/client-mod
+        run: chmod +x gradlew && ./gradlew build --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bloom-client-jars
+          path: |
+            apps/client-mod/fabric/build/libs/bloomclient-fabric-*.jar
+            apps/client-mod/neoforge/build/libs/bloomclient-neoforge-*.jar
+            !apps/client-mod/**/*-sources.jar
+          if-no-files-found: error
+
+  windows:
+    needs: client-mod
+    runs-on: windows-latest
+    env:
+      # Job-level so step conditions can see whether signing is configured.
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/launcher/src-tauri
+
+      - name: Check the tag matches the app version
+        shell: pwsh
+        run: |
+          $conf = Get-Content apps/launcher/src-tauri/tauri.conf.json | ConvertFrom-Json
+          if ("v$($conf.version)" -ne "${{ github.ref_name }}") { throw "Tag ${{ github.ref_name }} doesn't match tauri.conf.json version $($conf.version)" }
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bloom-client-jars
+          path: apps/client-mod
+      - name: Bundle BLOOD Client into the installer
+        run: node apps/client-mod/tools/bundle.mjs
+
+      - run: npm install --no-audit --no-fund
+      - run: npm test -w @bloom/shared && npm test -w @bloom/launcher
+      - run: cargo test --manifest-path apps/launcher/src-tauri/Cargo.toml
+
+      - name: Check the updater keys are configured
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          if (-not $env:TAURI_SIGNING_PRIVATE_KEY) { throw "Secret TAURI_SIGNING_PRIVATE_KEY is missing. See docs/RELEASE.md (one-time setup)." }
+          if (-not $env:TAURI_UPDATER_PUBKEY) { throw "Variable TAURI_UPDATER_PUBKEY is missing. See docs/RELEASE.md (one-time setup)." }
+
+      # Release config: the updater's public key and this repository's update URL are baked into
+      # the build, plus the Authenticode certificate thumbprint when one is configured.
+      - name: Write release config
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          TAURI_UPDATER_PUBKEY: ${{ vars.TAURI_UPDATER_PUBKEY }}
+        run: |
+          $conf = @{
+            plugins = @{ updater = @{
+              pubkey = $env:TAURI_UPDATER_PUBKEY.Trim()
+              endpoints = @("https://github.com/${{ github.repository }}/releases/latest/download/latest.json")
+              windows = @{ installMode = "passive" }
+            } }
+          }
+          if ($env:WINDOWS_CERTIFICATE) {
+            $pfx = Join-Path $env:RUNNER_TEMP "cert.pfx"
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+            $pw = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText
+            $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw
+            Remove-Item $pfx
+            $conf.bundle = @{ windows = @{ certificateThumbprint = $cert.Thumbprint } }
+          } else {
+            Write-Warning "WINDOWS_CERTIFICATE is not set: the installer will NOT be Authenticode-signed (SmartScreen warnings)."
+          }
+          $conf | ConvertTo-Json -Depth 6 | Set-Content apps/launcher/src-tauri/tauri.release.conf.json
+
+      - name: Release notes for this version
+        id: notes
+        shell: bash
+        run: |
+          node -e '
+            const v = process.argv[1].replace(/^v/, "");
+            const all = JSON.parse(require("fs").readFileSync("apps/api/content/releases.json", "utf8"));
+            const r = all.find((x) => x.version === v);
+            const body = r ? r.notes : "Bug fixes and improvements.";
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, "body<<EOF_NOTES\n" + body + "\nEOF_NOTES\n");
+          ' "${{ github.ref_name }}"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Updater signatures (required: createUpdaterArtifacts is on).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_MS_CLIENT_ID: ${{ vars.VITE_MS_CLIENT_ID }}
+          VITE_BLOOM_API_URL: ${{ vars.VITE_BLOOM_API_URL }}
+          BLOOM_CONTACT: ${{ vars.BLOOM_CONTACT }}
+        with:
+          projectPath: apps/launcher
+          tauriScript: npm run tauri
+          args: --config src-tauri/tauri.release.conf.json
+          tagName: ${{ github.ref_name }}
+          releaseName: BLOOD ${{ github.ref_name }}
+          releaseBody: ${{ steps.notes.outputs.body }}
+          # Published straight away: installed launchers only see non-draft, non-prerelease releases.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true

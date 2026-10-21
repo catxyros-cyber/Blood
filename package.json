@@ -1,0 +1,23 @@
+{
+  "name": "bloom",
+  "private": true,
+  "version": "1.0.0",
+  "description": "BLOOD — a performance-focused Minecraft launcher for Windows. Built for frames.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run tauri dev -w @bloom/launcher",
+    "dev:api": "npm run dev -w @bloom/api",
+    "build": "npm run tauri build -w @bloom/launcher",
+    "build:api": "npm run build -w @bloom/api",
+    "test": "npm test -w @bloom/shared && npm test -w @bloom/api && npm test -w @bloom/launcher",
+    "typecheck": "npm run typecheck -w @bloom/launcher && npm run typecheck -w @bloom/api",
+    "test:rust": "cargo test --manifest-path apps/launcher/src-tauri/Cargo.toml",
+    "release": "node scripts/release.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
