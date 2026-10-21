@@ -1,0 +1,17 @@
+{
+  "targets": [
+    "swap"
+  ],
+  "passes": [
+    {
+      "name": "bloodclient_grade",
+      "intarget": "minecraft:main",
+      "outtarget": "swap"
+    },
+    {
+      "name": "bloodclient_copy",
+      "intarget": "swap",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}
