@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.2",
+    "date": "2026-10-21",
+    "notes": "Right Ctrl visuals menu, shader effects, 25 new skies, presets\n\nBLOOD Client 0.2.1."
+  },
+  {
     "version": "1.0.1",
     "date": "2026-10-21",
     "notes": "Premium keys"
