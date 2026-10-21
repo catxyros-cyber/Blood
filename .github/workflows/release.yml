@@ -131,7 +131,14 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: BLOOD ${{ github.ref_name }}
           releaseBody: ${{ steps.notes.outputs.body }}
-          # Published straight away: installed launchers only see non-draft, non-prerelease releases.
-          releaseDraft: false
+          # Built as a draft so every file can be attached (GitHub refuses uploads to a published
+          # release when "immutable releases" is on: "The resource id … is invalid"). Published below.
+          releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
+
+      - name: Publish the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft=false --latest
