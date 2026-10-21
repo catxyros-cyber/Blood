@@ -9,7 +9,10 @@ import {
   AdminCreateCape,
   AdminCreateKeys,
   AdminKeyAction,
+  AdminSetTag,
   CAPE_MAX_BYTES,
+  ONLINE_WINDOW_MS,
+  PresenceRequest,
   capeSizeProblem,
   normalizeUuid,
   SetCapeRequest,
@@ -757,8 +760,8 @@ export function createApp(deps: Deps) {
     const raw = (ctx.query.get("uuids") ?? "").split(",").filter(Boolean);
     if (raw.length > 100) throw new HttpError(400, "too_many", "Ask for at most 100 players at a time.");
     const uuids = [...new Set(raw.map((u) => normalizeUuid(u)).filter((u): u is string => typeof u === "string" && /^[0-9a-f]{32}$/.test(u)))];
-    const capes = await store.playerCapes(uuids);
-    return { status: 200, body: { capes }, headers: { "Cache-Control": "public, max-age=30" } };
+    const [capes, tags] = await Promise.all([store.playerCapes(uuids), store.playerTags(uuids)]);
+    return { status: 200, body: { capes, tags }, headers: { "Cache-Control": "public, max-age=30" } };
   });
 
   r.get("/v1/me/cape", async (ctx) => {
@@ -819,6 +822,45 @@ export function createApp(deps: Deps) {
     if (!ok) throw new HttpError(404, "not_found", "No such cape.");
     log({ msg: "cape updated", cape: req.id, action: req.action });
     return { status: 200, body: { ok: true } };
+  });
+
+  // --- tags & presence -------------------------------------------------------------
+
+  const teamList = async () =>
+    (await store.listTagged()).map((t) => {
+      const online = t.lastSeen !== null && now() - t.lastSeen < ONLINE_WINDOW_MS;
+      return { username: t.username, text: t.text, color: t.color, online, playing: online && t.playing };
+    });
+
+  /** Players with a tag (owner, staff…) and whether they're online. */
+  r.get("/v1/team", async (ctx) => {
+    limit(ctx, "capes");
+    return { status: 200, body: { team: await teamList() }, headers: { "Cache-Control": "public, max-age=20" } };
+  });
+
+  /** The launcher checks in about once a minute while it's open. */
+  r.post("/v1/me/online", async (ctx) => {
+    limit(ctx, "general");
+    const { user } = await authenticate(ctx, { required: true });
+    const { playing } = parse(PresenceRequest, await ctx.json());
+    await store.touchPresence(user.minecraftUuid, playing, now());
+    return { status: 200, body: { ok: true } };
+  });
+
+  r.get("/v1/admin/tags", async (ctx) => {
+    requireAdmin(ctx);
+    return { status: 200, body: { team: await teamList() } };
+  });
+
+  r.post("/v1/admin/tags", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminSetTag, await ctx.json());
+    const user = await store.getUserByUsername(req.username);
+    if (!user) throw new HttpError(404, "no_player", `${req.username} hasn't signed in to BLOOD yet. They need to open the launcher and sign in once.`);
+    const text = req.text.trim();
+    await store.setPlayerTag(user.minecraftUuid, text ? { text, color: req.color.toLowerCase() } : null, now());
+    log({ msg: text ? "tag set" : "tag removed", player: user.minecraftUuid });
+    return { status: 200, body: { ok: true, username: user.username } };
   });
 
   // --- pipeline ---------------------------------------------------------------

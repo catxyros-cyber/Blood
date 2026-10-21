@@ -88,6 +88,9 @@ public final class BloomSettings {
     public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "BLOOD capes",
             "Show the capes BLOOD players chose (yours too). Only BLOOD users see them. Pick yours in the launcher: Visuals → Cape.",
             true, "cape", "cosmetic");
+    public static final BoolSetting TAGS = bool("tags.enabled", GENERAL, "Capes", "BLOOD tags",
+            "Show tags like [OWNER] before the names of BLOOD team members. Only BLOOD users see them.",
+            true, "tag", "owner", "rank", "nametag");
     public static final BoolSetting THEME_DECOR = bool("ui.themeDecor", GENERAL, "Appearance", "Theme decorations",
             "Embers, bats, mist and webs from the Halloween themes, drawn behind the menus. Off for a plain backdrop.", true, "particles", "halloween");
     public static final ChoiceSetting VISUALS_POSITION = choice("ui.visualsPosition", GENERAL, "Visuals menu (Right Ctrl)", "Menu position",

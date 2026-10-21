@@ -77,6 +77,15 @@ export interface Cape {
   createdAt: number;
 }
 
+export interface TaggedPlayer {
+  minecraftUuid: string;
+  username: string;
+  text: string;
+  color: string;
+  lastSeen: number | null;
+  playing: boolean;
+}
+
 export type SyncPutResult = { ok: true; doc: SyncDocument } | { ok: false; conflict: SyncDocument };
 
 export interface Store {
@@ -141,6 +150,15 @@ export interface Store {
   getPlayerCape(minecraftUuid: string): Promise<string | null>;
   /** Cape id per player, for enabled capes only. */
   playerCapes(minecraftUuids: string[]): Promise<Record<string, string>>;
+
+  /** Case-insensitive. */
+  getUserByUsername(username: string): Promise<User | null>;
+  /** null removes the tag. */
+  setPlayerTag(minecraftUuid: string, tag: { text: string; color: string } | null, now: number): Promise<void>;
+  playerTags(minecraftUuids: string[]): Promise<Record<string, { text: string; color: string }>>;
+  /** Everyone with a tag, with their name and when the launcher last checked in. */
+  listTagged(): Promise<TaggedPlayer[]>;
+  touchPresence(minecraftUuid: string, playing: boolean, now: number): Promise<void>;
 
   /** Remove expired sessions, challenges and codes. */
   cleanup(now: number): Promise<void>;

@@ -484,3 +484,31 @@ test("capes: admin publishes, players choose, clients look them up", async () =>
     await h.close();
   }
 });
+
+test("tags: admin tags a player by name, clients see it, team shows who's online", async () => {
+  const ADMIN = "a-very-long-admin-password-123";
+  const h = await harness({ adminToken: ADMIN });
+  try {
+    const missing = await h.call("POST", "/v1/admin/tags", { token: ADMIN, json: { username: "bgti", text: "OWNER", color: "#E3192F" } });
+    assert.equal(missing.status, 404);
+    const token = await h.signIn("bgti", "8667ba71b85a4004af54457a9734eed7");
+    assert.equal((await h.call("POST", "/v1/admin/tags", { json: { username: "bgti", text: "OWNER", color: "#E3192F" } })).status, 401);
+    assert.equal((await h.call("POST", "/v1/admin/tags", { token: ADMIN, json: { username: "BGTI", text: "§cfake", color: "#E3192F" } })).status, 400);
+    assert.equal((await h.call("POST", "/v1/admin/tags", { token: ADMIN, json: { username: "BGTI", text: "OWNER", color: "#E3192F" } })).status, 200);
+
+    const owners = await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7");
+    assert.deepEqual(owners.body.tags, { "8667ba71b85a4004af54457a9734eed7": { text: "OWNER", color: "#e3192f" } });
+
+    let team = (await h.call("GET", "/v1/team")).body.team;
+    assert.deepEqual(team, [{ username: "bgti", text: "OWNER", color: "#e3192f", online: false, playing: false }]);
+    assert.equal((await h.call("POST", "/v1/me/online", { token, json: { playing: true } })).status, 200);
+    team = (await h.call("GET", "/v1/team")).body.team;
+    assert.equal(team[0].online, true);
+    assert.equal(team[0].playing, true);
+
+    await h.call("POST", "/v1/admin/tags", { token: ADMIN, json: { username: "bgti", text: "", color: "#E3192F" } });
+    assert.deepEqual((await h.call("GET", "/v1/team")).body.team, []);
+  } finally {
+    await h.close();
+  }
+});

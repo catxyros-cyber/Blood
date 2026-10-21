@@ -383,6 +383,53 @@ export class PgStore implements Store {
     const { rows } = await this.pool.query<{ cape_id: string }>("SELECT cape_id FROM player_capes WHERE minecraft_uuid = $1", [minecraftUuid]);
     return rows[0]?.cape_id ?? null;
   }
+  async getUserByUsername(username: string) {
+    const { rows } = await this.pool.query<UserRow>("SELECT * FROM users WHERE lower(username) = lower($1) ORDER BY updated_at DESC LIMIT 1", [username]);
+    return rows[0] ? toUser(rows[0]) : null;
+  }
+  async setPlayerTag(minecraftUuid: string, tag: { text: string; color: string } | null, now: number) {
+    if (!tag) {
+      await this.pool.query("DELETE FROM player_tags WHERE minecraft_uuid = $1", [minecraftUuid]);
+      return;
+    }
+    await this.pool.query(
+      `INSERT INTO player_tags (minecraft_uuid, text, color, updated_at) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (minecraft_uuid) DO UPDATE SET text = EXCLUDED.text, color = EXCLUDED.color, updated_at = EXCLUDED.updated_at`,
+      [minecraftUuid, tag.text, tag.color, ts(now)],
+    );
+  }
+  async playerTags(uuids: string[]) {
+    const out: Record<string, { text: string; color: string }> = {};
+    if (!uuids.length) return out;
+    const { rows } = await this.pool.query<{ minecraft_uuid: string; text: string; color: string }>(
+      "SELECT minecraft_uuid, text, color FROM player_tags WHERE minecraft_uuid = ANY($1::text[])",
+      [uuids],
+    );
+    for (const r of rows) out[r.minecraft_uuid] = { text: r.text, color: r.color };
+    return out;
+  }
+  async listTagged() {
+    const { rows } = await this.pool.query<{ minecraft_uuid: string; username: string | null; text: string; color: string; last_seen: Date | null; playing: boolean | null }>(
+      `SELECT t.minecraft_uuid, u.username, t.text, t.color, p.last_seen, p.playing
+       FROM player_tags t LEFT JOIN users u ON u.minecraft_uuid = t.minecraft_uuid
+       LEFT JOIN presence p ON p.minecraft_uuid = t.minecraft_uuid ORDER BY t.updated_at`,
+    );
+    return rows.map((r) => ({
+      minecraftUuid: r.minecraft_uuid,
+      username: r.username ?? r.minecraft_uuid,
+      text: r.text,
+      color: r.color,
+      lastSeen: r.last_seen ? r.last_seen.getTime() : null,
+      playing: r.playing ?? false,
+    }));
+  }
+  async touchPresence(minecraftUuid: string, playing: boolean, now: number) {
+    await this.pool.query(
+      `INSERT INTO presence (minecraft_uuid, last_seen, playing) VALUES ($1, $2, $3)
+       ON CONFLICT (minecraft_uuid) DO UPDATE SET last_seen = EXCLUDED.last_seen, playing = EXCLUDED.playing`,
+      [minecraftUuid, ts(now), playing],
+    );
+  }
   async playerCapes(uuids: string[]) {
     if (!uuids.length) return {};
     const { rows } = await this.pool.query<{ minecraft_uuid: string; cape_id: string }>(

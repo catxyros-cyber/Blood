@@ -22,7 +22,7 @@ public final class CapeDirectory {
     /** After a failed request, wait this long before asking again (server down, offline). */
     public static final long RETRY_MS = 60_000;
 
-    private record Known(String capeId, long at) {
+    private record Known(String capeId, Tag tag, long at) {
     }
 
     private final Map<String, Known> known = new HashMap<>();
@@ -34,6 +34,16 @@ public final class CapeDirectory {
         if (uuid == null) return null;
         String u = uuid.replace("-", "").toLowerCase(Locale.ROOT);
         return u.matches("[0-9a-f]{32}") ? u : null;
+    }
+
+    /** A BLOOD tag like [OWNER]: text (letters, digits, a few symbols) and an RGB colour. */
+    public record Tag(String text, int rgb) {
+    }
+
+    /** The player's tag, or null. */
+    public synchronized Tag tagOf(String uuid) {
+        Known k = known.get(normalize(uuid));
+        return k == null ? null : k.tag();
     }
 
     /** Cape id for a player, or null (no cape, or not known yet). */
@@ -64,7 +74,19 @@ public final class CapeDirectory {
     /** Applies a reply {"capes": {uuid: capeId}} for the players that were asked. */
     public synchronized void answer(List<String> asked, String json, long now) {
         Map<String, String> capes = new HashMap<>();
+        Map<String, Tag> tags = new HashMap<>();
         JsonElement root = JsonParser.parseString(json);
+        if (root.isJsonObject() && root.getAsJsonObject().get("tags") instanceof JsonObject t) {
+            for (Map.Entry<String, JsonElement> e : t.entrySet()) {
+                String u = normalize(e.getKey());
+                if (u == null || !(e.getValue() instanceof JsonObject o)) continue;
+                JsonElement text = o.get("text"), color = o.get("color");
+                if (text == null || !text.isJsonPrimitive() || color == null || !color.isJsonPrimitive()) continue;
+                String tx = text.getAsString(), c = color.getAsString();
+                if (!tx.matches("[A-Za-z0-9 _+!*#&.\\-]{1,16}") || !c.matches("#[0-9a-fA-F]{6}")) continue;
+                tags.put(u, new Tag(tx, Integer.parseInt(c.substring(1), 16)));
+            }
+        }
         if (root.isJsonObject() && root.getAsJsonObject().get("capes") instanceof JsonObject o) {
             for (Map.Entry<String, JsonElement> e : o.entrySet()) {
                 String u = normalize(e.getKey());
@@ -76,7 +98,7 @@ public final class CapeDirectory {
         }
         for (String u : asked) {
             pending.remove(u);
-            known.put(u, new Known(capes.get(u), now));
+            known.put(u, new Known(capes.get(u), tags.get(u), now));
         }
     }
 

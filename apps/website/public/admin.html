@@ -88,6 +88,27 @@
           </div>
 
           <div class="card u-mt20">
+            <h3>Tags</h3>
+            <p class="muted">Give a player a tag shown before their name in game, like <b>[OWNER]</b>. Only BLOOD players see tags. The player must have signed in to the BLOOD launcher once. Leave the tag empty to remove it.</p>
+            <form class="admin-form u-mt16" data-tag-form>
+              <div class="row">
+                <label class="grow">Minecraft name
+                  <input type="text" name="username" maxlength="16" required placeholder="e.g. bgti" pattern="[A-Za-z0-9_]{1,16}" />
+                </label>
+                <label class="grow">Tag
+                  <input type="text" name="text" maxlength="16" placeholder="e.g. OWNER" pattern="[A-Za-z0-9 _+!*#&amp;.\-]{0,16}" />
+                </label>
+                <label>Colour
+                  <input type="color" name="color" value="#e3192f" />
+                </label>
+                <button class="btn btn-primary" type="submit">Save</button>
+              </div>
+            </form>
+            <p class="admin-msg" data-tag-msg></p>
+            <div class="admin-tags u-mt14" data-tags></div>
+          </div>
+
+          <div class="card u-mt20">
             <div class="btn-row">
               <h3 class="u-m0">All keys</h3>
               <button class="btn" type="button" data-reload>Refresh</button>

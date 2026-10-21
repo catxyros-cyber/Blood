@@ -40,4 +40,14 @@ public class CapeDirectoryTest {
         d.invalidate(A);
         assertEquals(1, d.due(List.of(A), CapeDirectory.RETRY_MS + 5).size());
     }
+
+    @Test
+    public void readsTagsAndRejectsFormattingTricks() {
+        CapeDirectory d = new CapeDirectory();
+        List<String> due = d.due(List.of(A, B), 0);
+        d.answer(due, "{\"capes\":{},\"tags\":{\"" + A32 + "\":{\"text\":\"OWNER\",\"color\":\"#e3192f\"},\"" + B + "\":{\"text\":\"\u00a7cX\",\"color\":\"#ffffff\"}}}", 0);
+        assertEquals(new CapeDirectory.Tag("OWNER", 0xE3192F), d.tagOf(A));
+        assertNull(d.tagOf(B));
+        assertNull(d.capeOf(A));
+    }
 }

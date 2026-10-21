@@ -21,6 +21,7 @@ import { BloodMark } from "../icons";
 import { native } from "../../services/native";
 import { UpgradeCard } from "../premiumParts";
 import { LicenseCard } from "../licenseCard";
+import { TeamCard } from "../teamCard";
 import { installSummary, type InstallSummary } from "../../services/dashboard";
 import { checkForUpdate, installUpdate, updateState } from "../../services/updater";
 import { perfStates } from "../../services/bloodMods";
@@ -736,6 +737,7 @@ export function HomePage() {
         </div>
         <aside className="space-y-6">
           <LicenseCard compact />
+          <TeamCard />
           {inst && <BloomClientCard inst={inst} />}
           {inst && (
             <section>

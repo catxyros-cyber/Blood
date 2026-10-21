@@ -70,14 +70,35 @@ public final class CapeManager {
         return tex;
     }
 
+    /** The player's BLOOD tag (e.g. [OWNER]), or null. */
+    public static CapeDirectory.Tag tagFor(UUID uuid) {
+        if (API == null || !BloomSettings.TAGS.on()) return null;
+        return DIRECTORY.tagOf(uuid.toString());
+    }
+
+    /** "[OWNER] name": the tag in its colour, then the name as it was. */
+    public static net.minecraft.network.chat.Component tagged(UUID uuid, net.minecraft.network.chat.Component name) {
+        CapeDirectory.Tag t = tagFor(uuid);
+        if (t == null || name == null) return name;
+        return net.minecraft.network.chat.Component.literal("[" + t.text() + "] ")
+                .withStyle(s -> s.withColor(t.rgb()).withBold(true))
+                .append(name.copy().withStyle(s -> s.withBold(false)));
+    }
+
     /** From the client tick: start a lookup round every 2 seconds for players without a fresh answer. */
     public static void tick(Minecraft mc) {
-        if (API == null || !BloomSettings.CAPES.on() || mc.level == null) return;
+        if (API == null || (!BloomSettings.CAPES.on() && !BloomSettings.TAGS.on()) || mc.level == null) return;
         long now = System.currentTimeMillis();
         if (now - lastRound < 2000) return;
         lastRound = now;
         List<String> present = new ArrayList<>();
         for (AbstractClientPlayer p : mc.level.players()) present.add(p.getUUID().toString());
+        if (BloomSettings.TAGS.on() && mc.getConnection() != null) {
+            for (net.minecraft.client.multiplayer.PlayerInfo info : mc.getConnection().getOnlinePlayers()) {
+                if (present.size() >= 400) break;
+                present.add(info.getProfile().getId().toString());
+            }
+        }
         List<String> due = DIRECTORY.due(present, now);
         DIRECTORY.trim(now);
         if (due.isEmpty()) return;

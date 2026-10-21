@@ -184,6 +184,79 @@
     }
   });
 
+  // ---------------------------------------------------------------- tags
+
+  async function loadTags() {
+    const box = $("[data-tags]");
+    try {
+      const { team } = await api("GET", "/v1/admin/tags");
+      box.replaceChildren();
+      if (!team.length) {
+        box.textContent = "No tags yet.";
+        return;
+      }
+      for (const t of team) {
+        const row = document.createElement("div");
+        row.className = "admin-tag";
+        const tag = document.createElement("span");
+        tag.className = "admin-tag-pill";
+        tag.style.color = t.color;
+        tag.textContent = `[${t.text}]`;
+        const name = document.createElement("span");
+        name.textContent = ` ${t.username} `;
+        const state = document.createElement("span");
+        state.className = "muted";
+        state.textContent = t.playing ? "● playing" : t.online ? "● online" : "offline";
+        if (t.online) state.style.color = "#3ecf6e";
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "btn";
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => {
+          const form = $("[data-tag-form]");
+          form.username.value = t.username;
+          form.text.value = t.text;
+          form.color.value = t.color;
+          form.text.focus();
+        });
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn btn-danger";
+        remove.textContent = "Remove";
+        remove.addEventListener("click", async () => {
+          try {
+            await api("POST", "/v1/admin/tags", { username: t.username, text: "", color: t.color });
+            await loadTags();
+          } catch (e) {
+            msg($("[data-tag-msg]"), e.message, true);
+          }
+        });
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+        actions.append(edit, remove);
+        row.append(tag, name, state, actions);
+        box.append(row);
+      }
+    } catch (e) {
+      msg($("[data-tag-msg]"), e.message, true);
+    }
+  }
+
+  $("[data-tag-form]").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const tagMsg = $("[data-tag-msg]");
+    const text = String(f.get("text") || "").trim();
+    try {
+      const r = await api("POST", "/v1/admin/tags", { username: String(f.get("username")).trim(), text, color: f.get("color") });
+      msg(tagMsg, text ? `Saved. ${r.username} now shows [${text}] to BLOOD players.` : `Removed ${r.username}'s tag.`);
+      ev.target.reset();
+      await loadTags();
+    } catch (e) {
+      msg(tagMsg, e.message, true);
+    }
+  });
+
   $("[data-login-form]").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     token = new FormData(ev.target).get("token").trim();
@@ -192,6 +265,7 @@
     show(true);
     await load();
     await loadCapes();
+    await loadTags();
   });
 
   $("[data-create-form]").addEventListener("submit", async (ev) => {
@@ -235,5 +309,7 @@
     show(true);
     void load();
     void loadCapes();
+    void loadTags();
   }
+  setInterval(() => { if (token) void loadTags(); }, 30_000);
 })();

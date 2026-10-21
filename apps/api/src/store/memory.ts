@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, TaggedPlayer, User } from "./types";
 
 const key = (b: Buffer) => b.toString("hex");
 
@@ -17,6 +17,8 @@ export class MemoryStore implements Store {
   licenses = new Map<string, LicenseKey>();
   capes = new Map<string, Cape>();
   playerCapeMap = new Map<string, string>();
+  tags = new Map<string, { text: string; color: string }>();
+  presence = new Map<string, { at: number; playing: boolean }>();
   events = new Map<string, string>();
   sync = new Map<string, SyncDocument>();
 
@@ -229,5 +231,35 @@ export class MemoryStore implements Store {
       if (id && this.capes.get(id)?.enabled) out[u] = id;
     }
     return out;
+  }
+
+  async getUserByUsername(username: string) {
+    const n = username.toLowerCase();
+    for (const u of this.users.values()) if (u.username.toLowerCase() === n) return { ...u };
+    return null;
+  }
+  async setPlayerTag(minecraftUuid: string, tag: { text: string; color: string } | null) {
+    if (tag) this.tags.set(minecraftUuid, { ...tag });
+    else this.tags.delete(minecraftUuid);
+  }
+  async playerTags(uuids: string[]) {
+    const out: Record<string, { text: string; color: string }> = {};
+    for (const u of uuids) {
+      const t = this.tags.get(u);
+      if (t) out[u] = { ...t };
+    }
+    return out;
+  }
+  async listTagged() {
+    const out: TaggedPlayer[] = [];
+    for (const [uuid, t] of this.tags) {
+      const u = [...this.users.values()].find((x) => x.minecraftUuid === uuid);
+      const p = this.presence.get(uuid);
+      out.push({ minecraftUuid: uuid, username: u?.username ?? uuid, ...t, lastSeen: p?.at ?? null, playing: p?.playing ?? false });
+    }
+    return out;
+  }
+  async touchPresence(minecraftUuid: string, playing: boolean, now: number) {
+    this.presence.set(minecraftUuid, { at: now, playing });
   }
 }

@@ -123,3 +123,32 @@ export const SetCapeRequest = v.object({
   capeId: v.string({ min: 0, max: 36, pattern: /^([0-9a-f-]{36})?$/ }),
 });
 export type SetCapeRequest = Infer<typeof SetCapeRequest>;
+
+// --- tags ---------------------------------------------------------------------
+
+/** A player's BLOOD tag, shown before their name to BLOOD users. */
+export interface TagInfo {
+  text: string;
+  color: string;
+}
+
+/** Someone with a tag, for the launcher's "BLOOD team" list. */
+export interface TeamMember extends TagInfo {
+  username: string;
+  online: boolean;
+  playing: boolean;
+}
+
+/** text "" removes the tag. */
+export const AdminSetTag = v.object({
+  username: v.string({ min: 1, max: 16, pattern: /^[A-Za-z0-9_]{1,16}$/ }),
+  text: v.string({ min: 0, max: 16, pattern: /^[A-Za-z0-9 _+!*#&.\-]{0,16}$/ }),
+  color: v.string({ min: 7, max: 7, pattern: /^#[0-9a-fA-F]{6}$/ }),
+});
+export type AdminSetTag = Infer<typeof AdminSetTag>;
+
+export const PresenceRequest = v.object({ playing: v.boolean() });
+export type PresenceRequest = Infer<typeof PresenceRequest>;
+
+/** Launcher open within this long counts as online. */
+export const ONLINE_WINDOW_MS = 150_000;

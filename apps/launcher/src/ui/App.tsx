@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { startPresence } from "../services/team";
 import { basename } from "../core/util/path";
 import { app, boot, navigate, P, reportError, toast } from "../services/app";
 import { importContent, importModpackFile } from "../services/content";
@@ -35,6 +36,7 @@ function startServices() {
   if (started) return;
   started = true;
   initGameEvents();
+  startPresence();
   watchForChanges();
   void refreshPremium({ quiet: true }).then(() => pullSync());
   void loadPlans();
