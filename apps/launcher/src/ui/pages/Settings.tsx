@@ -319,12 +319,14 @@ export function SettingsPage({ section }: { section?: string }) {
           </Section>
 
           <Section id="advanced" title="Advanced">
+{!MS_CLIENT_ID_BUILD && (
             <Field
               label="Microsoft application (client) id"
               hint={MS_CLIENT_ID_BUILD ? "This build includes an approved id. Only change this if you're developing BLOOD." : "This build has no id. Enter the Azure app id you registered (docs/MICROSOFT_AUTH.md)."}
             >
               <TextInput value={s.msClientId} onChange={(v) => set({ msClientId: v.trim() })} placeholder={MS_CLIENT_ID_BUILD || "00000000-0000-0000-0000-000000000000"} mono />
             </Field>
+            )}
             <Row label="Reset settings" description="Restore every launcher setting to its default. Installations and accounts are kept.">
               <Button
                 size="sm"

@@ -466,5 +466,6 @@ export async function boot(loadInstances: () => Promise<Instance[]>) {
 
 export const MS_CLIENT_ID_BUILD: string = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_MS_CLIENT_ID ?? "";
 export function msClientId(): string {
-  return app.get().settings.msClientId.trim() || MS_CLIENT_ID_BUILD;
+  // A build with an approved id always uses it, so a stray value typed in Settings can't break sign-in.
+  return MS_CLIENT_ID_BUILD || app.get().settings.msClientId.trim();
 }
