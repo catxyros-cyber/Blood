@@ -564,7 +564,7 @@ public final class Widgets {
         return percent ? (left * 100 / st.getMaxDamage()) + "%" : String.valueOf(left);
     }
 
-    static int durabilityColor(Ctx c, ItemStack st) {
+    static int durabilityColor(HudWidget.Ctx c, ItemStack st) {
         if (!st.isDamageableItem() || st.getMaxDamage() <= 0) return c.text;
         float f = 1f - st.getDamageValue() / (float) st.getMaxDamage();
         return f < 0.25f ? 0xFFFF7A7A : f < 0.5f ? 0xFFF2D46B : c.text;
