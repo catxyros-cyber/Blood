@@ -100,6 +100,90 @@
     }
   }
 
+  // ---------------------------------------------------------------- capes
+
+  async function loadCapes() {
+    const box = $("[data-capes]");
+    try {
+      const { capes } = await api("GET", "/v1/admin/capes");
+      box.replaceChildren();
+      if (!capes.length) {
+        box.textContent = "No capes yet.";
+        return;
+      }
+      for (const c of capes) {
+        const card = document.createElement("div");
+        card.className = "admin-cape" + (c.enabled ? "" : " off");
+        const img = document.createElement("img");
+        img.src = c.image;
+        img.alt = "";
+        img.width = 128;
+        img.height = 64;
+        const name = document.createElement("div");
+        name.className = "admin-cape-name";
+        name.textContent = c.name;
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.textContent = `${c.width}×${c.height} · ${c.access === "premium" ? "Premium only" : "Everyone"}${c.enabled ? "" : " · hidden"}`;
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+        const act = (label, action, danger) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = danger ? "btn btn-danger" : "btn";
+          b.textContent = label;
+          b.addEventListener("click", async () => {
+            if (action === "delete" && !confirm(`Delete "${c.name}"? Players wearing it lose it.`)) return;
+            b.disabled = true;
+            try {
+              await api("POST", "/v1/admin/capes/update", { id: c.id, action });
+              await loadCapes();
+            } catch (e) {
+              msg($("[data-cape-msg]"), e.message, true);
+              b.disabled = false;
+            }
+          });
+          return b;
+        };
+        actions.append(act(c.enabled ? "Hide" : "Show", c.enabled ? "disable" : "enable"));
+        actions.append(act(c.access === "premium" ? "Make free" : "Premium only", c.access === "premium" ? "everyone" : "premium"));
+        actions.append(act("Delete", "delete", true));
+        card.append(img, name, meta, actions);
+        box.append(card);
+      }
+    } catch (e) {
+      msg($("[data-cape-msg]"), e.message, true);
+    }
+  }
+
+  $("[data-cape-form]").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const file = f.get("file");
+    const capeMsg = $("[data-cape-msg]");
+    if (!file || !file.size) return msg(capeMsg, "Choose a PNG file.", true);
+    if (file.size > 512 * 1024) return msg(capeMsg, "The image must be at most 512 KB.", true);
+    const data = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result));
+      r.onerror = () => rej(new Error("Couldn't read the file."));
+      r.readAsDataURL(file);
+    });
+    const submit = ev.target.querySelector("button[type=submit]");
+    submit.disabled = true;
+    msg(capeMsg, "Publishing…");
+    try {
+      await api("POST", "/v1/admin/capes", { name: String(f.get("name")).trim(), access: f.get("access"), png: data });
+      msg(capeMsg, "Published. Players can pick it in the BLOOD launcher.");
+      ev.target.reset();
+      await loadCapes();
+    } catch (e) {
+      msg(capeMsg, e.message, true);
+    } finally {
+      submit.disabled = false;
+    }
+  });
+
   $("[data-login-form]").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     token = new FormData(ev.target).get("token").trim();
@@ -107,6 +191,7 @@
     msg($("[data-login-msg]"), "");
     show(true);
     await load();
+    await loadCapes();
   });
 
   $("[data-create-form]").addEventListener("submit", async (ev) => {
@@ -149,5 +234,6 @@
   if (token) {
     show(true);
     void load();
+    void loadCapes();
   }
 })();

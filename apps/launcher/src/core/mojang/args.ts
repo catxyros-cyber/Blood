@@ -25,6 +25,8 @@ export interface LaunchContext {
   loggingConfigPath?: string;
   memory: { minMb: number; maxMb: number };
   extraJvmArgs: string[];
+  /** Java system properties set by BLOOD itself (e.g. the BLOOD server address for the client mod). */
+  systemProps?: Record<string, string>;
   extraGameArgs: string[];
   resolution?: { width: number; height: number };
   fullscreen?: boolean;
@@ -115,6 +117,9 @@ export function buildLaunchCommand(version: VersionJson, ctx: LaunchContext): La
     ...sanitizeUserJvmArgs(ctx.extraJvmArgs),
     "-Dlog4j2.formatMsgNoLookups=true",
   ];
+  for (const [k, v] of Object.entries(ctx.systemProps ?? {})) {
+    if (/^[a-z][a-zA-Z0-9.]*$/.test(k) && !/[\s"]/.test(v)) jvmArgs.push(`-D${k}=${v}`);
+  }
   if (version.logging?.client && ctx.loggingConfigPath) {
     jvmArgs.push(version.logging.client.argument.replace("${path}", ctx.loggingConfigPath));
   }

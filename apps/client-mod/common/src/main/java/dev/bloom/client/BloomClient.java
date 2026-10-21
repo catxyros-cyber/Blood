@@ -16,6 +16,7 @@ import dev.bloom.client.core.settings.SettingsStore;
 import dev.bloom.client.core.sky.SkyFavorites;
 import dev.bloom.client.core.sky.SkyboxCatalog;
 import dev.bloom.client.core.sky.SkyboxLibrary;
+import dev.bloom.client.game.CapeManager;
 import dev.bloom.client.game.GameEnv;
 import dev.bloom.client.game.McImageCodec;
 import dev.bloom.client.game.ShaderCompat;
@@ -70,6 +71,7 @@ public final class BloomClient {
     private long lastSecond;
     private int ticks;
     private boolean hudHidden;
+    private boolean hadLevel;
     private String pendingLoadProblem;
 
     private BloomClient(Platform platform) {
@@ -266,6 +268,13 @@ public final class BloomClient {
                 pendingLoadProblem = null;
             }
             env.update(mc.level);
+            if (mc.level == null) {
+                if (hadLevel) CapeManager.clear();
+                hadLevel = false;
+            } else {
+                hadLevel = true;
+                CapeManager.tick(mc);
+            }
             if (mc.level != null && mc.gameRenderer != null) {
                 Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();
                 // Performance-friendly mode halves BLOOD's particle budget.

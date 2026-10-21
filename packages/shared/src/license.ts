@@ -81,3 +81,45 @@ export interface AdminKeyInfo {
   lastMoveAt: number | null;
   revoked: boolean;
 }
+
+// ---------------------------------------------------------------- capes
+
+/** Who may wear a cape. */
+export type CapeAccess = "everyone" | "premium";
+
+export interface CapeInfo {
+  id: string;
+  name: string;
+  access: CapeAccess;
+  /** Image path on the BLOOD server, e.g. /v1/capes/<id>.png */
+  image: string;
+}
+
+/** Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 1024×512. */
+export const CAPE_MAX_BYTES = 512 * 1024;
+
+export function capeSizeProblem(w: number, h: number): string | null {
+  if (w !== h * 2) return `A cape image must be twice as wide as it is tall (64×32, 128×64, …). This one is ${w}×${h}.`;
+  if (w < 64 || w > 1024 || w % 64 !== 0) return `A cape image must be 64, 128, 256, 512 or 1024 pixels wide. This one is ${w}.`;
+  return null;
+}
+
+export const AdminCreateCape = v.object({
+  name: v.string({ min: 1, max: 40, trim: true }),
+  access: v.literal("everyone", "premium"),
+  /** Base64 PNG. */
+  png: v.string({ min: 16, max: 720_000 }),
+});
+export type AdminCreateCape = Infer<typeof AdminCreateCape>;
+
+export const AdminCapeAction = v.object({
+  id: v.string({ min: 36, max: 36, pattern: /^[0-9a-f-]{36}$/ }),
+  action: v.literal("enable", "disable", "delete", "everyone", "premium"),
+});
+export type AdminCapeAction = Infer<typeof AdminCapeAction>;
+
+/** capeId "" removes the cape. */
+export const SetCapeRequest = v.object({
+  capeId: v.string({ min: 0, max: 36, pattern: /^([0-9a-f-]{36})?$/ }),
+});
+export type SetCapeRequest = Infer<typeof SetCapeRequest>;

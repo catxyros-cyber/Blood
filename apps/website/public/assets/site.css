@@ -195,3 +195,9 @@ section.u-pt8 { padding-top: 8px; }
 .admin-msg { min-height: 1.6em; color: var(--muted); }
 .admin-msg.bad { color: var(--danger); }
 .admin-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.admin-capes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.admin-cape { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 6px; }
+.admin-cape.off { opacity: 0.55; }
+.admin-cape img { image-rendering: pixelated; background: #000; border-radius: 6px; width: 128px; height: 64px; }
+.admin-cape-name { font-weight: 600; }
+.admin-cape .admin-actions { justify-content: flex-start; flex-wrap: wrap; }

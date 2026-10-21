@@ -425,3 +425,62 @@ test("admin key routes don't exist without ADMIN_TOKEN", async () => {
     await h.close();
   }
 });
+
+test("capes: admin publishes, players choose, clients look them up", async () => {
+  const ADMIN = "a-very-long-admin-password-123";
+  const h = await harness({ adminToken: ADMIN });
+  // A real 64x32 PNG header (the server only reads the size from it).
+  const png = (w: number, hgt: number) => {
+    const b = Buffer.alloc(64);
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b, 0);
+    b.writeUInt32BE(13, 8);
+    b.write("IHDR", 12, "latin1");
+    b.writeUInt32BE(w, 16);
+    b.writeUInt32BE(hgt, 20);
+    return b.toString("base64");
+  };
+  try {
+    assert.equal((await h.call("POST", "/v1/admin/capes", { json: { name: "Red", access: "everyone", png: png(64, 32) } })).status, 401);
+    const bad = await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Wide", access: "everyone", png: png(100, 32) } });
+    assert.equal(bad.body.error.code, "bad_size");
+    const notPng = await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Text", access: "everyone", png: Buffer.from("hello world, not a png").toString("base64") } });
+    assert.equal(notPng.body.error.code, "not_png");
+    const red = (await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Red", access: "everyone", png: png(64, 32) } })).body;
+    const gold = (await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Gold", access: "premium", png: png(128, 64) } })).body;
+    assert.match(red.image, /^\/v1\/capes\/[0-9a-f-]{36}\.png$/);
+
+    const list = await h.call("GET", "/v1/capes");
+    assert.deepEqual(list.body.capes.map((c: { name: string }) => c.name), ["Red", "Gold"]);
+    const img = await h.call("GET", red.image);
+    assert.equal(img.status, 200);
+    assert.equal(img.headers.get("content-type"), "image/png");
+
+    const token = await h.signIn("Steve", "8667ba71b85a4004af54457a9734eed7");
+    const mine = await h.call("GET", "/v1/me/cape", { token });
+    assert.equal(mine.body.capeId, null);
+    assert.equal(mine.body.capes.find((c: { name: string }) => c.name === "Gold").allowed, false);
+    assert.equal((await h.call("PUT", "/v1/me/cape", { token, json: { capeId: gold.id } })).status, 402);
+    assert.equal((await h.call("PUT", "/v1/me/cape", { token, json: { capeId: red.id } })).body.capeId, red.id);
+
+    const owners = await h.call("GET", "/v1/cape-owners?uuids=8667ba71-b85a-4004-af54-457a9734eed7,00000000000000000000000000000001,nonsense");
+    assert.deepEqual(owners.body.capes, { "8667ba71b85a4004af54457a9734eed7": red.id });
+
+    // Disabled capes disappear for everyone; enabling brings them back.
+    await h.call("POST", "/v1/admin/capes/update", { token: ADMIN, json: { id: red.id, action: "disable" } });
+    assert.deepEqual((await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7")).body.capes, {});
+    assert.equal((await h.call("GET", red.image)).status, 404);
+    await h.call("POST", "/v1/admin/capes/update", { token: ADMIN, json: { id: red.id, action: "enable" } });
+    // Make Gold free, then wear it; remove it again.
+    await h.call("POST", "/v1/admin/capes/update", { token: ADMIN, json: { id: gold.id, action: "everyone" } });
+    assert.equal((await h.call("PUT", "/v1/me/cape", { token, json: { capeId: gold.id } })).status, 200);
+    assert.equal((await h.call("PUT", "/v1/me/cape", { token, json: { capeId: "" } })).body.capeId, null);
+    // Deleting a cape takes it off everyone who wore it.
+    await h.call("PUT", "/v1/me/cape", { token, json: { capeId: red.id } });
+    await h.call("POST", "/v1/admin/capes/update", { token: ADMIN, json: { id: red.id, action: "delete" } });
+    assert.equal((await h.call("GET", "/v1/me/cape", { token })).body.capeId, null);
+    const tooMany = Array.from({ length: 101 }, (_, i) => i.toString(16).padStart(32, "0")).join(",");
+    assert.equal((await h.call("GET", "/v1/cape-owners?uuids=" + tooMany)).status, 400);
+  } finally {
+    await h.close();
+  }
+});

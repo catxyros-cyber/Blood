@@ -64,6 +64,30 @@
           </div>
 
           <div class="card u-mt20">
+            <h3>Capes</h3>
+            <p class="muted">Publish capes for BLOOD players. Use Minecraft's cape layout: a PNG 64×32 (or an HD multiple: 128×64 … 1024×512), at most 512 KB. Only players using BLOOD see these capes.</p>
+            <form class="admin-form u-mt16" data-cape-form>
+              <div class="row">
+                <label class="grow">Cape name
+                  <input type="text" name="name" maxlength="40" required placeholder="e.g. Crimson Founder" />
+                </label>
+                <label>Who can wear it
+                  <select name="access">
+                    <option value="everyone">Every BLOOD player</option>
+                    <option value="premium">Premium only</option>
+                  </select>
+                </label>
+                <label>Image
+                  <input type="file" name="file" accept="image/png" required />
+                </label>
+                <button class="btn btn-primary" type="submit">Publish</button>
+              </div>
+            </form>
+            <p class="admin-msg" data-cape-msg></p>
+            <div class="admin-capes u-mt14" data-capes></div>
+          </div>
+
+          <div class="card u-mt20">
             <div class="btn-row">
               <h3 class="u-m0">All keys</h3>
               <button class="btn" type="button" data-reload>Refresh</button>

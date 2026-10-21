@@ -29,6 +29,7 @@ import { getInstance, selectedInstance } from "../../services/instances";
 import { native } from "../../services/native";
 import { useStore } from "../../services/store";
 import { Petals } from "../backdrop";
+import { CapeCard } from "../capeCard";
 import { Badge, Button, Card, Callout, cx, PageHeader, Segmented, Select, Skeleton, Spinner, Toggle } from "../components";
 import { BloodMark, Icon } from "../icons";
 import { loaderLabel } from "../instanceParts";
@@ -64,6 +65,7 @@ export function CustomizePage({ instanceId }: { instanceId?: string }) {
           />
         }
       />
+      <CapeCard />
       <CustomizeInstance key={inst.id} inst={inst} />
     </div>
   );

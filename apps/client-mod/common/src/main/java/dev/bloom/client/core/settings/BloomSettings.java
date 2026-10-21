@@ -85,6 +85,9 @@ public final class BloomSettings {
             "How much the game is dimmed behind the BLOOD menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
             "Pause the game while the BLOOD menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "BLOOD capes",
+            "Show the capes BLOOD players chose (yours too). Only BLOOD users see them. Pick yours in the launcher: Visuals → Cape.",
+            true, "cape", "cosmetic");
     public static final BoolSetting THEME_DECOR = bool("ui.themeDecor", GENERAL, "Appearance", "Theme decorations",
             "Embers, bats, mist and webs from the Halloween themes, drawn behind the menus. Off for a plain backdrop.", true, "particles", "halloween");
     public static final ChoiceSetting VISUALS_POSITION = choice("ui.visualsPosition", GENERAL, "Visuals menu (Right Ctrl)", "Menu position",

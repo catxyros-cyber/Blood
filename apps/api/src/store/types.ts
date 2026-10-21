@@ -66,6 +66,17 @@ export interface LicenseKey {
   revoked: boolean;
 }
 
+export interface Cape {
+  id: string;
+  name: string;
+  access: "everyone" | "premium";
+  png: Buffer;
+  width: number;
+  height: number;
+  enabled: boolean;
+  createdAt: number;
+}
+
 export type SyncPutResult = { ok: true; doc: SyncDocument } | { ok: false; conflict: SyncDocument };
 
 export interface Store {
@@ -118,6 +129,18 @@ export interface Store {
   /** Admin: revoke/restore, or clear the PC binding so the key can be activated anywhere. */
   updateLicense(id: string, patch: { revoked?: boolean; unbind?: boolean }): Promise<boolean>;
   listLicenses(limit: number): Promise<LicenseKey[]>;
+
+  createCape(c: Cape): Promise<void>;
+  getCape(id: string): Promise<Cape | null>;
+  /** Without image bytes (png is an empty buffer). */
+  listCapes(includeDisabled: boolean): Promise<Cape[]>;
+  updateCape(id: string, patch: { enabled?: boolean; access?: Cape["access"]; name?: string }): Promise<boolean>;
+  deleteCape(id: string): Promise<boolean>;
+  /** null removes the player's cape. */
+  setPlayerCape(minecraftUuid: string, capeId: string | null, now: number): Promise<void>;
+  getPlayerCape(minecraftUuid: string): Promise<string | null>;
+  /** Cape id per player, for enabled capes only. */
+  playerCapes(minecraftUuids: string[]): Promise<Record<string, string>>;
 
   /** Remove expired sessions, challenges and codes. */
   cleanup(now: number): Promise<void>;

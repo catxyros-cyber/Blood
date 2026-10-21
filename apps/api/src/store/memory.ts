@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
 const key = (b: Buffer) => b.toString("hex");
 
@@ -15,6 +15,8 @@ export class MemoryStore implements Store {
   purchases = new Map<string, PurchaseRecord>();
   grants = new Map<string, Grant>();
   licenses = new Map<string, LicenseKey>();
+  capes = new Map<string, Cape>();
+  playerCapeMap = new Map<string, string>();
   events = new Map<string, string>();
   sync = new Map<string, SyncDocument>();
 
@@ -186,5 +188,46 @@ export class MemoryStore implements Store {
   }
   async listLicenses(limit: number) {
     return [...this.licenses.values()].sort((a, b) => b.createdAt - a.createdAt).slice(0, limit).map((k) => ({ ...k }));
+  }
+
+  async createCape(c: Cape) {
+    this.capes.set(c.id, { ...c });
+  }
+  async getCape(id: string) {
+    const c = this.capes.get(id);
+    return c ? { ...c } : null;
+  }
+  async listCapes(includeDisabled: boolean) {
+    return [...this.capes.values()]
+      .filter((c) => includeDisabled || c.enabled)
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map((c) => ({ ...c, png: Buffer.alloc(0) }));
+  }
+  async updateCape(id: string, patch: { enabled?: boolean; access?: Cape["access"]; name?: string }) {
+    const c = this.capes.get(id);
+    if (!c) return false;
+    if (patch.enabled !== undefined) c.enabled = patch.enabled;
+    if (patch.access !== undefined) c.access = patch.access;
+    if (patch.name !== undefined) c.name = patch.name;
+    return true;
+  }
+  async deleteCape(id: string) {
+    for (const [u, cid] of this.playerCapeMap) if (cid === id) this.playerCapeMap.delete(u);
+    return this.capes.delete(id);
+  }
+  async setPlayerCape(minecraftUuid: string, capeId: string | null) {
+    if (capeId) this.playerCapeMap.set(minecraftUuid, capeId);
+    else this.playerCapeMap.delete(minecraftUuid);
+  }
+  async getPlayerCape(minecraftUuid: string) {
+    return this.playerCapeMap.get(minecraftUuid) ?? null;
+  }
+  async playerCapes(uuids: string[]) {
+    const out: Record<string, string> = {};
+    for (const u of uuids) {
+      const id = this.playerCapeMap.get(u);
+      if (id && this.capes.get(id)?.enabled) out[u] = id;
+    }
+    return out;
   }
 }

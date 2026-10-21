@@ -1,4 +1,5 @@
 /** Play button: prepare → launch → track the running game. */
+import { API_URL } from "./premium";
 
 import { beforeLaunch as bloomClientBeforeLaunch } from "./bloomClient";
 import { prepareInstance } from "../core/install/installer";
@@ -142,6 +143,8 @@ export async function play(instanceId: string, opts: { repair?: boolean; ignoreM
       launcherVersion: app.get().paths?.version ?? "0",
       loggingConfigPath: prepared.loggingConfigPath,
       memory: { minMb: Math.min(memory.minMb, memory.maxMb), maxMb: memory.maxMb },
+      // BLOOD Client asks this server which capes players wear.
+      systemProps: API_URL ? { "bloodclient.api": API_URL } : undefined,
       extraJvmArgs: [...presetArgs, ...s.jvmArgs, ...(inst.jvmArgs ?? []), ...(gcArg ? [gcArg] : [])],
       extraGameArgs: [...s.gameArgs, ...(inst.gameArgs ?? [])],
       resolution: inst.resolution ?? s.resolution ?? undefined,

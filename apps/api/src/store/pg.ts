@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
 /** The subset of pg.Pool that BLOOD uses (keeps this file free of @types/pg). */
 export interface PgPool {
@@ -326,4 +326,95 @@ export class PgStore implements Store {
   async close() {
     await this.pool.end();
   }
+
+  // ------------------------------------------------------------------ capes
+
+  async createCape(c: Cape) {
+    await this.pool.query(
+      "INSERT INTO capes (id, name, access, png, width, height, enabled, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+      [c.id, c.name, c.access, c.png, c.width, c.height, c.enabled, ts(c.createdAt)],
+    );
+  }
+  async getCape(id: string) {
+    const { rows } = await this.pool.query<CapeRow>("SELECT * FROM capes WHERE id = $1", [id]);
+    return rows[0] ? toCape(rows[0]) : null;
+  }
+  async listCapes(includeDisabled: boolean) {
+    const { rows } = await this.pool.query<CapeRow>(
+      `SELECT id, name, access, ''::bytea AS png, width, height, enabled, created_at FROM capes ${includeDisabled ? "" : "WHERE enabled"} ORDER BY created_at`,
+    );
+    return rows.map(toCape);
+  }
+  async updateCape(id: string, patch: { enabled?: boolean; access?: Cape["access"]; name?: string }) {
+    const sets: string[] = [];
+    const vals: unknown[] = [id];
+    if (patch.enabled !== undefined) {
+      vals.push(patch.enabled);
+      sets.push(`enabled = $${vals.length}`);
+    }
+    if (patch.access !== undefined) {
+      vals.push(patch.access);
+      sets.push(`access = $${vals.length}`);
+    }
+    if (patch.name !== undefined) {
+      vals.push(patch.name);
+      sets.push(`name = $${vals.length}`);
+    }
+    if (!sets.length) return false;
+    const r = await this.pool.query(`UPDATE capes SET ${sets.join(", ")} WHERE id = $1`, vals);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async deleteCape(id: string) {
+    const r = await this.pool.query("DELETE FROM capes WHERE id = $1", [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async setPlayerCape(minecraftUuid: string, capeId: string | null, now: number) {
+    if (!capeId) {
+      await this.pool.query("DELETE FROM player_capes WHERE minecraft_uuid = $1", [minecraftUuid]);
+      return;
+    }
+    await this.pool.query(
+      `INSERT INTO player_capes (minecraft_uuid, cape_id, updated_at) VALUES ($1, $2, $3)
+       ON CONFLICT (minecraft_uuid) DO UPDATE SET cape_id = EXCLUDED.cape_id, updated_at = EXCLUDED.updated_at`,
+      [minecraftUuid, capeId, ts(now)],
+    );
+  }
+  async getPlayerCape(minecraftUuid: string) {
+    const { rows } = await this.pool.query<{ cape_id: string }>("SELECT cape_id FROM player_capes WHERE minecraft_uuid = $1", [minecraftUuid]);
+    return rows[0]?.cape_id ?? null;
+  }
+  async playerCapes(uuids: string[]) {
+    if (!uuids.length) return {};
+    const { rows } = await this.pool.query<{ minecraft_uuid: string; cape_id: string }>(
+      `SELECT p.minecraft_uuid, p.cape_id FROM player_capes p JOIN capes c ON c.id = p.cape_id
+       WHERE c.enabled AND p.minecraft_uuid = ANY($1::text[])`,
+      [uuids],
+    );
+    const out: Record<string, string> = {};
+    for (const r of rows) out[r.minecraft_uuid] = r.cape_id;
+    return out;
+  }
 }
+
+interface CapeRow {
+  id: string;
+  name: string;
+  access: "everyone" | "premium";
+  png: Buffer;
+  width: number;
+  height: number;
+  enabled: boolean;
+  created_at: Date;
+}
+
+const toCape = (r: CapeRow): Cape => ({
+  id: r.id,
+  name: r.name,
+  access: r.access,
+  png: r.png,
+  width: r.width,
+  height: r.height,
+  enabled: r.enabled,
+  createdAt: r.created_at.getTime(),
+});
+

@@ -5,8 +5,15 @@ import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import {
+  AdminCapeAction,
+  AdminCreateCape,
   AdminCreateKeys,
   AdminKeyAction,
+  CAPE_MAX_BYTES,
+  capeSizeProblem,
+  normalizeUuid,
+  SetCapeRequest,
+  type CapeInfo,
   CheckoutRequest,
   formatKey,
   KEY_ALPHABET,
@@ -39,7 +46,7 @@ import { computeEntitlement, planForPrice } from "./entitlements";
 import { HttpError, makeCtx, RateLimiter, Router, serializeCookie, writeReply, type Ctx, type Reply } from "./http";
 import { hasJoined, MojangUnavailable } from "./mojang";
 import { serveStatic } from "./static";
-import type { LicenseKey, Store, User } from "./store/types";
+import type { Cape, LicenseKey, Store, User } from "./store/types";
 import {
   periodEnd,
   Stripe,
@@ -122,6 +129,8 @@ export function createApp(deps: Deps) {
     // Key checks: generous enough for a launcher re-checking, far too slow to guess keys.
     license: new RateLimiter(30, 30 / 60),
     admin: new RateLimiter(30, 30 / 60),
+    // Clients look up capes of nearby players in batches; generous but bounded.
+    capes: new RateLimiter(60, 1),
   };
   const sweeper = setInterval(() => {
     for (const l of Object.values(limits)) l.sweep();
@@ -712,6 +721,104 @@ export function createApp(deps: Deps) {
     if (!(await store.updateLicense(req.id, patch))) throw new HttpError(404, "not_found", "No such key.");
     log({ msg: "license key updated", key: req.id, action: req.action });
     return { status: 200, body: adminInfo((await store.getLicenseById(req.id))!) };
+  });
+
+  // --- capes ------------------------------------------------------------------
+  //
+  // The owner publishes cape images (admin routes). Players pick one in the launcher. BLOOD Client
+  // looks up the capes of players around it and draws them; only BLOOD users see these capes.
+
+  const capeInfo = (c: Cape): CapeInfo => ({ id: c.id, name: c.name, access: c.access, image: `/v1/capes/${c.id}.png` });
+
+  /** Reads a PNG's size from its header; null if it isn't a PNG. */
+  function pngSize(buf: Buffer): { w: number; h: number } | null {
+    const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    if (buf.length < 24 || sig.some((b, i) => buf[i] !== b) || buf.toString("latin1", 12, 16) !== "IHDR") return null;
+    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  }
+
+  r.get("/v1/capes", async () => {
+    const capes = (await store.listCapes(false)).map(capeInfo);
+    return { status: 200, body: { capes }, headers: { "Cache-Control": "public, max-age=60" } };
+  });
+
+  r.get("/v1/capes/:file", async (ctx) => {
+    limit(ctx, "capes");
+    const m = /^([0-9a-f-]{36})\.png$/.exec(ctx.params.file ?? "");
+    const cape = m ? await store.getCape(m[1]!) : null;
+    if (!cape || !cape.enabled) throw new HttpError(404, "not_found", "No such cape.");
+    // Capes never change in place (a new image is a new cape id), so they can be cached for long.
+    return { status: 200, raw: cape.png, headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400, immutable" } };
+  });
+
+  /** Which cape each player wears: ?uuids=a,b,c (up to 100 Minecraft UUIDs). */
+  r.get("/v1/cape-owners", async (ctx) => {
+    limit(ctx, "capes");
+    const raw = (ctx.query.get("uuids") ?? "").split(",").filter(Boolean);
+    if (raw.length > 100) throw new HttpError(400, "too_many", "Ask for at most 100 players at a time.");
+    const uuids = [...new Set(raw.map((u) => normalizeUuid(u)).filter((u): u is string => typeof u === "string" && /^[0-9a-f]{32}$/.test(u)))];
+    const capes = await store.playerCapes(uuids);
+    return { status: 200, body: { capes }, headers: { "Cache-Control": "public, max-age=30" } };
+  });
+
+  r.get("/v1/me/cape", async (ctx) => {
+    limit(ctx, "general");
+    const { user } = await authenticate(ctx, { required: true });
+    const capeId = await store.getPlayerCape(user.minecraftUuid);
+    const ent = await entitlementFor(user.id, ctx);
+    const capes = (await store.listCapes(false)).map((c) => ({ ...capeInfo(c), allowed: c.access === "everyone" || ent.premium }));
+    return { status: 200, body: { capeId, capes } };
+  });
+
+  r.put("/v1/me/cape", async (ctx) => {
+    limit(ctx, "general");
+    const { user } = await authenticate(ctx, { required: true });
+    const { capeId } = parse(SetCapeRequest, await ctx.json());
+    if (!capeId) {
+      await store.setPlayerCape(user.minecraftUuid, null, now());
+      return { status: 200, body: { capeId: null } };
+    }
+    const cape = await store.getCape(capeId);
+    if (!cape || !cape.enabled) throw new HttpError(404, "not_found", "That cape isn't available.");
+    if (cape.access === "premium" && !(await entitlementFor(user.id, ctx)).premium) {
+      throw new HttpError(402, "premium_required", "This cape is for BLOOD Premium players.");
+    }
+    await store.setPlayerCape(user.minecraftUuid, cape.id, now());
+    log({ msg: "cape chosen", user: user.id, cape: cape.id });
+    return { status: 200, body: { capeId: cape.id } };
+  });
+
+  r.post("/v1/admin/capes", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCreateCape, await ctx.json(800_000));
+    const png = Buffer.from(req.png.replace(/^data:image\/png;base64,/, ""), "base64");
+    if (png.length > CAPE_MAX_BYTES) throw new HttpError(400, "too_large", "The cape image must be at most 512 KB.");
+    const size = pngSize(png);
+    if (!size) throw new HttpError(400, "not_png", "That file isn't a PNG image.");
+    const problem = capeSizeProblem(size.w, size.h);
+    if (problem) throw new HttpError(400, "bad_size", problem);
+    const cape: Cape = { id: randomUUID(), name: req.name, access: req.access, png, width: size.w, height: size.h, enabled: true, createdAt: now() };
+    await store.createCape(cape);
+    log({ msg: "cape published", cape: cape.id });
+    return { status: 200, body: capeInfo(cape) };
+  });
+
+  r.get("/v1/admin/capes", async (ctx) => {
+    requireAdmin(ctx);
+    const capes = (await store.listCapes(true)).map((c) => ({ ...capeInfo(c), enabled: c.enabled, width: c.width, height: c.height, createdAt: c.createdAt }));
+    return { status: 200, body: { capes } };
+  });
+
+  r.post("/v1/admin/capes/update", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCapeAction, await ctx.json());
+    let ok: boolean;
+    if (req.action === "delete") ok = await store.deleteCape(req.id);
+    else if (req.action === "enable" || req.action === "disable") ok = await store.updateCape(req.id, { enabled: req.action === "enable" });
+    else ok = await store.updateCape(req.id, { access: req.action });
+    if (!ok) throw new HttpError(404, "not_found", "No such cape.");
+    log({ msg: "cape updated", cape: req.id, action: req.action });
+    return { status: 200, body: { ok: true } };
   });
 
   // --- pipeline ---------------------------------------------------------------
