@@ -269,7 +269,8 @@ public class BloomMenuScreen extends Screen implements Host {
         float dim = visualsMenu ? BloomSettings.VISUALS_DIM.value() : BloomSettings.MENU_DIM.value();
         if (minecraft != null && minecraft.level == null) dim = 1f;
         g.fillGradient(0, 0, width, height, Theme.alpha(0xFF0C080B, dim * t), Theme.alpha(0xFF1A0E15, dim * t));
-        if (Anim.decorations() && !visualsMenu) drawPetals(g, dt, t);
+        if (ThemeDecor.active()) ThemeDecor.render(g, 0, 0, width, height, dt, visualsMenu ? t * 0.6f : t);
+        else if (Anim.decorations() && !visualsMenu) drawPetals(g, dt, t);
 
         boolean blockedByModal = !popups.isEmpty() && popups.get(popups.size() - 1).modal();
         boolean overPopup = false;
@@ -563,6 +564,7 @@ public class BloomMenuScreen extends Screen implements Host {
 
     @Override
     public void removed() {
+        dev.bloom.client.gui.page.SkyBrowserPage.onMenuClosed();
         BloomClient.get().saveNow();
     }
 

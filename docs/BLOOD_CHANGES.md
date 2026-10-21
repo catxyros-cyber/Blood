@@ -34,6 +34,16 @@ skyboxes, weather, profiles, Premium).
   **Launch anyway** option.
 - Settings explain which changes apply right away and which apply on the next game start.
 
+## Halloween update
+
+- **8 Halloween themes:** Blood Moon, Pumpkin Night, Haunted Forest, Midnight Halloween, Ghostfire,
+  Spiderweb, Crimson Eclipse and Classic BLOOD, with backdrop decorations and recommended skies.
+- **9 procedurally generated 4K skies** (1024 px faces).
+- **Sky browser:** live rotatable preview, favourites, search, filters, Try in world, Restore vanilla.
+- **Imports:** cubemap crosses and six-face sets, with validation, plus replacing an imported image.
+- **Quality and transitions:** four skybox quality levels with memory/GPU fallbacks, cache size,
+  adjustable fade, and turning the sky off now fades.
+
 ## Visuals update
 
 - **Right Ctrl visuals menu**: a compact, docked crimson menu with Visuals, World, Performance and General sections.

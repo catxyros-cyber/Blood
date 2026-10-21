@@ -56,12 +56,14 @@ public final class SkyRenderer {
         pose.mulPose(modelView);
         RenderSystem.depthMask(false);
         try {
-            if (BloomSettings.SKY_ENABLED.on()) {
-                drawSkyboxes(pose, timeOfDay, dayW, rain);
-                drawHorizon(pose);
-            }
+            // Always called: turning the skybox off fades back to Minecraft's sky instead of popping.
+            drawSkyboxes(pose, timeOfDay, dayW, rain, BloomSettings.SKY_ENABLED.on());
+            if (BloomSettings.SKY_ENABLED.on()) drawHorizon(pose);
             if (BloomSettings.SKY_STARS.on() && !BloomSettings.LITE_MODE.on()) drawStars(pose, level.getStarBrightness(partialTick) * (1f - rain), timeOfDay);
             boolean covered = BloomSettings.SKY_ENABLED.on() && !BloomSettings.SKY_DAY.is(SkyboxCatalog.NONE);
+            // The Halloween skies have their own moon (or eclipse) painted in: don't add a second one.
+            String shownNow = preview != null ? preview : BloomSettings.SKY_DAY.id();
+            if (shownNow.startsWith("hw_") || BloomSettings.SKY_NIGHT.id().startsWith("hw_")) covered = false;
             if (BloomSettings.SKY_ENABLED.on() && BloomSettings.SKY_SUN_MOON.on() && covered) drawSunMoon(pose, level, timeOfDay, rain);
             if (BloomSettings.SUN_GLOW.on()) drawGlow(pose, timeOfDay, rain, raw);
         } finally {
@@ -72,20 +74,34 @@ public final class SkyRenderer {
 
     // ------------------------------------------------------------------ skyboxes
 
-    private static final long FADE_MS = 1200;
+    private static long fadeMs() {
+        return Math.round(BloomSettings.SKY_FADE_TIME.value() * 1000f);
+    }
     private static String shownDay, shownNight, fromDay, fromNight;
     private static long fadeStart;
 
-    private static void drawSkyboxes(PoseStack pose, float timeOfDay, float dayW, float rain) {
-        String dayId = BloomSettings.SKY_DAY.id();
-        String nightId = BloomSettings.SKY_NIGHT.id();
+    /** "Try in world" from the sky browser: shown day and night until cleared (menu closed or applied). */
+    private static volatile String preview;
+
+    public static void setPreview(String id) {
+        preview = id;
+    }
+
+    public static String preview() {
+        return preview;
+    }
+
+    private static void drawSkyboxes(PoseStack pose, float timeOfDay, float dayW, float rain, boolean enabled) {
+        String p = preview;
+        String dayId = p != null ? p : enabled ? BloomSettings.SKY_DAY.id() : SkyboxCatalog.NONE;
+        String nightId = p != null ? p : enabled ? BloomSettings.SKY_NIGHT.id() : SkyboxCatalog.NONE;
         long now = System.currentTimeMillis();
         if (shownDay == null) {
             shownDay = dayId;
             shownNight = nightId;
         } else if (!dayId.equals(shownDay) || !nightId.equals(shownNight)) {
             // Smooth transitions: keep drawing the previous skyboxes underneath and fade the new ones in.
-            boolean smooth = BloomSettings.SMOOTH_TRANSITIONS.on() && !BloomSettings.REDUCE_MOTION.on();
+            boolean smooth = BloomSettings.SMOOTH_TRANSITIONS.on() && !BloomSettings.REDUCE_MOTION.on() && fadeMs() > 0;
             fromDay = smooth ? shownDay : null;
             fromNight = smooth ? shownNight : null;
             fadeStart = now;
@@ -94,7 +110,7 @@ public final class SkyRenderer {
         }
         float t = 1f;
         if (fromDay != null) {
-            t = (now - fadeStart) / (float) FADE_MS;
+            t = (now - fadeStart) / (float) Math.max(1L, fadeMs());
             if (t >= 1f) {
                 fromDay = fromNight = null;
                 t = 1f;

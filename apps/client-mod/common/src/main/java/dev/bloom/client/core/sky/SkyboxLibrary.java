@@ -15,7 +15,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 
 /**
@@ -80,10 +82,12 @@ public final class SkyboxLibrary {
                     String file = f.getFileName().toString();
                     String stem = file.substring(0, file.length() - 4);
                     if (!SafeFiles.isSafeName(stem) || !Files.isRegularFile(f)) continue;
-                    if (!prepareFile(f, stem)) continue;
+                    int face = prepareFile(f, stem);
+                    if (face <= 0) continue;
                     Meta m = readMeta(stem);
                     String id = SkyboxCatalog.CUSTOM_PREFIX + stem;
                     metas.put(id, m);
+                    SkyboxCatalog.setCustomFace(id, face);
                     entries.add(new SkyboxCatalog.Entry(id, m.name(), describe(m), false, m.tint()));
                 }
             } catch (IOException e) {
@@ -99,7 +103,8 @@ public final class SkyboxLibrary {
      * atlas is used as-is; a 2:1 panorama is converted to an atlas, with the original kept in
      * {@code skyboxes/originals/}. Anything else is skipped (and logged), never deleted.
      */
-    private boolean prepareFile(Path f, String stem) {
+    /** Returns the face size of a usable skybox file (converting it first if needed), or 0 to skip it. */
+    private int prepareFile(Path f, String stem) {
         try {
             byte[] head;
             try (java.io.InputStream in = Files.newInputStream(f)) {
@@ -108,25 +113,26 @@ public final class SkyboxLibrary {
             PngInfo info = PngInfo.read(head);
             if (info == null) {
                 Log.warn("Skipping skybox " + f.getFileName() + ": not a PNG (or larger than " + PngInfo.MAX_DIMENSION + " px)");
-                return false;
+                return 0;
             }
-            if (CubeLayout.checkAtlasSize(info.width, info.height) == null) return true;
-            if (!Panorama.looksLikePanorama(info.width, info.height)) {
+            if (CubeLayout.checkAtlasSize(info.width, info.height) == null) return info.width / 3;
+            boolean cross = CubeFormats.looksLikeCross(info.width, info.height);
+            if (!Panorama.looksLikePanorama(info.width, info.height) && !cross) {
                 Log.warn("Skipping skybox " + f.getFileName() + ": " + CubeLayout.checkAtlasSize(info.width, info.height));
-                return false;
+                return 0;
             }
             byte[] png = SafeFiles.readLimited(f, MAX_PNG_BYTES);
-            RgbaImage pano = codec.decodePng(png);
-            RgbaImage atlas = Panorama.toAtlas(pano, Panorama.faceSizeFor(pano.width));
+            RgbaImage src = codec.decodePng(png);
+            RgbaImage atlas = cross ? CubeFormats.crossToAtlas(src) : Panorama.toAtlas(src, Panorama.faceSizeFor(src.width));
             Path originals = dir.resolve("originals");
             Files.createDirectories(originals);
             Files.copy(f, SafeFiles.uniqueIn(originals, stem, ".png"));
             SafeFiles.writeAtomic(f, codec.encodePng(atlas));
-            Log.info("Converted 360° panorama " + f.getFileName() + " to a skybox (original kept in skyboxes/originals)");
-            return true;
+            Log.info("Converted " + (cross ? "cubemap cross " : "360° panorama ") + f.getFileName() + " to a skybox (original kept in skyboxes/originals)");
+            return atlas.width / 3;
         } catch (Exception | OutOfMemoryError e) {
             Log.warn("Could not prepare skybox " + f.getFileName(), e);
-            return false;
+            return 0;
         }
     }
 
@@ -185,24 +191,74 @@ public final class SkyboxLibrary {
      * converted into an atlas. Anything else is rejected with an explanation.
      */
     public Imported importPng(byte[] png, String originalFileName) throws IOException {
-        if (png.length > MAX_PNG_BYTES) throw new IOException("The image is larger than 32 MB.");
-        PngInfo info = PngInfo.read(png);
-        if (info == null) throw new IOException("That file isn't a PNG image (or it is larger than 8192 pixels).");
         List<String> notes = new ArrayList<>();
-        RgbaImage atlas;
-        String problem = CubeLayout.checkAtlasSize(info.width, info.height);
-        if (problem == null) {
-            atlas = codec.decodePng(png);
-        } else if (Panorama.looksLikePanorama(info.width, info.height)) {
-            RgbaImage pano = codec.decodePng(png);
-            atlas = Panorama.toAtlas(pano, Panorama.faceSizeFor(pano.width));
-            notes.add("Converted from a 360° panorama.");
-        } else {
-            throw new IOException(problem + " 360° panoramas (twice as wide as tall) are converted automatically.");
-        }
+        RgbaImage atlas = toAtlas(png, notes);
         String name = displayName(originalFileName);
         Meta meta = Meta.simple(name, averageColor(atlas), ProfileCodec.cleanText(baseName(originalFileName), 64));
         return save(atlas, meta, notes);
+    }
+
+    /**
+     * Decodes and validates one PNG and returns it as a 3×2 atlas: an atlas as-is, a 2:1 panorama or a
+     * 4×3 cubemap cross converted. Anything else is rejected with an explanation of what fits.
+     */
+    RgbaImage toAtlas(byte[] png, List<String> notes) throws IOException {
+        if (png.length > MAX_PNG_BYTES) throw new IOException("The image is larger than 32 MB.");
+        PngInfo info = PngInfo.read(png);
+        if (info == null) throw new IOException("That file isn't a PNG image (or it is larger than 8192 pixels).");
+        String problem = CubeLayout.checkAtlasSize(info.width, info.height);
+        if (problem == null) return codec.decodePng(png);
+        if (Panorama.looksLikePanorama(info.width, info.height)) {
+            notes.add("Converted from a 360° panorama (" + info.width + "×" + info.height + ").");
+            RgbaImage pano = codec.decodePng(png);
+            return Panorama.toAtlas(pano, Panorama.faceSizeFor(pano.width));
+        }
+        if (CubeFormats.looksLikeCross(info.width, info.height)) {
+            notes.add("Converted from a cubemap cross (" + info.width + "×" + info.height + ", " + info.width / 4 + " px faces).");
+            return CubeFormats.crossToAtlas(codec.decodePng(png));
+        }
+        throw new IOException(problem + " Also accepted: 360° panoramas (2:1), cubemap crosses (4:3) and a folder or .zip with six face images.");
+    }
+
+    /**
+     * Imports six separate face images (file name -> PNG bytes), e.g. px/nx/py/ny/pz/nz.png or
+     * right/left/top/bottom/front/back.png. Missing, non-square or mismatched faces are reported.
+     */
+    public Imported importFaces(Map<String, byte[]> files, String name) throws IOException {
+        Map<String, byte[]> byFace = new LinkedHashMap<>();
+        Map<String, int[]> sizes = new LinkedHashMap<>();
+        for (Map.Entry<String, byte[]> e : files.entrySet()) {
+            String face = CubeFormats.faceFor(e.getKey());
+            if (face == null) continue;
+            if (byFace.containsKey(face)) throw new IOException("Two files look like the same face: " + e.getKey() + ".");
+            PngInfo info = PngInfo.read(e.getValue());
+            if (info == null) throw new IOException(baseName(e.getKey()) + " isn't a PNG image.");
+            byFace.put(face, e.getValue());
+            sizes.put(face, new int[]{info.width, info.height});
+        }
+        if (byFace.isEmpty()) throw new IOException("No face images found. Name them px/nx/py/ny/pz/nz.png or right/left/top/bottom/front/back.png.");
+        List<String> problems = CubeFormats.checkFaces(sizes);
+        if (!problems.isEmpty()) throw new IOException(String.join(" ", problems));
+        Map<String, RgbaImage> faces = new LinkedHashMap<>();
+        for (Map.Entry<String, byte[]> e : byFace.entrySet()) faces.put(e.getKey(), codec.decodePng(e.getValue()));
+        RgbaImage atlas = CubeFormats.facesToAtlas(faces);
+        Meta meta = Meta.simple(displayName(name), averageColor(atlas), ProfileCodec.cleanText(baseName(name), 64));
+        List<String> notes = new ArrayList<>();
+        notes.add("Built from six face images (" + atlas.width / 3 + " px faces).");
+        return save(atlas, meta, notes);
+    }
+
+    /** Replaces the image of an imported skybox, keeping its name and settings. */
+    public List<String> replace(String entryId, byte[] png) throws IOException {
+        Meta m = metas.get(entryId);
+        if (m == null) throw new IOException("Only imported skyboxes can be replaced.");
+        List<String> notes = new ArrayList<>();
+        RgbaImage atlas = toAtlas(png, notes);
+        SafeFiles.writeAtomic(textureFile(entryId), codec.encodePng(atlas));
+        writeMeta(entryId.substring(SkyboxCatalog.CUSTOM_PREFIX.length()),
+                new Meta(m.name(), m.blend(), m.rotate(), m.speed(), m.axis(), m.suggested(), averageColor(atlas), m.origin()));
+        scan();
+        return notes;
     }
 
     /** Imports one OptiFine sky layer from a pack opened with {@link OptiFineSky#open}. */

@@ -68,7 +68,9 @@ public final class BloomSettings {
             "Master switch for every BLOOD visual effect (sky, particles, HUD). Turn off to see plain Minecraft instantly.", true, "master", "disable", "all");
     public static final ChoiceSetting THEME = choice("ui.theme", GENERAL, "Appearance", "Menu theme",
             "Colour scheme of the BLOOD menu and HUD accents.", "crimson",
-            ChoiceSetting.of("crimson", "Crimson", "obsidian", "Obsidian", "ash", "Ash", "ember", "Ember", "mono", "Monochrome"),
+            ChoiceSetting.of("crimson", "Classic BLOOD", "blood_moon", "Blood Moon", "pumpkin_night", "Pumpkin Night", "haunted_forest", "Haunted Forest",
+                    "midnight_halloween", "Midnight Halloween", "ghostfire", "Ghostfire", "spiderweb", "Spiderweb", "crimson_eclipse", "Crimson Eclipse",
+                    "obsidian", "Obsidian", "ash", "Ash", "ember", "Ember", "mono", "Monochrome"),
             "colour", "color", "red", "black", "grey").profile();
     public static final ColorSetting ACCENT = color("ui.accent", GENERAL, "Appearance", "Accent colour",
             "Highlight colour for toggles, sliders and selected items. Follows the theme until you change it.", 0xE3192F, "highlight").profile();
@@ -83,6 +85,8 @@ public final class BloomSettings {
             "How much the game is dimmed behind the BLOOD menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
             "Pause the game while the BLOOD menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final BoolSetting THEME_DECOR = bool("ui.themeDecor", GENERAL, "Appearance", "Theme decorations",
+            "Embers, bats, mist and webs from the Halloween themes, drawn behind the menus. Off for a plain backdrop.", true, "particles", "halloween");
     public static final ChoiceSetting VISUALS_POSITION = choice("ui.visualsPosition", GENERAL, "Visuals menu (Right Ctrl)", "Menu position",
             "Where the Right Ctrl visuals menu opens. At the side, you can watch your changes in the world.", "left",
             ChoiceSetting.of("left", "Left", "center", "Centre", "right", "Right"), "dock");
@@ -108,6 +112,9 @@ public final class BloomSettings {
     public static final NumberSetting SKY_NIGHT_OPACITY = num("sky.nightOpacity", SKYBOX, "Day and night", "Night-time appearance",
             "How strongly the night skybox covers the vanilla sky.", 1f, 0f, 1f, 0.05f, PERCENT, "", "opacity", "night")
             .<NumberSetting>profile().dependsOn(SKY_ENABLED);
+    public static final NumberSetting SKY_FADE_TIME = num("sky.fadeTime", SKYBOX, "Day and night", "Skybox switch fade",
+            "How long switching skyboxes (or back to Minecraft's sky) crossfades. 0 switches instantly.", 1.2f, 0f, 5f, 0.1f, DECIMAL, " s",
+            "transition", "crossfade").profile();
     public static final NumberSetting SKY_TRANSITION = num("sky.transition", SKYBOX, "Day and night", "Transition intensity",
             "0% gives long, gentle sunrises and sunsets; 100% switches quickly between day and night skyboxes.",
             0.5f, 0f, 1f, 0.05f, PERCENT, "", "sunrise", "sunset", "fade").<NumberSetting>profile().dependsOn(SKY_ENABLED);
@@ -366,9 +373,16 @@ public final class BloomSettings {
     public static final BoolSetting LITE_MODE = bool("perf.lite", PERFORMANCE, "Shader effects", "Performance-friendly mode",
             "Keeps colour grading but turns off glow and sharpening, halves BLOOD's particle budget and drops BLOOD's starfield. Your other settings are kept.",
             false, "fps", "potato", "light").profile();
-    public static final ChoiceSetting SKY_QUALITY = choice("perf.skyQuality", PERFORMANCE, "Shader effects", "Skybox resolution",
-            "Half uses a quarter of the video memory per skybox (256 px faces instead of 512 px), slightly softer.",
-            "full", ChoiceSetting.of("full", "Full", "half", "Half"), "texture", "vram").profile();
+    public static final ChoiceSetting SKY_QUALITY = choice("perf.skyQuality", PERFORMANCE, "Skyboxes", "Skybox quality",
+            "Largest skybox face BLOOD loads: Performance 256 px, Balanced 512 px, High 1024 px (full 4K for the Halloween skies), Ultra up to 2048 px for your own imports. "
+                    + "Larger skies are shrunk on a background thread. Each step down uses a quarter of the video memory.",
+            "high", ChoiceSetting.of("performance", "Performance", "balanced", "Balanced", "high", "High", "ultra", "Ultra"),
+            "texture", "vram", "resolution", "4k").profile();
+    public static final NumberSetting SKY_CACHE = num("perf.skyCache", PERFORMANCE, "Skyboxes", "Skybox cache",
+            "How many skyboxes stay loaded on the GPU for instant switching. Older ones are released.",
+            3f, 1f, 6f, 1f, INTEGER, "", "memory", "cache");
+    public static final BoolSetting SKY_LOAD_CUSTOM = bool("sky.loadCustom", PERFORMANCE, "Skyboxes", "Load custom skyboxes",
+            "Off: your imported skyboxes are hidden and never loaded (the built-in ones still work).", true, "import");
     public static final BoolSetting ADAPTIVE = bool("perf.adaptive", PERFORMANCE, "Adaptive effects", "Reduce effects when FPS drops",
             "While your frame rate is below the target, BLOOD temporarily draws fewer particles and, if needed, skips glow. Your saved settings are not changed.",
             true, "auto", "dynamic");

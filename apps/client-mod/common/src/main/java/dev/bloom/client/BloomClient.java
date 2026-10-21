@@ -13,6 +13,8 @@ import dev.bloom.client.core.profile.ProfileManager;
 import dev.bloom.client.core.settings.BloomSettings;
 import dev.bloom.client.core.settings.Setting;
 import dev.bloom.client.core.settings.SettingsStore;
+import dev.bloom.client.core.sky.SkyFavorites;
+import dev.bloom.client.core.sky.SkyboxCatalog;
 import dev.bloom.client.core.sky.SkyboxLibrary;
 import dev.bloom.client.game.GameEnv;
 import dev.bloom.client.game.McImageCodec;
@@ -54,6 +56,7 @@ public final class BloomClient {
     private final ProfileManager profiles;
     private final HudLayouts hudLayouts;
     private final SkyboxLibrary skyboxes;
+    private final SkyFavorites favorites;
     private final ParticleSystem particles = new ParticleSystem();
     private final GameEnv env = new GameEnv();
     private final FrameStats frames = new FrameStats();
@@ -89,10 +92,17 @@ public final class BloomClient {
         this.hudLayouts = new HudLayouts(store);
         this.profiles = new ProfileManager(configDir.resolve("profiles"), BloomSettings.all(), store, System::currentTimeMillis);
         this.skyboxes = new SkyboxLibrary(configDir.resolve("skyboxes"), new McImageCodec(configDir.resolve(".tmp")));
+        this.favorites = new SkyFavorites(store);
+        store.addSection(favorites);
         this.skyboxes.scan();
         this.store.load();
         this.profiles.ready();
         this.pendingLoadProblem = store.takeLoadProblem();
+        SkyboxCatalog.setCustomEnabled(BloomSettings.SKY_LOAD_CUSTOM.on());
+        BloomSettings.SKY_LOAD_CUSTOM.addListener(s -> {
+            SkyboxCatalog.setCustomEnabled(BloomSettings.SKY_LOAD_CUSTOM.on());
+            Minecraft.getInstance().execute(SkyTextures::invalidateAll);
+        });
         BloomSettings.SKY_DAY.revalidate();
         BloomSettings.SKY_NIGHT.revalidate();
         this.hud = new HudRenderer(this);
@@ -182,6 +192,10 @@ public final class BloomClient {
 
     public SkyboxLibrary skyboxes() {
         return skyboxes;
+    }
+
+    public SkyFavorites favorites() {
+        return favorites;
     }
 
     public ParticleSystem particles() {

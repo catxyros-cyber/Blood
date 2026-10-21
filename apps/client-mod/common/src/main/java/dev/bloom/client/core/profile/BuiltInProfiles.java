@@ -56,7 +56,7 @@ public final class BuiltInProfiles {
                                 .s("perf.quality", "high").n("petals.density", 0.7).b("dust.enabled", true).b("hud.background", false)
                                 .n("leaves.density", 0.6).n("glow.strength", 0.8)),
                 p("performance", "Performance", "Lightweight: plain sky, no particles or glow, half-size textures, colour grading off. For low-end PCs.",
-                        v().b("post.enabled", false).b("perf.lite", true).s("perf.postQuality", "low").s("perf.skyQuality", "half")
+                        v().b("post.enabled", false).b("perf.lite", true).s("perf.postQuality", "low").s("perf.skyQuality", "performance")
                                 .s("perf.quality", "low").b("sky.enabled", false).b("sky.stars", false).b("sky.clouds", false)
                                 .b("petals.enabled", false).b("leaves.enabled", false).b("fireflies.enabled", false).b("dust.enabled", false)
                                 .b("rain.enabled", false).b("snow.enabled", false).b("glow.sun", false).n("env.haze", 0).n("sky.horizonBlend", 0)),

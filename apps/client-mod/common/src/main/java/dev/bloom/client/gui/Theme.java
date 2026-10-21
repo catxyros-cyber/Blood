@@ -20,6 +20,22 @@ public final class Theme {
     private static final Palette MONO = new Palette(0xF0141414, 0xF01B1B1B, 0xFF232323, 0xFF2D2D2D, 0xFF383838, 0xFF3C3C3C,
             0xFFF2F2F2, 0xFFB5B5B5, 0xFF7E7E7E, 0xFFE6E6E6, 0xFF151515, 0xFFE8C36A, 0xFFFF7A7A, 0xFF9BE3A6);
 
+    // Halloween themes
+    private static final Palette BLOOD_MOON = new Palette(0xF0090506, 0xF00E0608, 0xFF160A0C, 0xFF210F12, 0xFF2E1418, 0xFF3A161C,
+            0xFFF6ECEC, 0xFFC0A6A8, 0xFF856A6E, 0xFFD8142A, 0xFFFFFFFF, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+    private static final Palette PUMPKIN_NIGHT = new Palette(0xF0121110, 0xF0181614, 0xFF201D1A, 0xFF2A2521, 0xFF36302A, 0xFF403830,
+            0xFFF8F0E6, 0xFFC8B8A4, 0xFF8A7A68, 0xFFF07A1A, 0xFF1A0C02, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+    private static final Palette HAUNTED_FOREST = new Palette(0xF00A0F0D, 0xF00E1512, 0xFF141D19, 0xFF1B2722, 0xFF23332C, 0xFF2A3C34,
+            0xFFEAF2EE, 0xFFA8BCB2, 0xFF6E8278, 0xFF4FB07A, 0xFF06140C, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+    private static final Palette MIDNIGHT = new Palette(0xF00C0814, 0xF0110C1C, 0xFF181226, 0xFF211932, 0xFF2B2140, 0xFF33284A,
+            0xFFF2ECFF, 0xFFB8ACD4, 0xFF7C6E9A, 0xFF9B5CFF, 0xFFFFFFFF, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+    private static final Palette GHOSTFIRE = new Palette(0xF0080706, 0xF00D0B0A, 0xFF151210, 0xFF1E1A16, 0xFF28221C, 0xFF332B24,
+            0xFFFFF6EE, 0xFFD0C0B0, 0xFF8E7C6C, 0xFFFF8A3A, 0xFF1A0A02, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+    private static final Palette SPIDERWEB = new Palette(0xF00B0B0B, 0xF0101010, 0xFF181818, 0xFF222222, 0xFF2C2C2C, 0xFF3A3A3A,
+            0xFFF5F5F5, 0xFFB0B0B0, 0xFF707070, 0xFFE8E8E8, 0xFF101010, 0xFFE8C36A, 0xFFFF7A7A, 0xFF9BE3A6);
+    private static final Palette CRIMSON_ECLIPSE = new Palette(0xF0100607, 0xF014080A, 0xFF1C0C0E, 0xFF261114, 0xFF32161A, 0xFF3E1A20,
+            0xFFF8EEEE, 0xFFC8A8AC, 0xFF8A6A70, 0xFFB0101F, 0xFFFFFFFF, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
+
     private Theme() {
     }
 
@@ -34,6 +50,13 @@ public final class Theme {
             case "ash" -> ASH;
             case "ember" -> EMBER;
             case "mono" -> MONO;
+            case "blood_moon" -> BLOOD_MOON;
+            case "pumpkin_night" -> PUMPKIN_NIGHT;
+            case "haunted_forest" -> HAUNTED_FOREST;
+            case "midnight_halloween" -> MIDNIGHT;
+            case "ghostfire" -> GHOSTFIRE;
+            case "spiderweb" -> SPIDERWEB;
+            case "crimson_eclipse" -> CRIMSON_ECLIPSE;
             default -> CRIMSON;
         };
     }

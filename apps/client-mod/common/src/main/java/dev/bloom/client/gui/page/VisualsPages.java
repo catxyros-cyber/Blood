@@ -8,6 +8,7 @@ import dev.bloom.client.core.settings.BloomSettings;
 import dev.bloom.client.core.settings.ChoiceSetting;
 import dev.bloom.client.core.settings.Setting;
 import dev.bloom.client.core.sky.SkyboxCatalog;
+import dev.bloom.client.core.visual.Themes;
 import dev.bloom.client.gui.BloomMenuScreen;
 import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
@@ -39,7 +40,9 @@ public final class VisualsPages {
 
     public static List<BloomMenuScreen.Nav> nav() {
         return List.of(
-                new BloomMenuScreen.Nav("Visuals", "skybox", VisualsPage::new, null),
+                new BloomMenuScreen.Nav("Visuals", "effects", VisualsPage::new, null),
+                new BloomMenuScreen.Nav("Skyboxes", "skybox", SkyBrowserPage::new, null),
+                new BloomMenuScreen.Nav("Themes", "color", ThemesPage::new, null),
                 new BloomMenuScreen.Nav("World", "world", WorldPage::new, null),
                 new BloomMenuScreen.Nav("Performance", "performance", PerfPage::new, null),
                 new BloomMenuScreen.Nav("General", "general", GeneralVisualsPage::new, null));
@@ -71,6 +74,7 @@ public final class VisualsPages {
         for (Setting s : VisualsPage.SETTINGS) out.add(s);
         for (Setting s : WorldPage.SETTINGS) out.add(s);
         for (Setting s : PerfPage.SETTINGS) out.add(s);
+        for (Setting s : ThemesPage.SETTINGS) out.add(s);
         out.add(BloomSettings.ENABLED);
         return out;
     }
@@ -103,7 +107,7 @@ public final class VisualsPages {
 
     static final class VisualsPage implements Page {
         static final Setting[] SKY = {BloomSettings.SKY_ENABLED};
-        static final Setting[] SKY_LOOK = {BloomSettings.SKY_TRANSITION, BloomSettings.SKY_BRIGHTNESS, BloomSettings.SKY_SATURATION,
+        static final Setting[] SKY_LOOK = {BloomSettings.SKY_FADE_TIME, BloomSettings.SKY_TRANSITION, BloomSettings.SKY_BRIGHTNESS, BloomSettings.SKY_SATURATION,
                 BloomSettings.SKY_TINT, BloomSettings.SKY_TINT_STRENGTH, BloomSettings.SKY_ROTATION, BloomSettings.SKY_ROTATION_SPEED,
                 BloomSettings.SKY_SUN_MOON, BloomSettings.SKY_STARS, BloomSettings.SKY_CLOUDS, BloomSettings.SUN_GLOW, BloomSettings.SUN_GLOW_STRENGTH};
         static final Setting[] SHADERS = {BloomSettings.POST};
@@ -134,8 +138,8 @@ public final class VisualsPages {
                             .tooltip("Your own presets, import/export and per-biome switching"))));
 
             section(rows, screen, used, "Skybox", SKY);
-            rows.add(new SkyboxPage.ModeRow());
-            rows.add(new SkyboxPage.Grid(screen));
+            rows.add(new Rows.Buttons(List.of(new Button("Open sky browser", "skybox", Button.Style.PRIMARY, () -> screen.switchTo(1))
+                    .tooltip("Live preview, 45 skies including the 4K Halloween set, favourites and imports"))));
             section(rows, screen, used, "Sky look", SKY_LOOK);
 
             section(rows, screen, used, "Shader effects", SHADERS);
@@ -290,6 +294,130 @@ public final class VisualsPages {
         }
     }
 
+    // ------------------------------------------------------------------ Themes
+
+    static final class ThemesPage implements Page {
+        static final Setting[] SETTINGS = {BloomSettings.THEME_DECOR, BloomSettings.ACCENT_FROM_THEME, BloomSettings.ACCENT,
+                BloomSettings.UI_EFFECTS, BloomSettings.REDUCE_MOTION};
+        private final BloomMenuScreen screen;
+
+        ThemesPage(BloomMenuScreen screen) {
+            this.screen = screen;
+        }
+
+        @Override
+        public List<Element> build() {
+            List<Element> rows = new ArrayList<>();
+            Set<Setting> used = new LinkedHashSet<>();
+            rows.add(new Rows.Header("Themes"));
+            rows.add(new ThemeCards(screen));
+            rows.add(new Rows.Info("info", "A theme changes the menu colours, accents and backdrop decoration. Each Halloween theme has a matching 4K sky: "
+                    + "you're asked before it's used, and your own sky choice is never changed otherwise.", Theme.palette().textDim()));
+            section(rows, screen, used, "Appearance", SETTINGS);
+            rows.add(new Rows.Buttons(List.of(resetButton(screen, "Themes", used))));
+            return rows;
+        }
+    }
+
+    static final class ThemeCards extends Element {
+        private final BloomMenuScreen screen;
+
+        ThemeCards(BloomMenuScreen screen) {
+            this.screen = screen;
+        }
+
+        private int cols(int width) {
+            return width >= 300 ? 3 : 2;
+        }
+
+        private int cardW(int width) {
+            int c = cols(width);
+            return (width - (c - 1) * 5) / c;
+        }
+
+        @Override
+        public int preferredHeight(int width) {
+            int c = cols(width);
+            return ((Themes.ALL.size() + c - 1) / c) * 41;
+        }
+
+        @Override
+        public void render(GuiGraphics g, int mx, int my, float dt) {
+            Theme.Palette p = Theme.palette();
+            int c = cols(w), cw = cardW(w);
+            for (int i = 0; i < Themes.ALL.size(); i++) {
+                Themes.Info t = Themes.ALL.get(i);
+                int cx = x + (i % c) * (cw + 5), cy = y + (i / c) * 41;
+                boolean sel = BloomSettings.THEME.is(t.id());
+                boolean over = Ui.inside(mx, my, cx, cy, cw, 36);
+                Theme.Palette tp = Theme.palette(t.id());
+                Ui.smallPanel(g, cx, cy, cw, 36, tp.window() | 0xFF000000);
+                g.fillGradient(cx + 2, cy + 2, cx + cw - 2, cy + 14, 0xFF000000 | t.swatchA(), Theme.alpha(0xFF000000 | t.swatchB(), 0.85f));
+                g.fill(cx + 2, cy + 14, cx + cw - 2, cy + 15, 0xFF000000 | (tp.accent() & 0xFFFFFF));
+                Ui.text(g, Ui.ellipsize(t.name(), cw - 8), cx + 5, cy + 19, sel ? (tp.accent() | 0xFF000000) : tp.text());
+                String sky = t.recommendedSky() == null ? "" : "none".equals(t.recommendedSky()) ? "Vanilla sky" : skyName(t.recommendedSky());
+                Ui.text(g, Ui.ellipsize(sky, cw - 8), cx + 5, cy + 28, tp.textFaint());
+                if (sel) Ui.panelBorder(g, cx, cy, cw, 36, tp.accent() | 0xFF000000);
+                else if (over) Ui.panelBorder(g, cx, cy, cw, 36, Theme.alpha(p.textDim(), 0.5f));
+            }
+        }
+
+        private static String skyName(String id) {
+            SkyboxCatalog.Entry e = SkyboxCatalog.find(id);
+            return e == null ? "" : e.name();
+        }
+
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            int c = cols(w), cw = cardW(w);
+            for (int i = 0; i < Themes.ALL.size(); i++) {
+                int cx = x + (i % c) * (cw + 5), cy = y + (i / c) * 41;
+                if (!Ui.inside(mx, my, cx, cy, cw, 36)) continue;
+                Themes.Info t = Themes.ALL.get(i);
+                Ui.click();
+                BloomSettings.THEME.set(t.id());
+                offerSky(screen, t);
+                screen.requestRebuild();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public List<String> tooltip(int mx, int my) {
+            int c = cols(w), cw = cardW(w);
+            for (int i = 0; i < Themes.ALL.size(); i++) {
+                int cx = x + (i % c) * (cw + 5), cy = y + (i / c) * 41;
+                if (Ui.inside(mx, my, cx, cy, cw, 36)) {
+                    Themes.Info t = Themes.ALL.get(i);
+                    return List.of(t.name(), t.description());
+                }
+            }
+            return null;
+        }
+    }
+
+    /** After a theme change: offer (never force) the theme's matching sky. */
+    static void offerSky(BloomMenuScreen screen, Themes.Info t) {
+        String rec = t.recommendedSky();
+        if (rec == null) return;
+        if ("none".equals(rec)) {
+            if (!BloomSettings.SKY_ENABLED.on()) return;
+            screen.confirm("Use Minecraft's sky too?", t.name() + " goes best with Minecraft's own sky. Your skybox choice is kept unless you switch.",
+                    "Use vanilla sky", false, () -> BloomSettings.SKY_ENABLED.set(false));
+            return;
+        }
+        SkyboxCatalog.Entry sky = SkyboxCatalog.find(rec);
+        if (sky == null) return;
+        if (BloomSettings.SKY_ENABLED.on() && BloomSettings.SKY_DAY.is(rec) && BloomSettings.SKY_NIGHT.is(rec)) return;
+        screen.confirm("Use " + sky.name() + " too?", t.name() + " has a matching sky: " + sky.name() + " (" + SkyboxCatalog.resolutionLabel(rec)
+                + "). Use it day and night? Your current sky is kept if you don't.", "Use this sky", false, () -> {
+            BloomSettings.SKY_DAY.set(rec);
+            BloomSettings.SKY_NIGHT.set(rec);
+            BloomSettings.SKY_ENABLED.set(true);
+        });
+    }
+
     // ------------------------------------------------------------------ World
 
     static final class WorldPage implements Page {
@@ -330,10 +458,11 @@ public final class VisualsPages {
     // ------------------------------------------------------------------ Performance
 
     static final class PerfPage implements Page {
-        static final Setting[] SHADERS = {BloomSettings.POST_QUALITY, BloomSettings.LITE_MODE, BloomSettings.SKY_QUALITY};
+        static final Setting[] SHADERS = {BloomSettings.POST_QUALITY, BloomSettings.LITE_MODE};
+        static final Setting[] SKIES = {BloomSettings.SKY_QUALITY, BloomSettings.SKY_CACHE, BloomSettings.SKY_LOAD_CUSTOM, BloomSettings.SKY_FADE_TIME};
         static final Setting[] PARTICLES = {BloomSettings.QUALITY, BloomSettings.MAX_PARTICLES, BloomSettings.EFFECT_DISTANCE};
         static final Setting[] AUTO = {BloomSettings.ADAPTIVE, BloomSettings.ADAPTIVE_TARGET, BloomSettings.LOW_FPS_TIP};
-        static final List<Setting> SETTINGS = concat(SHADERS, PARTICLES, AUTO);
+        static final List<Setting> SETTINGS = concat(SHADERS, SKIES, PARTICLES, AUTO);
 
         private final BloomMenuScreen screen;
 
@@ -353,7 +482,15 @@ public final class VisualsPages {
                         + Math.round(f * (BloomSettings.LITE_MODE.on() ? 50 : 100)) + "% budget"
                         + (f < 0.99f ? ", reduced while FPS is low" : "") + ")";
             }));
-            section(rows, screen, used, "Shaders and sky", SHADERS);
+            section(rows, screen, used, "Shader effects", SHADERS);
+            section(rows, screen, used, "Skyboxes", SKIES);
+            rows.add(new LiveInfo("skybox", () -> {
+                String reason = SkyTextures.reductionReason();
+                int f = SkyTextures.maxFace();
+                String base = "Skyboxes load at up to " + f + " px faces (" + Math.max(1, f * 4 / 1024) + "K), about "
+                        + (f * 3 * f * 2 * 4 / (1024 * 1024)) + " MB of video memory each. Shrinking happens on a background thread.";
+                return reason != null ? reason : base;
+            }));
             section(rows, screen, used, "Particles", PARTICLES);
             section(rows, screen, used, "Automatic quality", AUTO);
             rows.add(new Rows.Info("info", "Everything here changes real rendering work: glow buffers, sharpening taps, skybox texture size, "

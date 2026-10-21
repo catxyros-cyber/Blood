@@ -6,6 +6,7 @@ import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.Log;
 import dev.bloom.client.core.io.SafeFiles;
 import dev.bloom.client.core.settings.BloomSettings;
+import dev.bloom.client.core.sky.CubeFormats;
 import dev.bloom.client.core.sky.CubeLayout;
 import dev.bloom.client.core.sky.PngInfo;
 import dev.bloom.client.core.sky.SkyboxCatalog;
@@ -32,18 +33,64 @@ import java.util.concurrent.CompletableFuture;
  * a slider never stalls the game; the previous texture is shown until then.
  */
 public final class SkyTextures {
-    private static final int MAX_CACHED = 3;
+    /** Skyboxes kept on the GPU at once ("Skybox cache"); others are released. */
+    private static int maxCached() {
+        return Math.max(1, Math.min(6, BloomSettings.SKY_CACHE.intValue()));
+    }
     private static final long REPROCESS_INTERVAL_MS = 120;
 
-    private record Look(float brightness, float saturation, int tint, float tintStrength, boolean half) {
-        boolean neutral() {
-            return Math.abs(brightness - 1f) < 1e-3 && Math.abs(saturation - 1f) < 1e-3 && tintStrength < 1e-3 && !half;
+    private record Look(float brightness, float saturation, int tint, float tintStrength, int maxFace) {
+        /** True when the bundled texture can be drawn as it is (no colour change, not above the size cap). */
+        boolean neutralFor(String id) {
+            return dev.bloom.client.core.sky.SkyLook.neutral(brightness, saturation, tintStrength) && maxFace >= SkyboxCatalog.nativeFace(id);
         }
 
         static Look current() {
             return new Look(BloomSettings.SKY_BRIGHTNESS.value(), BloomSettings.SKY_SATURATION.value(),
-                    BloomSettings.SKY_TINT.rgb(), BloomSettings.SKY_TINT_STRENGTH.value(), BloomSettings.SKY_QUALITY.is("half"));
+                    BloomSettings.SKY_TINT.rgb(), BloomSettings.SKY_TINT_STRENGTH.value(), SkyTextures.maxFace());
         }
+    }
+
+    /** Face size cap from "Skybox quality", lowered when memory or the GPU can't take more. */
+    public static int maxFace() {
+        int cap = switch (BloomSettings.SKY_QUALITY.id()) {
+            case "performance" -> 256;
+            case "balanced" -> 512;
+            case "ultra" -> 2048;
+            default -> 1024;
+        };
+        if (memoryMb() < 2048 && cap > 512) cap = 512;
+        int gl = glMaxTexture();
+        while (cap > 64 && cap * 3 > gl) cap /= 2;
+        return cap;
+    }
+
+    private static long memoryMb() {
+        return Runtime.getRuntime().maxMemory() / (1024 * 1024);
+    }
+
+    private static int glMaxCache = -1;
+
+    private static int glMaxTexture() {
+        if (glMaxCache < 0) {
+            try {
+                glMaxCache = RenderSystem.maxSupportedTextureSize();
+            } catch (RuntimeException | LinkageError e) {
+                glMaxCache = 8192;
+            }
+        }
+        return glMaxCache;
+    }
+
+    /** Why skyboxes are drawn smaller than the quality setting asks, or null. */
+    public static String reductionReason() {
+        String q = BloomSettings.SKY_QUALITY.id();
+        int wanted = "ultra".equals(q) ? 2048 : "high".equals(q) ? 1024 : 0;
+        if (wanted == 0 || maxFace() >= wanted) return null;
+        if (memoryMb() < 2048) {
+            return "Reduced to 512 px faces: Minecraft has only " + memoryMb() + " MB of memory. Give it at least 2 GB in the launcher for High or Ultra.";
+        }
+        return "Reduced to " + maxFace() + " px faces: your graphics card's largest texture is " + glMaxTexture() + " px.";
     }
 
     private static final class Entry {
@@ -88,7 +135,8 @@ public final class SkyTextures {
         SkyboxCatalog.Entry e = SkyboxCatalog.find(id);
         if (e == null) return null;
         Look look = Look.current();
-        if (e.builtIn() && look.neutral()) return builtIn(id);
+        if (!e.builtIn() && !SkyboxCatalog.customEnabled()) return null;
+        if (e.builtIn() && look.neutralFor(id)) return builtIn(id);
         Entry entry = CACHE.get(id);
         if (entry == null) {
             entry = new Entry(id, counter++);
@@ -108,16 +156,13 @@ public final class SkyTextures {
     }
 
     /** Built-in atlases ship with 512 px faces (see tools/gen_skyboxes.py, tools/import_sbs_skies.py). */
-    public static final int BUILT_IN_FACE = 512;
-
     /** Face size (px) of the texture {@link #get} currently returns for this skybox. */
     public static int faceSize(String id) {
         Entry e = CACHE.get(id);
-        if (e != null && e.texture != null && e.faceSize > 0 && !(SkyboxCatalog.find(id) != null
-                && SkyboxCatalog.find(id).builtIn() && Look.current().neutral())) {
-            return e.faceSize;
-        }
-        return BUILT_IN_FACE;
+        SkyboxCatalog.Entry ce = SkyboxCatalog.find(id);
+        boolean direct = ce != null && ce.builtIn() && Look.current().neutralFor(id);
+        if (!direct && e != null && e.texture != null && e.faceSize > 0) return e.faceSize;
+        return SkyboxCatalog.nativeFace(id);
     }
 
     private static void request(Entry entry, Look look) {
@@ -150,7 +195,7 @@ public final class SkyTextures {
                     throw new IllegalStateException(ex);
                 }
                 synchronized (SOURCE) {
-                    if (SOURCE.size() >= MAX_CACHED) SOURCE.clear();
+                    if (SOURCE.size() >= maxCached()) SOURCE.clear();
                     SOURCE.put(id, src);
                 }
             }
@@ -181,56 +226,22 @@ public final class SkyTextures {
     }
 
     /**
-     * Applies brightness, saturation and tint, and halves the resolution for "Skybox resolution:
-     * Half" (2×2 box filter; each face stays square because faces are an even number of pixels).
-     * Input/output pixels are NativeImage ABGR.
+     * Shrinks to the quality cap (area average, face by face, so faces never bleed) and applies
+     * brightness, saturation and tint (the same maths as the menu preview, see SkyLook). Runs on a
+     * background thread. Input/output pixels are NativeImage ABGR.
      */
     private static NativeImage process(int[] src, Look look) {
-        if (look.half() && src[0] % 6 == 0 && src[1] % 4 == 0 && src[0] >= 96) src = halve(src);
-        int w = src[0], h = src[1];
+        int[] size = new int[2];
+        int[] px = java.util.Arrays.copyOfRange(src, 2, src.length);
+        px = CubeFormats.shrinkAtlas(px, src[0], src[1], look.maxFace(), size);
+        int w = size[0], h = size[1];
         NativeImage out = new NativeImage(w, h, false);
-        float tr = ((look.tint() >> 16) & 255) / 255f, tg = ((look.tint() >> 8) & 255) / 255f, tb = (look.tint() & 255) / 255f;
-        float s = look.saturation(), br = look.brightness(), ts = look.tintStrength();
+        boolean colour = !dev.bloom.client.core.sky.SkyLook.neutral(look.brightness(), look.saturation(), look.tintStrength());
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                int c = src[2 + y * w + x];
-                float r = (c & 255) / 255f, g = ((c >> 8) & 255) / 255f, b = ((c >> 16) & 255) / 255f;
-                int a = (c >>> 24);
-                float luma = 0.2126f * r + 0.7152f * g + 0.0722f * b;
-                r = luma + (r - luma) * s;
-                g = luma + (g - luma) * s;
-                b = luma + (b - luma) * s;
-                if (ts > 0) {
-                    float k = 0.35f + 0.65f * luma;
-                    r += (tr * k - r) * ts;
-                    g += (tg * k - g) * ts;
-                    b += (tb * k - b) * ts;
-                }
-                r *= br;
-                g *= br;
-                b *= br;
-                int ir = clamp(r), ig = clamp(g), ib = clamp(b);
-                out.setPixelRGBA(x, y, (a << 24) | (ib << 16) | (ig << 8) | ir);
-            }
-        }
-        return out;
-    }
-
-    private static int[] halve(int[] src) {
-        int w = src[0], h = src[1], hw = w / 2, hh = h / 2;
-        int[] out = new int[2 + hw * hh];
-        out[0] = hw;
-        out[1] = hh;
-        for (int y = 0; y < hh; y++) {
-            for (int x = 0; x < hw; x++) {
-                int i = 2 + (y * 2) * w + x * 2;
-                int a = src[i], b = src[i + 1], c = src[i + w], d = src[i + w + 1];
-                int px = 0;
-                for (int sh = 0; sh < 32; sh += 8) {
-                    int sum = ((a >>> sh) & 255) + ((b >>> sh) & 255) + ((c >>> sh) & 255) + ((d >>> sh) & 255);
-                    px |= ((sum + 2) / 4) << sh;
-                }
-                out[2 + y * hw + x] = px;
+                int c = px[y * w + x];
+                if (colour) c = dev.bloom.client.core.sky.SkyLook.apply(c, true, look.brightness(), look.saturation(), look.tint(), look.tintStrength());
+                out.setPixelRGBA(x, y, c);
             }
         }
         return out;
@@ -266,7 +277,7 @@ public final class SkyTextures {
     }
 
     private static void trim() {
-        while (CACHE.size() > MAX_CACHED) {
+        while (CACHE.size() > maxCached()) {
             Iterator<Map.Entry<String, Entry>> it = CACHE.entrySet().iterator();
             Entry old = it.next().getValue();
             it.remove();
@@ -281,6 +292,35 @@ public final class SkyTextures {
             e.pending.thenAccept(NativeImage::close);
             e.pending = null;
         }
+    }
+
+    /**
+     * Pixels of a skybox for the menu preview: {w, h, abgr...}, shrunk to at most {@code maxFace}
+     * px faces. File reading happens here (call on the render thread); decoding and shrinking run
+     * in the background. Fails for unknown, disabled or invalid skyboxes.
+     */
+    public static CompletableFuture<int[]> previewPixels(String id, int maxFace) {
+        SkyboxCatalog.Entry e = SkyboxCatalog.find(id);
+        if (e == null) return CompletableFuture.failedFuture(new IllegalArgumentException("Unknown skybox " + id));
+        byte[] bytes = readBytes(id, e.builtIn());
+        if (bytes == null) return CompletableFuture.failedFuture(new IllegalStateException("Couldn't read " + id));
+        return CompletableFuture.supplyAsync(() -> {
+            try (NativeImage img = NativeImage.read(bytes)) {
+                int w = img.getWidth(), h = img.getHeight();
+                if (CubeLayout.checkAtlasSize(w, h) != null) throw new IllegalStateException("bad skybox size " + w + "x" + h);
+                int[] px = new int[w * h];
+                for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) px[y * w + x] = img.getPixelRGBA(x, y);
+                int[] size = new int[2];
+                int[] small = CubeFormats.shrinkAtlas(px, w, h, maxFace, size);
+                int[] out = new int[2 + small.length];
+                out[0] = size[0];
+                out[1] = size[1];
+                System.arraycopy(small, 0, out, 2, small.length);
+                return out;
+            } catch (java.io.IOException ex) {
+                throw new java.io.UncheckedIOException(ex);
+            }
+        });
     }
 
     /** Forget everything (resource reload, skybox deleted or replaced). Render thread only. */

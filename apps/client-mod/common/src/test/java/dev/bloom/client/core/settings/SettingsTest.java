@@ -75,7 +75,7 @@ public class SettingsTest {
         assertFalse(BloomSettings.THEME.fromJson(new JsonPrimitive("neon")));
         assertTrue(BloomSettings.THEME.is("crimson"));
         BloomSettings.THEME.cycle(1);
-        assertTrue(BloomSettings.THEME.is("obsidian"));
+        assertTrue(BloomSettings.THEME.is("blood_moon")); // the Halloween themes follow Classic BLOOD
         BloomSettings.THEME.cycle(-2);
         assertTrue(BloomSettings.THEME.is("mono"));
     }
@@ -94,7 +94,7 @@ public class SettingsTest {
     @Test
     public void skyboxDropdownIncludesVanillaAndBuiltIns() {
         assertEquals("none", BloomSettings.SKY_DAY.options().get(0).id());
-        assertEquals(1 + 11 + 25, BloomSettings.SKY_DAY.options().size()); // vanilla + BLOOD skies + 25 cloudy skies
+        assertEquals(1 + 11 + 9 + 25, BloomSettings.SKY_DAY.options().size()); // vanilla + BLOOD + 4K Halloween + cloudy
         assertTrue(BloomSettings.SKY_DAY.is("crimson_dusk"));
         assertTrue(BloomSettings.SKY_NIGHT.is("blood_moon"));
         assertTrue(BloomSettings.SKY_DAY.isValid("galaxy"));
