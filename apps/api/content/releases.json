@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.9",
+    "date": "2026-10-22",
+    "notes": "Minecraft 1.21.11 support\n\nBLOOD Client 0.2.6."
+  },
+  {
     "version": "1.0.8",
     "date": "2026-10-22",
     "notes": "Cape fixes\n\nBLOOD Client 0.2.5."
