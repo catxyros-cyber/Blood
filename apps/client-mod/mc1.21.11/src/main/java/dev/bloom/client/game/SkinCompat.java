@@ -71,7 +71,16 @@ public final class SkinCompat {
                 String n = comps[i].getName();
                 if (cape < 0 && (n.equals("cape") || n.equals("capeTexture"))) cape = i;
             }
-            if (cape < 0) return new Plan(null, null, -1, null);
+            // In a real (non-development) game Minecraft's record components are obfuscated
+            // (comp_1234), so the names above never match. PlayerSkin always lists the body
+            // texture first and the cape as the next component of that same type
+            // (1.21.1: texture, textureUrl, capeTexture, elytraTexture, …;
+            //  1.21.9+: body, cape, elytra, …), so find it by type instead.
+            if (cape < 0) cape = capeIndexByType(types);
+            if (cape < 0) {
+                warnOnce(new IllegalStateException("Couldn't find the cape in " + skinClass.getName()));
+                return new Plan(null, null, -1, null);
+            }
             Constructor<?> ctor = skinClass.getDeclaredConstructor(types);
             ctor.setAccessible(true);
             Class<?> capeType = types[cape];
@@ -88,6 +97,15 @@ public final class SkinCompat {
             warnOnce(e);
             return new Plan(null, null, -1, null);
         }
+    }
+
+    /** Index of the second component with the same type as the first (the cape), or -1. */
+    static int capeIndexByType(Class<?>[] types) {
+        if (types.length < 2) return -1;
+        Class<?> texture = types[0];
+        if (texture.isPrimitive() || texture == String.class) return -1;
+        for (int i = 1; i < types.length; i++) if (types[i] == texture) return i;
+        return -1;
     }
 
     /** A record implementing {@code type} built from (Identifier id, Identifier texturePath). */

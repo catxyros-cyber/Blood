@@ -739,6 +739,7 @@ export function createApp(deps: Deps) {
     image: `/v1/capes/${c.id}.png`,
     frames: Math.max(1, capeFrames(c.width, c.height)),
     frameMs: c.frameMs,
+    width: c.width,
   });
 
   /** Reads a PNG's size from its header; null if it isn't a PNG. */

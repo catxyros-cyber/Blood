@@ -119,6 +119,7 @@
         img.alt = "";
         img.width = 128;
         img.height = 64;
+        if (c.width > 64) img.className = "hd";
         if (c.frames > 1) {
           // Show the first frame of the strip.
           img.style.objectFit = "cover";
@@ -210,23 +211,65 @@
       stripFrames = fh / (fw / 2);
       fh = fw / 2;
     }
-    if (Math.abs(fw / fh - 2) > 0.02) throw new Error(`A cape must be twice as wide as it is tall (for example 64×32). This one is ${fw}×${fh}.`);
-    const width = CAPE_WIDTHS.find((w) => w >= Math.min(fw, 1024)) ?? 1024;
-    const height = width / 2;
     const n = frames.length > 1 ? frames.length : stripFrames;
     if (n > MAX_FRAMES) throw new Error(`An animated cape can have at most ${MAX_FRAMES} frames. This one has ${n}.`);
+    // Not a cape layout (2:1)? Treat it as artwork and wrap it onto an HD cape.
+    const artwork = Math.abs(fw / fh - 2) > 0.02;
+    const width = artwork ? artworkWidth(fw, fh, n) : CAPE_WIDTHS.find((w) => w >= Math.min(fw, 1024)) ?? 1024;
+    const height = width / 2;
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height * n;
     const g = canvas.getContext("2d");
-    g.imageSmoothingEnabled = false;
+    // Pixel art (64×32, or whole-number upscales of it) stays crisp; HD art is resampled smoothly.
+    const pixelArt = !artwork && (fw <= 64 || (width % fw === 0 && fw % 64 === 0));
+    g.imageSmoothingEnabled = !pixelArt;
+    g.imageSmoothingQuality = "high";
     for (let i = 0; i < n; i++) {
       const src = frames.length > 1 ? frames[i] : frames[0];
       const sy = frames.length > 1 ? 0 : i * fh;
-      g.drawImage(src, 0, sy, fw, fh, 0, i * height, width, height);
+      if (artwork) wrapArtwork(g, src, 0, sy, fw, fh, i * height, width);
+      else g.drawImage(src, 0, sy, fw, fh, 0, i * height, width, height);
     }
     const dataUrl = canvas.toDataURL("image/png");
     return { dataUrl, frames: n, frameMs };
+  }
+
+
+  /** Largest cape width that keeps an artwork animation under the server's size limits. */
+  function artworkWidth(fw, fh, n) {
+    // Roughly one byte per pixel after PNG compression; the server takes up to 4 MB.
+    for (const w of [1024, 512, 256, 128]) if (w * (w / 2) * n <= 3_400_000 && w <= Math.max(128, fw * 2)) return w;
+    return 128;
+  }
+
+  /**
+   * Draws any picture onto one cape frame (Minecraft's 64×32 layout, scaled to `width`):
+   * the artwork covers the outside of the cape and the elytra, the inside gets a darker copy,
+   * and the thin edges take the artwork's colours so no gaps show in game.
+   */
+  function wrapArtwork(g, src, sx, sy, sw, sh, top, width) {
+    const u = width / 64;
+    const cover = (dx, dy, dw, dh) => {
+      const s = Math.max(dw / sw, dh / sh);
+      const cw = dw / s, ch = dh / s;
+      g.drawImage(src, sx + (sw - cw) / 2, sy + (sh - ch) / 2, cw, ch, dx, top + dy, dw, dh);
+    };
+    g.save();
+    g.clearRect(0, top, width, width / 2);
+    // Outside (seen by other players), the edges and top/bottom strips.
+    cover(1 * u, 1 * u, 10 * u, 16 * u);
+    cover(0, 1 * u, 1 * u, 16 * u);
+    cover(11 * u, 1 * u, 1 * u, 16 * u);
+    cover(1 * u, 0, 10 * u, 1 * u);
+    cover(11 * u, 0, 10 * u, 1 * u);
+    // Inside (against the player's back): the same art, darkened.
+    cover(12 * u, 1 * u, 10 * u, 16 * u);
+    g.fillStyle = "rgba(0,0,0,0.55)";
+    g.fillRect(12 * u, top + 1 * u, 10 * u, 16 * u);
+    // Elytra wings.
+    cover(22 * u, 0, 24 * u, 22 * u);
+    g.restore();
   }
 
   $("[data-cape-form]").addEventListener("submit", async (ev) => {

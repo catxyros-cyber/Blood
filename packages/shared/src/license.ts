@@ -97,6 +97,8 @@ export interface CapeInfo {
   frameMs: number;
   /** Image path on the BLOOD server, e.g. /v1/capes/<id>.png */
   image: string;
+  /** Image width in pixels (64 = classic pixel-art cape, 128–1024 = HD). Missing on older servers. */
+  width?: number;
 }
 
 /**

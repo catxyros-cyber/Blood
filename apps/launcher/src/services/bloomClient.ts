@@ -16,6 +16,7 @@ import type { Instance } from "../core/instances/model";
 import { BloomError } from "../core/platform";
 import { slugify } from "../core/util/path";
 import { app, P, path, startTask, endTask, toast, updateTask } from "./app";
+import { capeState, loadCapes } from "./capes";
 import { applyInstallPlan, contentDir, listContent, modrinth, planProjectInstall, type ContentItem } from "./content";
 import { getInstance, instanceGameDir, updateInstance } from "./instances";
 import { native } from "./native";
@@ -109,12 +110,31 @@ export async function disable(inst: Instance): Promise<void> {
 
 /** Called before launching: keeps the managed jar on the bundled version. Never blocks a launch. */
 export async function beforeLaunch(inst: Instance): Promise<void> {
-  if (!inst.bloomClient?.enabled) return;
+  if (!inst.bloomClient?.enabled) {
+    await addForCape(inst);
+    return;
+  }
   const s = await status(inst);
   if (!s.support.ok) return;
   if (!s.enabled || s.updateAvailable) {
     await enable(getInstance(inst.id) ?? inst);
   }
+}
+
+/**
+ * BLOOD capes are drawn by BLOOD Client, so a cape does nothing in an installation without it.
+ * If you've picked a cape and this installation can run BLOOD Client (and you never switched it
+ * off here), add it before launching so your cape shows up in game.
+ */
+async function addForCape(inst: Instance): Promise<void> {
+  if (inst.bloomClient?.enabled === false) return; // turned off on purpose
+  if (inst.loader === "vanilla" || inst.loader === "forge") return;
+  if (capeState.get().status === "idle") await loadCapes().catch(() => undefined);
+  if (!capeState.get().capeId) return;
+  const s = await status(inst);
+  if (!s.support.ok || s.enabled) return;
+  await enable(getInstance(inst.id) ?? inst);
+  toast({ kind: "success", title: "Added BLOOD Client for your cape", message: "Your BLOOD cape is shown in game by BLOOD Client. Turn it off on the BLOOD Mods page if you don't want it." });
 }
 
 // ---------------------------------------------------------------- settings.json
