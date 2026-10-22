@@ -91,24 +91,44 @@ export interface CapeInfo {
   id: string;
   name: string;
   access: CapeAccess;
+  /** Animation frames (1 = still). The image is a vertical strip of frames, each width × width/2. */
+  frames: number;
+  /** Milliseconds per frame. */
+  frameMs: number;
   /** Image path on the BLOOD server, e.g. /v1/capes/<id>.png */
   image: string;
 }
 
-/** Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 1024×512. */
-export const CAPE_MAX_BYTES = 512 * 1024;
+/**
+ * Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 1024×512 per frame.
+ * Animated capes stack their frames vertically (64×32 frames → 64×(32·frames)), up to 64 frames.
+ */
+export const CAPE_MAX_BYTES = 4 * 1024 * 1024;
+export const CAPE_MAX_FRAMES = 64;
+
+/** Number of frames in a cape image of this size (0 if the size isn't valid). */
+export function capeFrames(w: number, h: number): number {
+  const fh = w / 2;
+  if (!Number.isInteger(fh) || fh <= 0 || h % fh !== 0) return 0;
+  return h / fh;
+}
 
 export function capeSizeProblem(w: number, h: number): string | null {
-  if (w !== h * 2) return `A cape image must be twice as wide as it is tall (64×32, 128×64, …). This one is ${w}×${h}.`;
-  if (w < 64 || w > 1024 || w % 64 !== 0) return `A cape image must be 64, 128, 256, 512 or 1024 pixels wide. This one is ${w}.`;
+  if (w < 64 || w > 1024 || w % 64 !== 0) return `A cape must be 64, 128, 256, 512 or 1024 pixels wide. This one is ${w}.`;
+  const frames = capeFrames(w, h);
+  if (frames < 1) return `A cape frame must be twice as wide as it is tall (64×32, 128×64, …). This image is ${w}×${h}.`;
+  if (frames > CAPE_MAX_FRAMES) return `An animated cape can have at most ${CAPE_MAX_FRAMES} frames. This one has ${frames}.`;
+  if (w * h > 1024 * 512 * 16) return "That animation is too big. Use fewer frames or a smaller size.";
   return null;
 }
 
 export const AdminCreateCape = v.object({
   name: v.string({ min: 1, max: 40, trim: true }),
   access: v.literal("everyone", "premium"),
-  /** Base64 PNG. */
-  png: v.string({ min: 16, max: 720_000 }),
+  /** Base64 PNG (animated: a vertical strip of frames; the admin page converts GIFs). */
+  png: v.string({ min: 16, max: 5_600_000 }),
+  /** Milliseconds per frame for animated capes. */
+  frameMs: v.optional(v.number({ min: 20, max: 5000, int: true })),
 });
 export type AdminCreateCape = Infer<typeof AdminCreateCape>;
 

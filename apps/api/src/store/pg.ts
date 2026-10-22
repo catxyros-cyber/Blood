@@ -331,8 +331,8 @@ export class PgStore implements Store {
 
   async createCape(c: Cape) {
     await this.pool.query(
-      "INSERT INTO capes (id, name, access, png, width, height, enabled, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-      [c.id, c.name, c.access, c.png, c.width, c.height, c.enabled, ts(c.createdAt)],
+      "INSERT INTO capes (id, name, access, png, width, height, frame_ms, enabled, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+      [c.id, c.name, c.access, c.png, c.width, c.height, c.frameMs, c.enabled, ts(c.createdAt)],
     );
   }
   async getCape(id: string) {
@@ -341,7 +341,7 @@ export class PgStore implements Store {
   }
   async listCapes(includeDisabled: boolean) {
     const { rows } = await this.pool.query<CapeRow>(
-      `SELECT id, name, access, ''::bytea AS png, width, height, enabled, created_at FROM capes ${includeDisabled ? "" : "WHERE enabled"} ORDER BY created_at`,
+      `SELECT id, name, access, ''::bytea AS png, width, height, frame_ms, enabled, created_at FROM capes ${includeDisabled ? "" : "WHERE enabled"} ORDER BY created_at`,
     );
     return rows.map(toCape);
   }
@@ -450,6 +450,7 @@ interface CapeRow {
   png: Buffer;
   width: number;
   height: number;
+  frame_ms: number;
   enabled: boolean;
   created_at: Date;
 }
@@ -461,6 +462,7 @@ const toCape = (r: CapeRow): Cape => ({
   png: r.png,
   width: r.width,
   height: r.height,
+  frameMs: r.frame_ms ?? 100,
   enabled: r.enabled,
   createdAt: r.created_at.getTime(),
 });

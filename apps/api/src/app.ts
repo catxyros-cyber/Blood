@@ -11,6 +11,7 @@ import {
   AdminKeyAction,
   AdminSetTag,
   CAPE_MAX_BYTES,
+  capeFrames,
   ONLINE_WINDOW_MS,
   PresenceRequest,
   capeSizeProblem,
@@ -731,7 +732,14 @@ export function createApp(deps: Deps) {
   // The owner publishes cape images (admin routes). Players pick one in the launcher. BLOOD Client
   // looks up the capes of players around it and draws them; only BLOOD users see these capes.
 
-  const capeInfo = (c: Cape): CapeInfo => ({ id: c.id, name: c.name, access: c.access, image: `/v1/capes/${c.id}.png` });
+  const capeInfo = (c: Cape): CapeInfo => ({
+    id: c.id,
+    name: c.name,
+    access: c.access,
+    image: `/v1/capes/${c.id}.png`,
+    frames: Math.max(1, capeFrames(c.width, c.height)),
+    frameMs: c.frameMs,
+  });
 
   /** Reads a PNG's size from its header; null if it isn't a PNG. */
   function pngSize(buf: Buffer): { w: number; h: number } | null {
@@ -751,7 +759,17 @@ export function createApp(deps: Deps) {
     const cape = m ? await store.getCape(m[1]!) : null;
     if (!cape || !cape.enabled) throw new HttpError(404, "not_found", "No such cape.");
     // Capes never change in place (a new image is a new cape id), so they can be cached for long.
-    return { status: 200, raw: cape.png, headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400, immutable" } };
+    return {
+      status: 200,
+      raw: cape.png,
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=86400, immutable",
+        // BLOOD Client reads the animation speed from here (frames come from the image size).
+        "X-Cape-Frame-Ms": String(cape.frameMs),
+        "Access-Control-Expose-Headers": "X-Cape-Frame-Ms",
+      },
+    };
   });
 
   /** Which cape each player wears: ?uuids=a,b,c (up to 100 Minecraft UUIDs). */
@@ -793,14 +811,14 @@ export function createApp(deps: Deps) {
 
   r.post("/v1/admin/capes", async (ctx) => {
     requireAdmin(ctx);
-    const req = parse(AdminCreateCape, await ctx.json(800_000));
+    const req = parse(AdminCreateCape, await ctx.json(6_000_000));
     const png = Buffer.from(req.png.replace(/^data:image\/png;base64,/, ""), "base64");
-    if (png.length > CAPE_MAX_BYTES) throw new HttpError(400, "too_large", "The cape image must be at most 512 KB.");
+    if (png.length > CAPE_MAX_BYTES) throw new HttpError(400, "too_large", "The cape image must be at most 4 MB.");
     const size = pngSize(png);
     if (!size) throw new HttpError(400, "not_png", "That file isn't a PNG image.");
     const problem = capeSizeProblem(size.w, size.h);
     if (problem) throw new HttpError(400, "bad_size", problem);
-    const cape: Cape = { id: randomUUID(), name: req.name, access: req.access, png, width: size.w, height: size.h, enabled: true, createdAt: now() };
+    const cape: Cape = { id: randomUUID(), name: req.name, access: req.access, png, width: size.w, height: size.h, frameMs: req.frameMs ?? 100, enabled: true, createdAt: now() };
     await store.createCape(cape);
     log({ msg: "cape published", cape: cape.id });
     return { status: 200, body: capeInfo(cape) };

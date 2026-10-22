@@ -449,6 +449,14 @@ test("capes: admin publishes, players choose, clients look them up", async () =>
     const gold = (await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Gold", access: "premium", png: png(128, 64) } })).body;
     assert.match(red.image, /^\/v1\/capes\/[0-9a-f-]{36}\.png$/);
 
+    const anim = (await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Flame", access: "everyone", png: png(64, 32 * 8), frameMs: 80 } })).body;
+    assert.equal(anim.frames, 8);
+    assert.equal(anim.frameMs, 80);
+    assert.equal((await h.call("GET", anim.image)).headers.get("x-cape-frame-ms"), "80");
+    const tooManyFrames = await h.call("POST", "/v1/admin/capes", { token: ADMIN, json: { name: "Long", access: "everyone", png: png(64, 32 * 65) } });
+    assert.equal(tooManyFrames.body.error.code, "bad_size");
+    await h.call("POST", "/v1/admin/capes/update", { token: ADMIN, json: { id: anim.id, action: "delete" } });
+
     const list = await h.call("GET", "/v1/capes");
     assert.deepEqual(list.body.capes.map((c: { name: string }) => c.name), ["Red", "Gold"]);
     const img = await h.call("GET", red.image);

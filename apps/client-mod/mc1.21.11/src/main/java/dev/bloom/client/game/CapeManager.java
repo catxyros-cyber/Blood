@@ -16,7 +16,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,9 +32,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * or with "BLOOD capes" off, nothing is requested.
  */
 public final class CapeManager {
-    private static final long MAX_PNG = 512 * 1024;
+    private static final long MAX_PNG = 4L * 1024 * 1024;
+    private static final int MAX_FRAMES = 64;
     private static final CapeDirectory DIRECTORY = new CapeDirectory();
-    private static final Map<String, Identifier> TEXTURES = new ConcurrentHashMap<>();
+    /** A loaded cape: one texture per animation frame (one for still capes). */
+    private record Anim(Identifier[] frames, int frameMs) {
+        Identifier now() {
+            if (frames.length == 1) return frames[0];
+            return frames[(int) ((System.currentTimeMillis() / frameMs) % frames.length)];
+        }
+    }
+
+    private static final Map<String, Anim> TEXTURES = new ConcurrentHashMap<>();
     private static final Set<String> LOADING = ConcurrentHashMap.newKeySet();
     private static final Set<String> FAILED = ConcurrentHashMap.newKeySet();
     private static final String API = apiBase();
@@ -69,9 +77,9 @@ public final class CapeManager {
         if (API == null || !BloomSettings.CAPES.on()) return null;
         String id = DIRECTORY.capeOf(uuid.toString());
         if (id == null) return null;
-        Identifier tex = TEXTURES.get(id);
-        if (tex == null && !FAILED.contains(id) && LOADING.add(id)) download(id);
-        return tex;
+        Anim anim = TEXTURES.get(id);
+        if (anim == null && !FAILED.contains(id) && LOADING.add(id)) download(id);
+        return anim == null ? null : anim.now();
     }
 
     /** The player's BLOOD tag (e.g. [OWNER]), or null. */
@@ -134,16 +142,30 @@ public final class CapeManager {
                 if (res != null && res.statusCode() == 404) FAILED.add(capeId);
                 return;
             }
-            NativeImage img;
-            try {
-                img = NativeImage.read(new java.io.ByteArrayInputStream(res.body()));
+            int frameMs = res.headers().firstValue("X-Cape-Frame-Ms").map(x -> {
+                try {
+                    return Math.max(20, Math.min(5000, Integer.parseInt(x.trim())));
+                } catch (NumberFormatException e) {
+                    return 100;
+                }
+            }).orElse(100);
+            NativeImage[] frames;
+            try (NativeImage img = NativeImage.read(new java.io.ByteArrayInputStream(res.body()))) {
                 int w = img.getWidth(), h = img.getHeight();
-                if (w != h * 2 || w < 64 || w > 1024) {
+                int fh = w / 2;
+                int count = fh > 0 && h % fh == 0 ? h / fh : 0;
+                if (w < 64 || w > 1024 || w % 2 != 0 || count < 1 || count > MAX_FRAMES) {
                     Log.warn("BLOOD capes: cape " + capeId + " is " + w + "x" + h + ", not a cape layout");
-                    img.close();
                     FAILED.add(capeId);
                     LOADING.remove(capeId);
                     return;
+                }
+                // Animated capes are a vertical strip: cut it into one image per frame.
+                frames = new NativeImage[count];
+                for (int i = 0; i < count; i++) {
+                    NativeImage frame = new NativeImage(w, fh, false);
+                    for (int y = 0; y < fh; y++) for (int x = 0; x < w; x++) frame.setPixel(x, y, img.getPixel(x, i * fh + y));
+                    frames[i] = frame;
                 }
             } catch (Exception e) {
                 Log.warn("BLOOD cape " + capeId + " isn't a valid image", e);
@@ -151,11 +173,17 @@ public final class CapeManager {
                 LOADING.remove(capeId);
                 return;
             }
+            final NativeImage[] cut = frames;
+            final int ms = frameMs;
             Minecraft.getInstance().execute(() -> {
-                Identifier rl = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "capes/" + capeId);
-                Minecraft.getInstance().getTextureManager().register(rl, new DynamicTexture(() -> "BLOOD cape " + capeId, img));
-                TEXTURES.put(capeId, rl);
-                Log.info("BLOOD capes: loaded cape " + capeId);
+                Identifier[] ids = new Identifier[cut.length];
+                for (int i = 0; i < cut.length; i++) {
+                    NativeImage frame = cut[i];
+                    ids[i] = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "capes/" + capeId + "/" + i);
+                    Minecraft.getInstance().getTextureManager().register(ids[i], new DynamicTexture(() -> "BLOOD cape " + capeId, frame));
+                }
+                TEXTURES.put(capeId, new Anim(ids, ms));
+                Log.info("BLOOD capes: loaded cape " + capeId + (cut.length > 1 ? " (" + cut.length + " frames)" : ""));
                 LOADING.remove(capeId);
             });
         });
@@ -164,7 +192,7 @@ public final class CapeManager {
     /** Leaving a world, or capes turned off: forget lookups and free the textures (render thread). */
     public static void clear() {
         DIRECTORY.clear();
-        for (Identifier rl : new HashSet<>(TEXTURES.values())) Minecraft.getInstance().getTextureManager().release(rl);
+        for (Anim a : new java.util.ArrayList<>(TEXTURES.values())) for (Identifier rl : a.frames()) Minecraft.getInstance().getTextureManager().release(rl);
         TEXTURES.clear();
         FAILED.clear();
     }

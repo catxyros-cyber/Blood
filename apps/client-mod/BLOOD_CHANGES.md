@@ -24,3 +24,8 @@
 - Removed the 20 skies BLOOD generated itself (11 procedural + 9 Halloween) and their generators.
 - Added 33 skies from the "Fantasy Skybox FREE" pack (supplied by the owner), converted by `tools/import_fantasy_skies.py`: 9 classic cubemaps and 4 panorama sets (day, night, sunrise, sunset, rain, snow). Sun-less/moon-less versions are used so BLOOD's own sun and moon don't double up; sunrise/sunset skies hide BLOOD's sun.
 - Old sky ids in settings and profiles are mapped to the closest new sky (`SkyboxCatalog.migrate`, launcher `migrateSky`). New defaults: Crimson Sunset by day, Crimson Night at night.
+
+## Animated capes
+- Admin page takes PNG, JPG, WebP and animated GIF/WebP (converted in the browser into a vertical PNG strip, up to 64 frames, 4 MB), or a ready-made PNG strip with a frame time.
+- Server stores `frame_ms` (migration 005) and sends it as `X-Cape-Frame-Ms`; frames come from the image size (frame = width × width/2).
+- BLOOD Client (1.21.1 and 1.21.11) cuts the strip into one texture per frame and plays it on the cape and elytra; the launcher preview animates too.

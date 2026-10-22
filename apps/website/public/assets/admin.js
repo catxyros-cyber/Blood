@@ -119,12 +119,18 @@
         img.alt = "";
         img.width = 128;
         img.height = 64;
+        if (c.frames > 1) {
+          // Show the first frame of the strip.
+          img.style.objectFit = "cover";
+          img.style.objectPosition = "top";
+        }
         const name = document.createElement("div");
         name.className = "admin-cape-name";
         name.textContent = c.name;
         const meta = document.createElement("div");
         meta.className = "muted";
-        meta.textContent = `${c.width}×${c.height} · ${c.access === "premium" ? "Premium only" : "Everyone"}${c.enabled ? "" : " · hidden"}`;
+        const anim = c.frames > 1 ? ` · animated, ${c.frames} frames` : "";
+        meta.textContent = `${c.width}×${c.width / 2}${anim} · ${c.access === "premium" ? "Premium only" : "Everyone"}${c.enabled ? "" : " · hidden"}`;
         const actions = document.createElement("div");
         actions.className = "admin-actions";
         const act = (label, action, danger) => {
@@ -156,25 +162,97 @@
     }
   }
 
+  // ---------------------------------------------------------------- cape images
+
+  const CAPE_WIDTHS = [64, 128, 256, 512, 1024];
+  const MAX_FRAMES = 64;
+
+  /**
+   * Turns any image into a cape PNG. Animated GIF/WebP/APNG frames (decoded by the browser) become
+   * a vertical strip, one frame under the other. Images in the cape layout but at an odd size are
+   * scaled (pixel-sharp) to the nearest valid width.
+   */
+  async function capeFromFile(file) {
+    let frames = [];
+    let frameMs = 100;
+    if (typeof ImageDecoder === "function" && /gif|webp|apng|png/.test(file.type)) {
+      try {
+        const dec = new ImageDecoder({ data: await file.arrayBuffer(), type: file.type });
+        await dec.tracks.ready;
+        const count = dec.tracks.selectedTrack ? dec.tracks.selectedTrack.frameCount : 1;
+        if (count > 1) {
+          const step = Math.max(1, Math.ceil(count / MAX_FRAMES));
+          let total = 0;
+          for (let i = 0; i < count; i += step) {
+            const { image } = await dec.decode({ frameIndex: i });
+            const bmp = await createImageBitmap(image);
+            total += (image.duration || 100000) / 1000;
+            image.close();
+            frames.push(bmp);
+          }
+          frameMs = Math.max(20, Math.round((total / frames.length) * step));
+        }
+        dec.close();
+      } catch {
+        frames = [];
+      }
+    }
+    if (!frames.length) {
+      if (file.type === "image/gif" && typeof ImageDecoder !== "function") {
+        throw new Error("This browser can't read animated GIFs. Use Chrome or Edge, or upload a PNG strip.");
+      }
+      frames = [await createImageBitmap(file)];
+    }
+    let fw = frames[0].width, fh = frames[0].height;
+    // One tall image with frames stacked vertically (a "strip").
+    let stripFrames = 1;
+    if (frames.length === 1 && fh > fw / 2 && Number.isInteger(fw / 2) && fh % (fw / 2) === 0) {
+      stripFrames = fh / (fw / 2);
+      fh = fw / 2;
+    }
+    if (Math.abs(fw / fh - 2) > 0.02) throw new Error(`A cape must be twice as wide as it is tall (for example 64×32). This one is ${fw}×${fh}.`);
+    const width = CAPE_WIDTHS.find((w) => w >= Math.min(fw, 1024)) ?? 1024;
+    const height = width / 2;
+    const n = frames.length > 1 ? frames.length : stripFrames;
+    if (n > MAX_FRAMES) throw new Error(`An animated cape can have at most ${MAX_FRAMES} frames. This one has ${n}.`);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height * n;
+    const g = canvas.getContext("2d");
+    g.imageSmoothingEnabled = false;
+    for (let i = 0; i < n; i++) {
+      const src = frames.length > 1 ? frames[i] : frames[0];
+      const sy = frames.length > 1 ? 0 : i * fh;
+      g.drawImage(src, 0, sy, fw, fh, 0, i * height, width, height);
+    }
+    const dataUrl = canvas.toDataURL("image/png");
+    return { dataUrl, frames: n, frameMs };
+  }
+
   $("[data-cape-form]").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const f = new FormData(ev.target);
     const file = f.get("file");
     const capeMsg = $("[data-cape-msg]");
-    if (!file || !file.size) return msg(capeMsg, "Choose a PNG file.", true);
-    if (file.size > 512 * 1024) return msg(capeMsg, "The image must be at most 512 KB.", true);
-    const data = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(String(r.result));
-      r.onerror = () => rej(new Error("Couldn't read the file."));
-      r.readAsDataURL(file);
-    });
+    if (!file || !file.size) return msg(capeMsg, "Choose an image.", true);
+    if (file.size > 20 * 1024 * 1024) return msg(capeMsg, "The file is too big (max 20 MB before conversion).", true);
+    let cape;
+    try {
+      msg(capeMsg, "Preparing the image…");
+      cape = await capeFromFile(file);
+    } catch (e) {
+      return msg(capeMsg, e.message, true);
+    }
+    const typedMs = Number(f.get("frameMs"));
+    const frameMs = typedMs >= 20 ? Math.round(typedMs) : cape.frameMs;
+    const data = cape.dataUrl;
+    if (data.length * 0.75 > 4 * 1024 * 1024) return msg(capeMsg, "That cape is over 4 MB after conversion. Use fewer frames or a smaller size.", true);
     const submit = ev.target.querySelector("button[type=submit]");
     submit.disabled = true;
     msg(capeMsg, "Publishing…");
     try {
-      await api("POST", "/v1/admin/capes", { name: String(f.get("name")).trim(), access: f.get("access"), png: data });
-      msg(capeMsg, "Published. Players can pick it in the BLOOD launcher.");
+      await api("POST", "/v1/admin/capes", { name: String(f.get("name")).trim(), access: f.get("access"), png: data, ...(cape.frames > 1 ? { frameMs } : {}) });
+      msg(capeMsg, cape.frames > 1 ? `Published an animated cape (${cape.frames} frames). Players can pick it in the BLOOD launcher.` : "Published. Players can pick it in the BLOOD launcher.");
       ev.target.reset();
       await loadCapes();
     } catch (e) {

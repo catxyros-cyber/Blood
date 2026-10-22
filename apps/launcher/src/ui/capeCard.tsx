@@ -6,8 +6,15 @@ import { useStore } from "../services/store";
 import { Button, Card, cx, Spinner } from "./components";
 import { Icon } from "./icons";
 
-/** The front of the cape (Minecraft's layout: 10×16 at (1,1) of a 64×32 texture), scaled up crisply. */
+/** The front of the cape (Minecraft's layout: 10×16 at (1,1) of a 64×32 frame), scaled up crisply. Animated capes play. */
 function CapeFront({ cape, size = 4 }: { cape: CapeChoice; size?: number }) {
+  const frames = Math.max(1, cape.frames ?? 1);
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    if (frames <= 1) return;
+    const t = setInterval(() => setFrame((f) => (f + 1) % frames), Math.max(20, cape.frameMs ?? 100));
+    return () => clearInterval(t);
+  }, [frames, cape.frameMs]);
   return (
     <div
       className="rounded-sm"
@@ -15,8 +22,8 @@ function CapeFront({ cape, size = 4 }: { cape: CapeChoice; size?: number }) {
         width: 10 * size,
         height: 16 * size,
         backgroundImage: `url("${capeImage(cape)}")`,
-        backgroundSize: `${64 * size}px ${32 * size}px`,
-        backgroundPosition: `${-1 * size}px ${-1 * size}px`,
+        backgroundSize: `${64 * size}px ${32 * size * frames}px`,
+        backgroundPosition: `${-1 * size}px ${-1 * size - frame * 32 * size}px`,
         imageRendering: "pixelated",
       }}
     />

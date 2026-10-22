@@ -65,7 +65,7 @@
 
           <div class="card u-mt20">
             <h3>Capes</h3>
-            <p class="muted">Publish capes for BLOOD players. Use Minecraft's cape layout: a PNG 64×32 (or an HD multiple: 128×64 … 1024×512), at most 512 KB. Only players using BLOOD see these capes.</p>
+            <p class="muted">Publish capes for BLOOD players. Use Minecraft's cape layout: 64×32 (or an HD multiple: 128×64 … 1024×512). PNG, JPG, WebP or an <b>animated GIF</b> (up to 64 frames); for animations you can also upload a PNG strip with the frames stacked top to bottom. Only players using BLOOD see these capes.</p>
             <form class="admin-form u-mt16" data-cape-form>
               <div class="row">
                 <label class="grow">Cape name
@@ -78,7 +78,10 @@
                   </select>
                 </label>
                 <label>Image
-                  <input type="file" name="file" accept="image/png" required />
+                  <input type="file" name="file" accept="image/png,image/gif,image/webp,image/jpeg" required />
+                </label>
+                <label>Frame time (ms)
+                  <input type="number" name="frameMs" min="20" max="5000" step="10" placeholder="from the GIF" />
                 </label>
                 <button class="btn btn-primary" type="submit">Publish</button>
               </div>

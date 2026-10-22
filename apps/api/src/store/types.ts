@@ -72,7 +72,10 @@ export interface Cape {
   access: "everyone" | "premium";
   png: Buffer;
   width: number;
+  /** Total PNG height: frames × width/2 (animated capes are a vertical strip of frames). */
   height: number;
+  /** Milliseconds per frame (animated capes). */
+  frameMs: number;
   enabled: boolean;
   createdAt: number;
 }
