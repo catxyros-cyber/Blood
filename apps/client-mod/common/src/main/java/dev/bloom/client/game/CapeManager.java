@@ -51,6 +51,10 @@ public final class CapeManager {
         return null;
     }
 
+    static {
+        Log.info(API == null ? "BLOOD capes: no server address from the launcher (-Dbloodclient.api), capes and tags are off" : "BLOOD capes: using " + API);
+    }
+
     public static boolean available() {
         return API != null;
     }
@@ -107,11 +111,13 @@ public final class CapeManager {
         http().sendAsync(req, HttpResponse.BodyHandlers.ofString()).whenComplete((res, err) -> {
             long t = System.currentTimeMillis();
             if (err != null || res.statusCode() != 200) {
+                Log.warn("BLOOD capes: lookup failed (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
                 DIRECTORY.failed(due, t);
                 return;
             }
             try {
                 DIRECTORY.answer(due, res.body(), t);
+                Log.info("BLOOD capes: looked up " + due.size() + " player(s): " + res.body());
             } catch (RuntimeException e) {
                 DIRECTORY.failed(due, t);
             }
@@ -122,6 +128,7 @@ public final class CapeManager {
         HttpRequest req = HttpRequest.newBuilder(URI.create(API + "/v1/capes/" + capeId + ".png")).timeout(Duration.ofSeconds(15)).GET().build();
         http().sendAsync(req, HttpResponse.BodyHandlers.ofByteArray()).whenComplete((res, err) -> {
             if (err != null || res.statusCode() != 200 || res.body().length > MAX_PNG) {
+                Log.warn("BLOOD capes: couldn't download cape " + capeId + " (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
                 LOADING.remove(capeId);
                 if (res != null && res.statusCode() == 404) FAILED.add(capeId);
                 return;
@@ -131,6 +138,7 @@ public final class CapeManager {
                 img = NativeImage.read(new java.io.ByteArrayInputStream(res.body()));
                 int w = img.getWidth(), h = img.getHeight();
                 if (w != h * 2 || w < 64 || w > 1024) {
+                    Log.warn("BLOOD capes: cape " + capeId + " is " + w + "x" + h + ", not a cape layout");
                     img.close();
                     FAILED.add(capeId);
                     LOADING.remove(capeId);
@@ -146,6 +154,7 @@ public final class CapeManager {
                 ResourceLocation rl = ResourceLocation.fromNamespaceAndPath(BloomClient.MOD_ID, "capes/" + capeId);
                 Minecraft.getInstance().getTextureManager().register(rl, new DynamicTexture(img));
                 TEXTURES.put(capeId, rl);
+                Log.info("BLOOD capes: loaded cape " + capeId);
                 LOADING.remove(capeId);
             });
         });
