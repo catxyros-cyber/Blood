@@ -78,7 +78,7 @@ public class SettingsStoreTest {
         SettingsStore st = store();
         st.load();
         assertEquals(0.2f, BloomSettings.PETAL_DENSITY.value(), 1e-6);
-        assertTrue(BloomSettings.SKY_DAY.is("crimson_dusk"));
+        assertTrue(BloomSettings.SKY_DAY.is("fs_013_sunset"));
         assertTrue(BloomSettings.RAIN.on());
         BloomSettings.SNOW.set(true);
         st.flush();
@@ -137,9 +137,9 @@ public class SettingsStoreTest {
         st.load();
         java.util.Set<String> seen = new java.util.HashSet<>();
         st.addExternalChangeListener((k, s) -> seen.addAll(k));
-        launcherEdit("sky.day", "galaxy");
+        launcherEdit("sky.day", "fs_classic_night_3");
         st.checkExternal();
         assertEquals(java.util.Set.of("sky.day"), seen);
-        assertTrue(BloomSettings.SKY_DAY.is("galaxy"));
+        assertTrue(BloomSettings.SKY_DAY.is("fs_classic_night_3"));
     }
 }

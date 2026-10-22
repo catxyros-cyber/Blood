@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { BUILT_IN_SKYBOXES, MENU_KEYS, MENU_THEMES, QUALITY_PRESETS, menuKeyLabel, type ProfileInfo } from "../../core/bloomclient/catalog";
+import { BUILT_IN_SKYBOXES, DEFAULT_SKY_DAY, DEFAULT_SKY_NIGHT, migrateSky, MENU_KEYS, MENU_THEMES, QUALITY_PRESETS, menuKeyLabel, type ProfileInfo } from "../../core/bloomclient/catalog";
 import type { SettingsView } from "../../core/bloomclient/settingsFile";
 import { preferredVersion } from "../../core/bloomclient/support";
 import type { Instance } from "../../core/instances/model";
@@ -350,8 +350,8 @@ function SkyboxSection({ inst, view, custom, onPick, onImported }: {
 }) {
   const [slot, setSlot] = useState<"day" | "night">("day");
   const [importing, setImporting] = useState(false);
-  const day = (view?.settings["sky.day"] as string | undefined) ?? "crimson_dusk";
-  const night = (view?.settings["sky.night"] as string | undefined) ?? "blood_moon";
+  const day = migrateSky((view?.settings["sky.day"] as string | undefined) ?? DEFAULT_SKY_DAY);
+  const night = migrateSky((view?.settings["sky.night"] as string | undefined) ?? DEFAULT_SKY_NIGHT);
   const items = useMemo(
     () => [
       { id: "none", name: "Vanilla sky", preview: null as string | null, custom: false },
@@ -465,8 +465,8 @@ function MenuKeyRow({ inst, running }: { inst: Instance; running: boolean }) {
 
 function Preview({ view, custom, installed }: { view: SettingsView | null; custom: CustomSkybox[]; installed: boolean }) {
   const s = view?.settings ?? {};
-  const day = (s["sky.day"] as string | undefined) ?? "crimson_dusk";
-  const night = (s["sky.night"] as string | undefined) ?? "blood_moon";
+  const day = migrateSky((s["sky.day"] as string | undefined) ?? DEFAULT_SKY_DAY);
+  const night = migrateSky((s["sky.night"] as string | undefined) ?? DEFAULT_SKY_NIGHT);
   const [time, setTime] = useState<"day" | "night">("day");
   const id = time === "day" ? day : night;
   const sky = BUILT_IN_SKYBOXES.find((b) => b.id === id);

@@ -19,7 +19,7 @@ public final class BuiltInProfiles {
                                 .n("post.tintStrength", 0.12).n("post.vignette", 0.35).b("post.glow", true).n("post.glowStrength", 0.35)
                                 .n("post.glowThreshold", 0.72).n("post.brightness", -0.1).n("world.netherFogStrength", 0.25)),
                 p("cherry_blossom", "Cherry Blossom", "Pink skies, drifting cherry petals and soft pink haze.",
-                        v().s("sky.day", "cherry_blossom").s("sky.night", "sakura_night").mc("petals.colorA", "#FFC3D9").mc("petals.colorB", "#FF8FB8")
+                        v().s("sky.day", "fs_002_sunset").s("sky.night", "fs_classic_night_2").mc("petals.colorA", "#FFC3D9").mc("petals.colorB", "#FF8FB8")
                                 .c("env.hazeColor", "#FFC2D4").c("outline.color", "#FF8FB8").c("world.fogTint", "#FFD6E2").c("world.skyTint", "#FFB3CC")),
                 p("competitive", "Clean PvP", "Clear visibility for PvP: crisp, slightly punchier colours, thinner fog, no decorative particles or skybox, a clear block outline and low fire.",
                         v().n("post.contrast", 1.06).n("post.saturation", 1.1).n("post.sharpen", 0.35).b("post.weatherMood", false)
@@ -34,7 +34,7 @@ public final class BuiltInProfiles {
                                 .b("sky.stars", false).s("ui.theme", "ash").s("perf.quality", "low")),
                 p("snowfall", "Snowfall", "Gentle decorative snow everywhere under a cool, pale sky.",
                         v().b("snow.enabled", true).s("snow.where", "everywhere").s("snow.intensity", "medium").b("petals.enabled", false)
-                                .s("sky.day", "fantasy_clouds").s("sky.night", "starry_night").n("sky.saturation", 0.7)
+                                .s("sky.day", "fs_classic_day_1").s("sky.night", "fs_002_night").n("sky.saturation", 0.7)
                                 .n("env.haze", 0.35).c("env.hazeColor", "#DDE8F5").c("world.fogTint", "#E6EEF7").n("world.fogTintStrength", 0.35)
                                 .n("wind.strength", 0.25).s("ui.theme", "ash").b("fireflies.enabled", false)),
                 p("rainy_day", "Rainy Day", "Steady decorative rain, grey-blue sky and closer fog.",
@@ -43,11 +43,11 @@ public final class BuiltInProfiles {
                                 .c("world.fogTint", "#A9B4C2").n("world.fogTintStrength", 0.4).n("env.haze", 0.45).c("env.hazeColor", "#A9B4C2")
                                 .b("petals.enabled", false).b("fireflies.enabled", false).n("wind.strength", 0.55).s("ui.theme", "ash")),
                 p("fantasy", "Fantasy", "Pastel clouds, aurora nights, fireflies and petals everywhere.",
-                        v().s("sky.day", "fantasy_clouds").s("sky.night", "aurora").n("sky.saturation", 1.2).b("petals.everywhere", true)
+                        v().s("sky.day", "fs_classic_day_1").s("sky.night", "fs_017_night").n("sky.saturation", 1.2).b("petals.everywhere", true)
                                 .n("fireflies.density", 0.6).b("dust.enabled", true).n("glow.strength", 0.7).s("ui.theme", "obsidian")
                                 .mc("petals.colorA", "#FFD1E8").mc("petals.colorB", "#D9B8FF")),
                 p("night_sky", "Night Sky", "Always night (client-side only): a galaxy sky, dense stars and fireflies.",
-                        v().b("world.timeLock", true).n("world.time", 18000).s("sky.night", "galaxy").n("sky.starDensity", 1)
+                        v().b("world.timeLock", true).n("world.time", 18000).s("sky.night", "fs_classic_night_3").n("sky.starDensity", 1)
                                 .n("fireflies.density", 0.7).b("petals.enabled", false).s("ui.theme", "obsidian")),
                 p("cinematic", "Cinematic", "Soft golden-hour colours, atmospheric haze, film-like glow and vignette for screenshots and videos.",
                         v().s("sky.day", "sbs_amber_dusk").s("sky.night", "sbs_violet_night").n("post.contrast", 1.04).n("post.saturation", 0.92)

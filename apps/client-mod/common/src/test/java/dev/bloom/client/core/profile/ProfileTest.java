@@ -131,11 +131,11 @@ public class ProfileTest {
 
     @Test
     public void createRenameDuplicateDelete() throws Exception {
-        BloomSettings.SKY_DAY.set("galaxy");
+        BloomSettings.SKY_DAY.set("fs_classic_night_3");
         Profile mine = pm.create("My  Sky§c!");
         assertEquals("My Sky!", mine.name());
         assertEquals("my_sky", mine.id());
-        assertEquals("galaxy", mine.values().get("sky.day").getAsString());
+        assertEquals("fs_classic_night_3", mine.values().get("sky.day").getAsString());
         Profile copy = pm.duplicate(mine.id());
         assertEquals("My Sky! copy", copy.name());
         pm.rename(copy.id(), "Evening");

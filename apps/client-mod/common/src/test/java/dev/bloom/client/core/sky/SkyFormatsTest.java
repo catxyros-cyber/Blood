@@ -207,15 +207,15 @@ public class SkyFormatsTest {
             String sky = t.recommendedSky();
             if (sky != null && !"none".equals(sky)) assertNotNull(t.id() + " recommends a missing sky", SkyboxCatalog.find(sky));
         }
-        int hw = 0;
+        int fs = 0;
         for (SkyboxCatalog.Entry e : SkyboxCatalog.BUILT_IN) {
-            if (e.id().startsWith("hw_")) {
-                hw++;
-                assertEquals(1024, SkyboxCatalog.nativeFace(e.id()));
-                assertEquals("4K · 1024 px faces", SkyboxCatalog.resolutionLabel(e.id()));
-            }
+            if (e.id().startsWith("fs_")) fs++;
+            assertEquals(512, SkyboxCatalog.nativeFace(e.id()));
         }
-        assertEquals(9, hw);
+        assertEquals(33, fs);
+        // Removed skies still resolve (old settings and profiles keep working).
+        assertEquals("fs_013_night", SkyboxCatalog.migrate("hw_blood_moon"));
+        assertTrue(BloomSettings.SKY_NIGHT.isValid("blood_moon"));
         assertEquals("2K · 512 px faces", SkyboxCatalog.resolutionLabel("sbs_overcast"));
     }
 }

@@ -68,9 +68,9 @@ public final class SkyRenderer {
         if (BloomSettings.SKY_ENABLED.on()) drawHorizon(base);
         if (BloomSettings.SKY_STARS.on() && !BloomSettings.LITE_MODE.on()) drawStars(base, SkyTime.starBrightness(timeOfDay) * (1f - rain), timeOfDay);
         boolean covered = BloomSettings.SKY_ENABLED.on() && !BloomSettings.SKY_DAY.is(SkyboxCatalog.NONE);
-        // The Halloween skies have their own moon (or eclipse) painted in: don't add a second one.
+        // Sunrise/sunset skies have their own sun painted in: don't add a second one.
         String shownNow = preview != null ? preview : BloomSettings.SKY_DAY.id();
-        if (shownNow.startsWith("hw_") || BloomSettings.SKY_NIGHT.id().startsWith("hw_")) covered = false;
+        if (paintedSun(shownNow) || paintedSun(BloomSettings.SKY_NIGHT.id())) covered = false;
         if (BloomSettings.SKY_ENABLED.on() && BloomSettings.SKY_SUN_MOON.on() && covered) drawSunMoon(base, dayTime, timeOfDay, rain);
         if (BloomSettings.SUN_GLOW.on()) drawGlow(base, timeOfDay, rain, raw);
     }
@@ -369,6 +369,10 @@ public final class SkyRenderer {
             batch.quad();
         }
         Draw.draw(batch, m, Draw.Blend.ADDITIVE, false);
+    }
+
+    private static boolean paintedSun(String id) {
+        return id.contains("sunrise") || id.contains("sunset");
     }
 
     static float clamp01(float v) {

@@ -19,3 +19,8 @@
 - Skies stay 4K (download size); the generator can render 8K (`--face 2048`) and 8K sources aren't kept in memory.
 - **Sharper menus**: GUI sprites and icons are stored at 4x (`tools/gen_textures.py`), and sky thumbnails are 512×288 (`tools/gen_sky_thumbnails.py`).
 - **Stronger shader effects**: contrast-adaptive sharpening, screen-blended glow (no blown-out whites), vibrance-style saturation, and a third, wider blur round at High quality.
+
+## New built-in skies
+- Removed the 20 skies BLOOD generated itself (11 procedural + 9 Halloween) and their generators.
+- Added 33 skies from the "Fantasy Skybox FREE" pack (supplied by the owner), converted by `tools/import_fantasy_skies.py`: 9 classic cubemaps and 4 panorama sets (day, night, sunrise, sunset, rain, snow). Sun-less/moon-less versions are used so BLOOD's own sun and moon don't double up; sunrise/sunset skies hide BLOOD's sun.
+- Old sky ids in settings and profiles are mapped to the closest new sky (`SkyboxCatalog.migrate`, launcher `migrateSky`). New defaults: Crimson Sunset by day, Crimson Night at night.

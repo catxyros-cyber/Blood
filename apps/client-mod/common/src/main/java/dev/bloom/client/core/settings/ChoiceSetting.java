@@ -72,10 +72,19 @@ public final class ChoiceSetting extends Setting {
     }
 
     public boolean isValid(String id) {
-        return indexOf(id) >= 0;
+        return indexOf(alias.apply(id)) >= 0;
+    }
+
+    private java.util.function.UnaryOperator<String> alias = id -> id;
+
+    /** Old ids that should be read as new ones (e.g. removed skyboxes). */
+    public ChoiceSetting aliases(java.util.function.UnaryOperator<String> alias) {
+        this.alias = alias;
+        return this;
     }
 
     public void set(String id) {
+        id = id == null ? null : alias.apply(id);
         if (id == null || !isValid(id)) return;
         if (!id.equals(value)) {
             value = id;
@@ -133,7 +142,7 @@ public final class ChoiceSetting extends Setting {
     @Override
     public boolean fromJson(JsonElement json) {
         if (json == null || !json.isJsonPrimitive() || !json.getAsJsonPrimitive().isString()) return false;
-        String id = json.getAsString();
+        String id = alias.apply(json.getAsString());
         if (!isValid(id)) return false;
         set(id);
         return true;

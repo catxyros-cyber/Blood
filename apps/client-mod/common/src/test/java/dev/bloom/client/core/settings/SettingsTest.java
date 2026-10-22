@@ -94,10 +94,10 @@ public class SettingsTest {
     @Test
     public void skyboxDropdownIncludesVanillaAndBuiltIns() {
         assertEquals("none", BloomSettings.SKY_DAY.options().get(0).id());
-        assertEquals(1 + 11 + 9 + 25, BloomSettings.SKY_DAY.options().size()); // vanilla + BLOOD + 4K Halloween + cloudy
-        assertTrue(BloomSettings.SKY_DAY.is("crimson_dusk"));
-        assertTrue(BloomSettings.SKY_NIGHT.is("blood_moon"));
-        assertTrue(BloomSettings.SKY_DAY.isValid("galaxy"));
+        assertEquals(1 + 33 + 25, BloomSettings.SKY_DAY.options().size()); // vanilla + Fantasy pack + cloudy
+        assertTrue(BloomSettings.SKY_DAY.is("fs_013_sunset"));
+        assertTrue(BloomSettings.SKY_NIGHT.is("fs_013_night"));
+        assertTrue(BloomSettings.SKY_DAY.isValid("fs_classic_night_3"));
     }
 
     @Test

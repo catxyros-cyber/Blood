@@ -107,11 +107,11 @@ public final class BloomSettings {
     public static final BoolSetting SKY_ENABLED = bool("sky.enabled", SKYBOX, "Skybox", "Custom skybox",
             "Draw a BLOOD skybox in the Overworld. Turn off for the vanilla sky.", true, "sky").profile();
     public static final ChoiceSetting SKY_DAY = reg(new ChoiceSetting("sky.day", SKYBOX, "Skybox", "Daytime skybox",
-            "Skybox shown during the day. Import your own in the Custom skyboxes section below.", "crimson_dusk",
-            SkyboxCatalog::options, "day", "sky")).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
+            "Skybox shown during the day. Import your own in the Custom skyboxes section below.", "fs_013_sunset",
+            SkyboxCatalog::options, "day", "sky").aliases(SkyboxCatalog::migrate)).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
     public static final ChoiceSetting SKY_NIGHT = reg(new ChoiceSetting("sky.night", SKYBOX, "Skybox", "Night-time skybox",
-            "Skybox shown at night. BLOOD crossfades between the day and night skyboxes.", "blood_moon",
-            SkyboxCatalog::options, "night", "sky")).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
+            "Skybox shown at night. BLOOD crossfades between the day and night skyboxes.", "fs_013_night",
+            SkyboxCatalog::options, "night", "sky").aliases(SkyboxCatalog::migrate)).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
     public static final NumberSetting SKY_DAY_OPACITY = num("sky.dayOpacity", SKYBOX, "Day and night", "Daytime appearance",
             "How strongly the daytime skybox covers the vanilla sky.", 1f, 0f, 1f, 0.05f, PERCENT, "", "opacity", "day")
             .<NumberSetting>profile().dependsOn(SKY_ENABLED);
