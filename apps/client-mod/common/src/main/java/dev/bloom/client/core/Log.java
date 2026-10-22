@@ -19,7 +19,7 @@ public final class Log {
 
         @Override
         public void warn(String msg, Throwable t) {
-            System.err.println("[BLOOD] " + msg + (t != null ? " (" + t + ")" : ""));
+            System.err.println("[MOTION] " + msg + (t != null ? " (" + t + ")" : ""));
         }
     };
 

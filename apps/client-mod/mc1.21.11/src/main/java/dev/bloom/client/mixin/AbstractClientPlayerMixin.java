@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * BLOOD capes: swap the cape texture in the player's skin, so Minecraft's own cape layer (and the
+ * MOTION capes: swap the cape texture in the player's skin, so Minecraft's own cape layer (and the
  * elytra, when the player has no elytra texture) draw it. Only this client sees the change.
  */
 @Mixin(AbstractClientPlayer.class)

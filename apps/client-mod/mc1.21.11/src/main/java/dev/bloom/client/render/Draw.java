@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 
 /**
  * Immediate-mode world drawing for Minecraft 1.21.11's GPU API: build a batch of quads, then draw
- * it with one of BLOOD's render pipelines straight into the main render target. Blending, depth
+ * it with one of MOTION's render pipelines straight into the main render target. Blending, depth
  * and culling live in the pipeline (there is no global GL state any more), so callers pick a
  * {@link Blend} and whether the batch is depth-tested.
  *
@@ -179,7 +179,7 @@ public final class Draw {
                 depth = RenderSystem.outputDepthTextureOverride != null ? RenderSystem.outputDepthTextureOverride : target.getDepthTextureView();
             }
             try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder()
-                    .createRenderPass(() -> "BLOOD " + pipeline, color, OptionalInt.empty(), depth, OptionalDouble.empty())) {
+                    .createRenderPass(() -> "MOTION " + pipeline, color, OptionalInt.empty(), depth, OptionalDouble.empty())) {
                 pass.setPipeline(pipeline);
                 pass.setVertexBuffer(0, vertices);
                 pass.setIndexBuffer(indices, seq.type());

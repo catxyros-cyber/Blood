@@ -4,7 +4,7 @@ import { useStore } from "../services/store";
 import { Card } from "./components";
 import { Icon } from "./icons";
 
-/** "BLOOD team": tagged players (owner, staff…) and whether they're online right now. */
+/** "MOTION team": tagged players (owner, staff…) and whether they're online right now. */
 export function TeamCard() {
   const { team, loaded } = useStore(teamState, (s) => s);
   useEffect(() => {
@@ -15,7 +15,7 @@ export function TeamCard() {
     <Card className="p-5">
       <div className="flex items-center gap-2 mb-3">
         <Icon.Crown size={16} className="text-accent" />
-        <h3 className="font-semibold">BLOOD team</h3>
+        <h3 className="font-semibold">MOTION team</h3>
       </div>
       <div className="flex flex-col gap-2">
         {team.map((m) => (

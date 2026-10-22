@@ -1,4 +1,4 @@
-/** BLOOD API: routes and request pipeline. `createApp` is pure wiring so tests can inject fakes. */
+/** MOTION API: routes and request pipeline. `createApp` is pure wiring so tests can inject fakes. */
 
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -6,6 +6,10 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import {
   AdminCapeAction,
+  AdminCreateAccessory,
+  ACCESSORY_MAX_BYTES,
+  SetAccessoryRequest,
+  type AccessoryInfo,
   AdminCreateCape,
   AdminCreateKeys,
   AdminKeyAction,
@@ -50,7 +54,7 @@ import { computeEntitlement, planForPrice } from "./entitlements";
 import { HttpError, makeCtx, RateLimiter, Router, serializeCookie, writeReply, type Ctx, type Reply } from "./http";
 import { hasJoined, MojangUnavailable } from "./mojang";
 import { serveStatic } from "./static";
-import type { Cape, LicenseKey, Store, User } from "./store/types";
+import type { Accessory, Cape, LicenseKey, Store, User } from "./store/types";
 import {
   periodEnd,
   Stripe,
@@ -135,6 +139,8 @@ export function createApp(deps: Deps) {
     admin: new RateLimiter(30, 30 / 60),
     // Clients look up capes of nearby players in batches; generous but bounded.
     capes: new RateLimiter(60, 1),
+    // Skin hand-offs to Mojang (a few per minute per IP is plenty).
+    skins: new RateLimiter(6, 6 / 60),
   };
   const sweeper = setInterval(() => {
     for (const l of Object.values(limits)) l.sweep();
@@ -167,7 +173,7 @@ export function createApp(deps: Deps) {
     // Cookie-authenticated writes must come from our own site (CSRF protection on top of SameSite=Lax).
     if (viaCookie && ctx.method !== "GET" && ctx.method !== "HEAD") {
       const o = ctx.req.headers.origin;
-      if (o !== origin) throw new HttpError(403, "bad_origin", "This request must come from the BLOOD website.");
+      if (o !== origin) throw new HttpError(403, "bad_origin", "This request must come from the MOTION website.");
     }
     const session = await store.useSession(sha256(raw), now());
     if (!session || (viaCookie && session.kind !== "web")) {
@@ -431,7 +437,7 @@ export function createApp(deps: Deps) {
   });
 
   async function deleteUser(userId: string) {
-    // Payment records stay with Stripe (legal/tax retention); BLOOD removes its own data.
+    // Payment records stay with Stripe (legal/tax retention); MOTION removes its own data.
     await store.deleteUserSessions(userId);
     await store.deleteUser(userId);
   }
@@ -452,7 +458,7 @@ export function createApp(deps: Deps) {
     if (ctx.req.headers.origin && ctx.req.headers.origin !== origin) throw new HttpError(403, "bad_origin", "Cross-site request refused.");
     const { code } = parse(WebExchangeRequest, await ctx.json());
     const userId = await store.takeWebCode(sha256(code), now());
-    if (!userId) throw new HttpError(400, "link_expired", "This sign-in link has expired. Open the website again from BLOOD.");
+    if (!userId) throw new HttpError(400, "link_expired", "This sign-in link has expired. Open the website again from MOTION.");
     const raw = token("bw");
     const maxAge = WEB_SESSION_DAYS * 86_400;
     await store.createSession({ tokenHash: sha256(raw), userId, kind: "web", device: "website", createdAt: now(), lastUsedAt: now(), expiresAt: now() + maxAge * 1000 });
@@ -468,7 +474,7 @@ export function createApp(deps: Deps) {
     const priceId = config.stripe!.prices[plan];
     if (!priceId) throw new HttpError(400, "plan_unavailable", `${PLAN_NAMES[plan]} isn't available.`);
     const ent = await entitlementFor(user.id);
-    if (ent.source === "lifetime") throw new HttpError(409, "already_premium", "You already own BLOOD Premium Lifetime.");
+    if (ent.source === "lifetime") throw new HttpError(409, "already_premium", "You already own MOTION Premium Lifetime.");
     if (ent.source === "subscription" && plan !== "lifetime") {
       throw new HttpError(409, "already_subscribed", "You already have a subscription. Change or cancel it in the billing portal.");
     }
@@ -531,7 +537,7 @@ export function createApp(deps: Deps) {
   r.get("/v1/sync", async (ctx) => {
     limit(ctx, "general");
     const { user } = await authenticate(ctx, { required: true });
-    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
+    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a MOTION Premium feature.");
     const doc = await store.getSync(user.id);
     return { status: 200, body: doc ?? { version: 0, updatedAt: 0, data: {} }, headers: { "Cache-Control": "no-store" } };
   });
@@ -539,7 +545,7 @@ export function createApp(deps: Deps) {
   r.put("/v1/sync", async (ctx) => {
     limit(ctx, "general");
     const { user } = await authenticate(ctx, { required: true });
-    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a BLOOD Premium feature.");
+    if (!(await entitlementFor(user.id, ctx)).premium) throw new HttpError(402, "premium_required", "Cloud sync is a MOTION Premium feature.");
     const req = parse(SyncPutRequest, await ctx.json(SYNC_MAX_BYTES + 4096));
     if (Buffer.byteLength(JSON.stringify(req.data)) > SYNC_MAX_BYTES) throw new HttpError(413, "payload_too_large", "Synced settings are limited to 256 KB.");
     const result = await store.putSync(user.id, req.baseVersion, req.data, req.device ?? null, now());
@@ -601,7 +607,7 @@ export function createApp(deps: Deps) {
 
   async function findKey(raw: string): Promise<LicenseKey> {
     const norm = normalizeKey(raw);
-    if (!norm) throw new HttpError(400, "invalid_key", "That doesn't look like a BLOOD key. Keys look like BLOOD-XXXXX-XXXXX-XXXXX-XXXXX.");
+    if (!norm) throw new HttpError(400, "invalid_key", "That doesn't look like a MOTION key. Keys look like MOTION-XXXXX-XXXXX-XXXXX-XXXXX.");
     const k = await store.getLicense(keyHash(norm));
     if (!k) throw new HttpError(404, "invalid_key", "This key doesn't exist. Check it for typos.");
     if (k.revoked) throw new HttpError(403, "key_revoked", "This key has been disabled.");
@@ -729,8 +735,8 @@ export function createApp(deps: Deps) {
 
   // --- capes ------------------------------------------------------------------
   //
-  // The owner publishes cape images (admin routes). Players pick one in the launcher. BLOOD Client
-  // looks up the capes of players around it and draws them; only BLOOD users see these capes.
+  // The owner publishes cape images (admin routes). Players pick one in the launcher. MOTION Client
+  // looks up the capes of players around it and draws them; only MOTION users see these capes.
 
   const capeInfo = (c: Cape): CapeInfo => ({
     id: c.id,
@@ -766,7 +772,7 @@ export function createApp(deps: Deps) {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400, immutable",
-        // BLOOD Client reads the animation speed from here (frames come from the image size).
+        // MOTION Client reads the animation speed from here (frames come from the image size).
         "X-Cape-Frame-Ms": String(cape.frameMs),
         "Access-Control-Expose-Headers": "X-Cape-Frame-Ms",
       },
@@ -779,8 +785,8 @@ export function createApp(deps: Deps) {
     const raw = (ctx.query.get("uuids") ?? "").split(",").filter(Boolean);
     if (raw.length > 100) throw new HttpError(400, "too_many", "Ask for at most 100 players at a time.");
     const uuids = [...new Set(raw.map((u) => normalizeUuid(u)).filter((u): u is string => typeof u === "string" && /^[0-9a-f]{32}$/.test(u)))];
-    const [capes, tags] = await Promise.all([store.playerCapes(uuids), store.playerTags(uuids)]);
-    return { status: 200, body: { capes, tags }, headers: { "Cache-Control": "public, max-age=30" } };
+    const [capes, tags, acc] = await Promise.all([store.playerCapes(uuids), store.playerTags(uuids), store.playerAccessories(uuids)]);
+    return { status: 200, body: { capes, tags, wings: acc.wings, auras: acc.auras }, headers: { "Cache-Control": "public, max-age=30" } };
   });
 
   r.get("/v1/me/cape", async (ctx) => {
@@ -803,7 +809,7 @@ export function createApp(deps: Deps) {
     const cape = await store.getCape(capeId);
     if (!cape || !cape.enabled) throw new HttpError(404, "not_found", "That cape isn't available.");
     if (cape.access === "premium" && !(await entitlementFor(user.id, ctx)).premium) {
-      throw new HttpError(402, "premium_required", "This cape is for BLOOD Premium players.");
+      throw new HttpError(402, "premium_required", "This cape is for MOTION Premium players.");
     }
     await store.setPlayerCape(user.minecraftUuid, cape.id, now());
     log({ msg: "cape chosen", user: user.id, cape: cape.id });
@@ -843,6 +849,147 @@ export function createApp(deps: Deps) {
     return { status: 200, body: { ok: true } };
   });
 
+  // --- accessories (wings & auras) ---------------------------------------------------
+  //
+  // Like capes: the owner publishes them, players pick one wings and one aura in the launcher,
+  // and the in-game client shows them to other MOTION players.
+
+  const accessoryInfo = (a: Accessory): AccessoryInfo => ({
+    id: a.id,
+    name: a.name,
+    kind: a.kind,
+    access: a.access,
+    color: a.color,
+    ...(a.kind === "wings" ? { image: `/v1/accessories/${a.id}.png` } : { style: (a.style ?? "glow") as AccessoryInfo["style"] }),
+  });
+
+  r.get("/v1/accessories", async () => {
+    const accessories = (await store.listAccessories(false)).map(accessoryInfo);
+    return { status: 200, body: { accessories }, headers: { "Cache-Control": "public, max-age=60" } };
+  });
+
+  r.get("/v1/accessories/:file", async (ctx) => {
+    limit(ctx, "capes");
+    const m = /^([0-9a-f-]{36})\.png$/.exec(ctx.params.file ?? "");
+    const a = m ? await store.getAccessory(m[1]!) : null;
+    if (!a || !a.enabled || !a.png) throw new HttpError(404, "not_found", "No such accessory.");
+    return { status: 200, raw: a.png, headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400, immutable" } };
+  });
+
+  r.get("/v1/me/accessories", async (ctx) => {
+    limit(ctx, "general");
+    const { user } = await authenticate(ctx, { required: true });
+    const worn = await store.getPlayerAccessories(user.minecraftUuid);
+    const ent = await entitlementFor(user.id, ctx);
+    const accessories = (await store.listAccessories(false)).map((a) => ({ ...accessoryInfo(a), allowed: a.access === "everyone" || ent.premium }));
+    return { status: 200, body: { ...worn, accessories } };
+  });
+
+  r.put("/v1/me/accessories", async (ctx) => {
+    limit(ctx, "general");
+    const { user } = await authenticate(ctx, { required: true });
+    const { kind, id } = parse(SetAccessoryRequest, await ctx.json());
+    if (id) {
+      const a = await store.getAccessory(id);
+      if (!a || !a.enabled || a.kind !== kind) throw new HttpError(404, "not_found", "That accessory isn't available.");
+      if (a.access === "premium" && !(await entitlementFor(user.id, ctx)).premium) {
+        throw new HttpError(402, "premium_required", "This accessory is for Premium players.");
+      }
+    }
+    await store.setPlayerAccessory(user.minecraftUuid, kind, id || null, now());
+    log({ msg: "accessory chosen", user: user.id, kind, accessory: id || null });
+    return { status: 200, body: await store.getPlayerAccessories(user.minecraftUuid) };
+  });
+
+  r.post("/v1/admin/accessories", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCreateAccessory, await ctx.json(6_000_000));
+    let png: Buffer | null = null;
+    let size = { w: 0, h: 0 };
+    if (req.kind === "wings") {
+      if (!req.png) throw new HttpError(400, "missing_image", "Wings need an image.");
+      png = Buffer.from(req.png.replace(/^data:image\/png;base64,/, ""), "base64");
+      if (png.length > ACCESSORY_MAX_BYTES) throw new HttpError(400, "too_large", "The wing image must be at most 4 MB.");
+      const s = pngSize(png);
+      if (!s) throw new HttpError(400, "not_png", "That file isn't a PNG image.");
+      if (s.w < 16 || s.h < 16 || s.w > 2048 || s.h > 2048) throw new HttpError(400, "bad_size", "A wing image must be between 16 and 2048 pixels on each side.");
+      size = s;
+    }
+    const a: Accessory = {
+      id: randomUUID(),
+      name: req.name,
+      kind: req.kind,
+      access: req.access,
+      png,
+      width: size.w,
+      height: size.h,
+      color: req.color.toLowerCase(),
+      style: req.kind === "aura" ? (req.style ?? "glow") : null,
+      enabled: true,
+      createdAt: now(),
+    };
+    await store.createAccessory(a);
+    log({ msg: "accessory published", accessory: a.id, kind: a.kind });
+    return { status: 200, body: accessoryInfo(a) };
+  });
+
+  r.get("/v1/admin/accessories", async (ctx) => {
+    requireAdmin(ctx);
+    const accessories = (await store.listAccessories(true)).map((a) => ({ ...accessoryInfo(a), enabled: a.enabled, width: a.width, height: a.height, createdAt: a.createdAt }));
+    return { status: 200, body: { accessories } };
+  });
+
+  r.post("/v1/admin/accessories/update", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCapeAction, await ctx.json());
+    let ok: boolean;
+    if (req.action === "delete") ok = await store.deleteAccessory(req.id);
+    else if (req.action === "enable" || req.action === "disable") ok = await store.updateAccessory(req.id, { enabled: req.action === "enable" });
+    else ok = await store.updateAccessory(req.id, { access: req.action });
+    if (!ok) throw new HttpError(404, "not_found", "No such accessory.");
+    log({ msg: "accessory updated", accessory: req.id, action: req.action });
+    return { status: 200, body: { ok: true } };
+  });
+
+  // --- skins: hand a PNG to Mojang ------------------------------------------------
+  //
+  // Mojang's skin API takes a skin by URL. The launcher can't upload binary files itself, so it
+  // gives the PNG to us; we serve it for 10 minutes at an unguessable URL, the launcher asks
+  // Mojang to apply it (with the player's own token, which never reaches us), and Mojang fetches
+  // it from here. Kept in memory only.
+
+  const SKIN_TTL_MS = 10 * 60_000;
+  const skinFiles = new Map<string, { png: Buffer; expires: number }>();
+  const pruneSkins = () => {
+    const t = now();
+    for (const [k, v] of skinFiles) if (v.expires < t) skinFiles.delete(k);
+  };
+
+  r.post("/v1/me/skin-upload", async (ctx) => {
+    limit(ctx, "skins");
+    await authenticate(ctx, { required: true });
+    const body = (await ctx.json(200_000)) as { png?: unknown };
+    if (typeof body?.png !== "string") throw new HttpError(400, "bad_request", "Send the skin as a base64 PNG.");
+    const png = Buffer.from(body.png.replace(/^data:image\/png;base64,/, ""), "base64");
+    if (png.length > 64 * 1024) throw new HttpError(400, "too_large", "A skin must be at most 64 KB.");
+    const size = pngSize(png);
+    if (!size) throw new HttpError(400, "not_png", "That file isn't a PNG image.");
+    if (size.w !== 64 || (size.h !== 64 && size.h !== 32)) throw new HttpError(400, "bad_size", "A Minecraft skin is 64×64 (or the old 64×32).");
+    pruneSkins();
+    if (skinFiles.size > 500) throw new HttpError(503, "busy", "Too many skins are being applied right now. Try again in a minute.");
+    const id = randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "");
+    skinFiles.set(id, { png, expires: now() + SKIN_TTL_MS });
+    return { status: 200, body: { url: `${config.publicUrl}/v1/skin-files/${id}.png`, expiresIn: SKIN_TTL_MS / 1000 } };
+  });
+
+  r.get("/v1/skin-files/:file", async (ctx) => {
+    limit(ctx, "capes");
+    const m = /^([0-9a-f]{64})\.png$/.exec(ctx.params.file ?? "");
+    const f = m ? skinFiles.get(m[1]!) : undefined;
+    if (!f || f.expires < now()) throw new HttpError(404, "not_found", "No such skin (they expire after 10 minutes).");
+    return { status: 200, raw: f.png, headers: { "Content-Type": "image/png", "Cache-Control": "no-store" } };
+  });
+
   // --- tags & presence -------------------------------------------------------------
 
   const teamList = async () =>
@@ -875,7 +1022,7 @@ export function createApp(deps: Deps) {
     requireAdmin(ctx);
     const req = parse(AdminSetTag, await ctx.json());
     const user = await store.getUserByUsername(req.username);
-    if (!user) throw new HttpError(404, "no_player", `${req.username} hasn't signed in to BLOOD yet. They need to open the launcher and sign in once.`);
+    if (!user) throw new HttpError(404, "no_player", `${req.username} hasn't signed in to MOTION yet. They need to open the launcher and sign in once.`);
     const text = req.text.trim();
     await store.setPlayerTag(user.minecraftUuid, text ? { text, color: req.color.toLowerCase() } : null, now());
     log({ msg: text ? "tag set" : "tag removed", player: user.minecraftUuid });

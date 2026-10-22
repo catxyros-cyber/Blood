@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
 /**
- * BLOOD's post-processing: real GLSL passes (assets/minecraft/shaders/program/bloodclient_*) run
+ * MOTION's post-processing: real GLSL passes (assets/minecraft/shaders/program/bloodclient_*) run
  * through Minecraft's own {@link PostChain} right after the world is drawn and before the HUD.
  *
  * <ul>
@@ -121,7 +121,7 @@ public final class PostEffects {
             loaded = null;
             failedChain = want;
             failure = "Couldn't start shader effects: " + e.getMessage();
-            Log.warn("BLOOD shader effects failed to load (" + want.file + "); they stay off until the setting changes", e);
+            Log.warn("MOTION shader effects failed to load (" + want.file + "); they stay off until the setting changes", e);
         }
     }
 

@@ -3,7 +3,7 @@ package dev.bloom.client.core.particles;
 /**
  * Decorative wind. Direction uses Minecraft's yaw convention (0° = towards +Z/south,
  * 90° = towards -X/west). Strength wanders slowly, gusts sweep through now and then, and a
- * little spatial turbulence keeps particles from moving in lockstep. Affects only BLOOD's
+ * little spatial turbulence keeps particles from moving in lockstep. Affects only MOTION's
  * own particles.
  */
 public final class WindField {

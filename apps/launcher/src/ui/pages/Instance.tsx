@@ -90,7 +90,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
             {inst.performancePreset && <Badge>Preset: {PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "Custom"}</Badge>}
             {inst.bloomClient?.enabled && (
               <Badge tone="accent">
-                <Icon.Drop size={12} /> BLOOD Client
+                <Icon.Motion size={12} /> MOTION Client
               </Badge>
             )}
           </div>
@@ -98,7 +98,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
         </div>
         <div className="flex items-center gap-2">
           <Button icon={<Icon.Hud size={16} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
-            BLOOD Mods
+            MOTION Mods
           </Button>
           <Button icon={<Icon.Paint size={16} />} onClick={() => navigate({ page: "customize", instanceId: inst.id })}>
             Visuals
@@ -385,7 +385,7 @@ function ModsTab({ inst }: { inst: Instance }) {
                   items={[
                     ...(m.modrinth
                       ? [
-                          { label: "View in BLOOD", icon: <Icon.Compass size={15} />, onClick: () => navigate({ page: "project", id: m.modrinth!.projectId, instanceId: inst.id }) },
+                          { label: "View in MOTION", icon: <Icon.Compass size={15} />, onClick: () => navigate({ page: "project", id: m.modrinth!.projectId, instanceId: inst.id }) },
                           { label: "Open on Modrinth", icon: <Icon.External size={15} />, onClick: () => void native.openUrl(projectUrl("mod", m.modrinth!.projectId)) },
                         ]
                       : []),
@@ -439,7 +439,7 @@ function PacksTab({ inst, kind }: { inst: Instance; kind: "resourcepacks" | "sha
               </Button>
             }
           >
-            Install {inst.loader === "forge" ? "Oculus" : "Iris"} to use shader packs. BLOOD won't install it without asking.
+            Install {inst.loader === "forge" ? "Oculus" : "Iris"} to use shader packs. MOTION won't install it without asking.
           </Callout>
         </div>
       )}
@@ -745,7 +745,7 @@ function SettingsTab({ inst }: { inst: Instance }) {
     if (loaderChanged && enabledMods > 0) {
       const ok = await confirm({
         title: `Switch to ${LOADERS.find((l) => l.id === draft.loader)?.name}?`,
-        message: `This installation has ${enabledMods} mod${enabledMods === 1 ? "" : "s"} for ${loaderLabel(inst)}. Mods usually only work with the loader they were made for; BLOOD will flag incompatible ones.`,
+        message: `This installation has ${enabledMods} mod${enabledMods === 1 ? "" : "s"} for ${loaderLabel(inst)}. Mods usually only work with the loader they were made for; MOTION will flag incompatible ones.`,
         confirmLabel: "Switch loader",
       });
       if (!ok) return;
@@ -813,7 +813,7 @@ function SettingsTab({ inst }: { inst: Instance }) {
               options={[{ value: "", label: "Launcher default" }, ...JVM_PRESETS.map((p) => ({ value: p.id, label: `${p.name} — Java ${p.minJava}+` }))]}
             />
           </Field>
-          <Field label="Extra JVM arguments" hint="Advanced. Memory is set above; BLOOD builds the classpath itself.">
+          <Field label="Extra JVM arguments" hint="Advanced. Memory is set above; MOTION builds the classpath itself.">
             <TextInput value={jvmText} onChange={setJvmText} placeholder="-XX:+AlwaysPreTouch" mono />
           </Field>
           {jvmIssues.map((i) => (

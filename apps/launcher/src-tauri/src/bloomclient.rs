@@ -1,4 +1,4 @@
-//! BLOOD Client (the in-game mod) shipped inside the launcher.
+//! MOTION Client (the in-game mod) shipped inside the launcher.
 //!
 //! CI builds the mod and places the jars plus `manifest.json` in
 //! `resources/bloomclient/`, which Tauri bundles with the app. These commands
@@ -53,7 +53,7 @@ fn read_bundle(dir: &Path) -> Result<Option<Bundle>> {
     let bundle: Bundle = serde_json::from_str(&text)?;
     for f in &bundle.files {
         if !is_plain_jar_name(&f.file) {
-            return Err(AppError::new("invalid_bundle", "BLOOD Client bundle has an invalid file name"));
+            return Err(AppError::new("invalid_bundle", "MOTION Client bundle has an invalid file name"));
         }
     }
     Ok(Some(bundle))
@@ -70,7 +70,7 @@ fn is_plain_jar_name(name: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '+'))
 }
 
-/// The BLOOD Client version bundled with this launcher, or null in builds without it.
+/// The MOTION Client version bundled with this launcher, or null in builds without it.
 #[tauri::command]
 pub async fn bloom_client_bundle(app: AppHandle) -> Result<Option<Bundle>> {
     read_bundle(&bundle_dir(&app)?)
@@ -89,22 +89,22 @@ pub async fn bloom_client_install(
 ) -> Result<String> {
     let dir = bundle_dir(&app)?;
     let bundle = read_bundle(&dir)?
-        .ok_or_else(|| AppError::new("not_bundled", "This build of BLOOD doesn't include BLOOD Client"))?;
+        .ok_or_else(|| AppError::new("not_bundled", "This build of MOTION doesn't include MOTION Client"))?;
     let wanted = file;
     let file = bundle
         .files
         .iter()
         .find(|f| f.loader == loader && wanted.as_deref().map_or(true, |w| w == f.file))
-        .ok_or_else(|| AppError::new("unsupported_loader", format!("BLOOD Client isn't available for {loader}")))?;
+        .ok_or_else(|| AppError::new("unsupported_loader", format!("MOTION Client isn't available for {loader}")))?;
     let dest_dir = state.roots.resolve(&mods_dir)?;
     if dest_dir.file_name().map(|n| n != "mods").unwrap_or(true) {
-        return Err(AppError::new("forbidden_path", "BLOOD Client can only be installed into a mods folder"));
+        return Err(AppError::new("forbidden_path", "MOTION Client can only be installed into a mods folder"));
     }
     let src = dir.join(&file.file);
     let bytes = tokio::fs::read(&src).await?;
     let digest = hex::encode(Sha1::digest(&bytes));
     if !digest.eq_ignore_ascii_case(&file.sha1) {
-        return Err(AppError::new("corrupt_bundle", "The bundled BLOOD Client file is damaged; reinstall BLOOD"));
+        return Err(AppError::new("corrupt_bundle", "The bundled MOTION Client file is damaged; reinstall MOTION"));
     }
     tokio::fs::create_dir_all(&dest_dir).await?;
     let target = dest_dir.join(&file.file);
@@ -120,7 +120,7 @@ pub async fn bloom_client_install(
 }
 
 /// Read a local image (custom background, skybox preview) as a data: URL.
-/// The path must be inside BLOOD's roots or picked by the user this session.
+/// The path must be inside MOTION's roots or picked by the user this session.
 #[tauri::command]
 pub async fn fs_read_data_url(state: State<'_, AppState>, path: String, max_bytes: u64) -> Result<Option<String>> {
     let p = state.roots.resolve_source(&path)?;

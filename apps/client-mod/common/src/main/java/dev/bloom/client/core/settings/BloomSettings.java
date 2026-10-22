@@ -13,7 +13,7 @@ import static dev.bloom.client.core.settings.Category.*;
 import static dev.bloom.client.core.settings.NumberSetting.Format.*;
 
 /**
- * Every BLOOD Client option, with its default, range and description. Render and tick
+ * Every MOTION Client option, with its default, range and description. Render and tick
  * code reads these fields directly (e.g. {@code BloomSettings.PETALS.on()}).
  *
  * <p>Each option here is implemented somewhere; nothing is decorative. Options that only
@@ -64,33 +64,54 @@ public final class BloomSettings {
     // =====================================================================
     // General
     // =====================================================================
-    public static final BoolSetting ENABLED = bool("general.enabled", GENERAL, "BLOOD Client", "BLOOD visuals",
-            "Master switch for every BLOOD visual effect (sky, particles, HUD). Turn off to see plain Minecraft instantly.", true, "master", "disable", "all");
+    public static final BoolSetting ENABLED = bool("general.enabled", GENERAL, "MOTION Client", "MOTION visuals",
+            "Master switch for every MOTION visual effect (sky, particles, HUD). Turn off to see plain Minecraft instantly.", true, "master", "disable", "all");
     public static final ChoiceSetting THEME = choice("ui.theme", GENERAL, "Appearance", "Menu theme",
-            "Colour scheme of the BLOOD menu and HUD accents.", "crimson",
-            ChoiceSetting.of("crimson", "Classic BLOOD", "blood_moon", "Blood Moon", "pumpkin_night", "Pumpkin Night", "haunted_forest", "Haunted Forest",
+            "Colour scheme of the MOTION menu and HUD accents.", "motion",
+            ChoiceSetting.of("motion", "Motion (green)", "crimson", "Crimson (classic)", "blood_moon", "Blood Moon", "pumpkin_night", "Pumpkin Night", "haunted_forest", "Haunted Forest",
                     "midnight_halloween", "Midnight Halloween", "ghostfire", "Ghostfire", "spiderweb", "Spiderweb", "crimson_eclipse", "Crimson Eclipse",
                     "obsidian", "Obsidian", "ash", "Ash", "ember", "Ember", "mono", "Monochrome"),
-            "colour", "color", "red", "black", "grey").profile();
+            "colour", "color", "green", "red", "black", "grey").profile();
     public static final ColorSetting ACCENT = color("ui.accent", GENERAL, "Appearance", "Accent colour",
             "Highlight colour for toggles, sliders and selected items. Follows the theme until you change it.", 0xE3192F, "highlight").profile();
     public static final BoolSetting ACCENT_FROM_THEME = bool("ui.accentFromTheme", GENERAL, "Appearance", "Use the theme's accent",
             "Use the selected theme's accent colour instead of your own.", true).profile();
     public static final ChoiceSetting UI_EFFECTS = choice("ui.effects", GENERAL, "Interface", "Interface effects",
-            "Full: all animations. Reduced: quick, subtle animations. Performance: no animations or decorative effects in BLOOD menus.",
+            "Full: all animations. Reduced: quick, subtle animations. Performance: no animations or decorative effects in MOTION menus.",
             "full", ChoiceSetting.of("full", "Full", "reduced", "Reduced", "performance", "Performance"), "animation", "motion");
     public static final BoolSetting REDUCE_MOTION = bool("ui.reduceMotion", GENERAL, "Interface", "Reduce motion",
-            "Turns off sliding and scaling animations in BLOOD menus and the decorative petals in the menu background.", false, "accessibility", "animation");
+            "Turns off sliding and scaling animations in MOTION menus and the decorative petals in the menu background.", false, "accessibility", "animation");
     public static final NumberSetting MENU_DIM = num("ui.menuDim", GENERAL, "Interface", "Menu backdrop",
-            "How much the game is dimmed behind the BLOOD menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
+            "How much the game is dimmed behind the MOTION menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
-            "Pause the game while the BLOOD menu is open in singleplayer. Multiplayer never pauses.", false);
-    public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "BLOOD capes",
-            "Show the capes BLOOD players chose (yours too). Only BLOOD users see them. Pick yours in the launcher: Visuals → Cape.",
+            "Pause the game while the MOTION menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "MOTION capes",
+            "Show the capes MOTION players chose (yours too). Only MOTION users see them. Pick yours in the launcher: Visuals → Cape.",
             true, "cape", "cosmetic");
-    public static final BoolSetting TAGS = bool("tags.enabled", GENERAL, "Capes", "BLOOD tags",
-            "Show tags like [OWNER] before the names of BLOOD team members. Only BLOOD users see them.",
+    public static final BoolSetting TAGS = bool("tags.enabled", GENERAL, "Capes", "MOTION tags",
+            "Show tags like [OWNER] before the names of MOTION team members. Only MOTION users see them.",
             true, "tag", "owner", "rank", "nametag");
+    public static final BoolSetting CAPE_SMOOTH = bool("capes.smooth", GENERAL, "Capes", "Smooth cape motion",
+            "Capes ease into position instead of snapping: they hang still while you stand, and drift back gently as you move. Applies to every cape you see.",
+            true, "cape", "sway", "physics", "smooth");
+    public static final NumberSetting CAPE_SWAY = num("capes.sway", GENERAL, "Capes", "Cape sway",
+            "How far capes swing back while moving. Lower is calmer; 100% is as far as Minecraft's own cape.", 0.55f, 0.1f, 1f, 0.05f, PERCENT, "",
+            "cape", "sway", "lean");
+    public static final BoolSetting WINGS = bool("accessories.wings", GENERAL, "Accessories", "Wings",
+            "Show the wings MOTION players picked in the launcher (yours too, in third person). Only MOTION users see them.",
+            true, "wings", "cosmetic", "accessory");
+    public static final BoolSetting AURAS = bool("accessories.auras", GENERAL, "Accessories", "Auras",
+            "Show the glow and particle auras MOTION players picked in the launcher. Yours is hidden in first person so it never blocks your view.",
+            true, "aura", "particles", "cosmetic", "accessory");
+    public static final ChoiceSetting MENU_BACKGROUND = choice("ui.menuBackground", GENERAL, "Menu background", "Background",
+            "What Minecraft's own screens show behind them: the title screen, pause and option menus, and loading screens. Pick a custom image in the launcher (Customize).",
+            "vanilla", ChoiceSetting.of("vanilla", "Minecraft's own", "red", "Fully red", "black", "Fully black", "white", "Fully white", "green", "Motion green", "custom", "Custom image"),
+            "background", "panorama", "title", "menu", "loading");
+    public static final NumberSetting MENU_BACKGROUND_INWORLD = num("ui.menuBackgroundInWorld", GENERAL, "Menu background", "Over the world",
+            "How much the background covers the world behind pause and option menus while you play. 100% hides the world completely.", 0.85f, 0f, 1f, 0.05f, PERCENT, "",
+            "background", "pause", "opacity");
+    public static final BoolSetting MENU_BACKGROUND_LOADING = bool("ui.menuBackgroundLoading", GENERAL, "Menu background", "On loading screens",
+            "Also use the background on world-loading screens and Minecraft's resource-loading screen.", true, "loading", "background");
     public static final BoolSetting THEME_DECOR = bool("ui.themeDecor", GENERAL, "Appearance", "Theme decorations",
             "Embers, bats, mist and webs from the Halloween themes, drawn behind the menus. Off for a plain backdrop.", true, "particles", "halloween");
     public static final ChoiceSetting VISUALS_POSITION = choice("ui.visualsPosition", GENERAL, "Visuals menu (Right Ctrl)", "Menu position",
@@ -98,19 +119,19 @@ public final class BloomSettings {
             ChoiceSetting.of("left", "Left", "center", "Centre", "right", "Right"), "dock");
     public static final NumberSetting VISUALS_DIM = num("ui.visualsDim", GENERAL, "Visuals menu (Right Ctrl)", "Backdrop",
             "How much the world behind the visuals menu is darkened.", 0.1f, 0f, 0.8f, 0.05f, PERCENT, "", "dim");
-    public static final BoolSetting TOASTS = bool("ui.toasts", GENERAL, "Interface", "BLOOD notifications",
-            "Small notifications from BLOOD, such as a profile switch or a performance tip.", true, "toast", "popup");
+    public static final BoolSetting TOASTS = bool("ui.toasts", GENERAL, "Interface", "MOTION notifications",
+            "Small notifications from MOTION, such as a profile switch or a performance tip.", true, "toast", "popup");
 
     // =====================================================================
     // Skyboxes
     // =====================================================================
     public static final BoolSetting SKY_ENABLED = bool("sky.enabled", SKYBOX, "Skybox", "Custom skybox",
-            "Draw a BLOOD skybox in the Overworld. Turn off for the vanilla sky.", true, "sky").profile();
+            "Draw a MOTION skybox in the Overworld. Turn off for the vanilla sky.", true, "sky").profile();
     public static final ChoiceSetting SKY_DAY = reg(new ChoiceSetting("sky.day", SKYBOX, "Skybox", "Daytime skybox",
             "Skybox shown during the day. Import your own in the Custom skyboxes section below.", "fs_013_sunset",
             SkyboxCatalog::options, "day", "sky").aliases(SkyboxCatalog::migrate)).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
     public static final ChoiceSetting SKY_NIGHT = reg(new ChoiceSetting("sky.night", SKYBOX, "Skybox", "Night-time skybox",
-            "Skybox shown at night. BLOOD crossfades between the day and night skyboxes.", "fs_013_night",
+            "Skybox shown at night. MOTION crossfades between the day and night skyboxes.", "fs_013_night",
             SkyboxCatalog::options, "night", "sky").aliases(SkyboxCatalog::migrate)).<ChoiceSetting>profile().dependsOn(SKY_ENABLED);
     public static final NumberSetting SKY_DAY_OPACITY = num("sky.dayOpacity", SKYBOX, "Day and night", "Daytime appearance",
             "How strongly the daytime skybox covers the vanilla sky.", 1f, 0f, 1f, 0.05f, PERCENT, "", "opacity", "day")
@@ -143,32 +164,32 @@ public final class BloomSettings {
     public static final BoolSetting SKY_SUN_MOON = bool("sky.sunMoon", SKYBOX, "Sky objects", "Sun and moon",
             "Draw the sun and moon in front of the skybox.", true, "sun", "moon").<BoolSetting>profile().dependsOn(SKY_ENABLED);
     public static final BoolSetting SKY_STARS = bool("sky.stars", SKYBOX, "Sky objects", "Stars",
-            "BLOOD's twinkling starfield at night (in addition to any stars painted into the skybox).", true, "stars", "night").profile();
+            "MOTION's twinkling starfield at night (in addition to any stars painted into the skybox).", true, "stars", "night").profile();
     public static final NumberSetting SKY_STAR_DENSITY = num("sky.starDensity", SKYBOX, "Sky objects", "Star density",
-            "How many stars BLOOD draws.", 0.6f, 0.1f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(SKY_STARS);
+            "How many stars MOTION draws.", 0.6f, 0.1f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(SKY_STARS);
     public static final BoolSetting SKY_CLOUDS = bool("sky.clouds", SKYBOX, "Sky objects", "Clouds",
             "Show Minecraft's clouds. This hides clouds without changing your Minecraft video settings.", true, "clouds").profile();
     public static final BoolSetting SKY_WITH_SHADERS = bool("sky.withShaders", SKYBOX, "Compatibility", "Use with shader packs",
-            "Shader packs (Iris/Oculus) draw their own sky. BLOOD's skybox and world effects are paused while a shader pack is active unless you enable this. Results depend on the shader pack.",
+            "Shader packs (Iris/Oculus) draw their own sky. MOTION's skybox and world effects are paused while a shader pack is active unless you enable this. Results depend on the shader pack.",
             false, "iris", "oculus", "shaders");
 
     // =====================================================================
     // Weather & environment
     // =====================================================================
     public static final BoolSetting RAIN = bool("rain.enabled", WEATHER, "Rain", "Enhanced rain",
-            "BLOOD's rain streaks and splashes. Purely visual; real weather is unchanged.", true, "weather").profile();
+            "MOTION's rain streaks and splashes. Purely visual; real weather is unchanged.", true, "weather").profile();
     public static final ChoiceSetting RAIN_MODE = choice("rain.mode", WEATHER, "Rain", "When it rains",
             "Follow the world's weather, or show decorative rain all the time (visual only).", "follow",
             ChoiceSetting.of("follow", "With the world's weather", "always", "Always (decorative)"), "weather")
             .<ChoiceSetting>profile().dependsOn(RAIN);
     public static final NumberSetting RAIN_DENSITY = num("rain.density", WEATHER, "Rain", "Rain density",
-            "Number of BLOOD raindrops.", 0.6f, 0.05f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(RAIN);
+            "Number of MOTION raindrops.", 0.6f, 0.05f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(RAIN);
     public static final ColorSetting RAIN_TINT = color("rain.tint", WEATHER, "Rain", "Rain colour",
-            "Tint of BLOOD's raindrops.", 0xB4CCF5, "tint").<ColorSetting>profile().dependsOn(RAIN);
+            "Tint of MOTION's raindrops.", 0xB4CCF5, "tint").<ColorSetting>profile().dependsOn(RAIN);
     public static final BoolSetting RAIN_SPLASHES = bool("rain.splashes", WEATHER, "Rain", "Splashes",
             "Small splash particles where raindrops land.", true).<BoolSetting>profile().dependsOn(RAIN);
     public static final BoolSetting RAIN_HIDE_VANILLA = bool("rain.hideVanilla", WEATHER, "Rain", "Hide vanilla rain and snow",
-            "Hide Minecraft's own rain and snow sheets so only BLOOD's weather shows. Sounds are unaffected.", false, "vanilla")
+            "Hide Minecraft's own rain and snow sheets so only MOTION's weather shows. Sounds are unaffected.", false, "vanilla")
             .profile();
 
     public static final BoolSetting SNOW = bool("snow.enabled", WEATHER, "Snow", "Decorative snowfall",
@@ -193,7 +214,7 @@ public final class BloomSettings {
             "Tint of the snowflakes.", 0xFFFFFF).<ColorSetting>profile().dependsOn(SNOW);
 
     public static final BoolSetting WIND = bool("wind.enabled", WEATHER, "Wind and atmosphere", "Wind",
-            "Wind pushes BLOOD's petals, leaves, snow and rain. It never affects players, mobs or blocks.", true, "breeze").profile();
+            "Wind pushes MOTION's petals, leaves, snow and rain. It never affects players, mobs or blocks.", true, "breeze").profile();
     public static final NumberSetting WIND_STRENGTH = num("wind.strength", WEATHER, "Wind and atmosphere", "Wind strength",
             "How hard the wind blows.", 0.35f, 0f, 1f, 0.05f, PERCENT, "").<NumberSetting>profile().dependsOn(WIND);
     public static final NumberSetting WIND_DIRECTION = num("wind.direction", WEATHER, "Wind and atmosphere", "Wind direction",
@@ -332,9 +353,9 @@ public final class BloomSettings {
     // World appearance
     // =====================================================================
     public static final BoolSetting FOG_CUSTOM = bool("world.fogEnabled", WORLD, "Fog", "Custom fog",
-            "BLOOD's fog changes: distance, tint and haze. Off = Minecraft's own fog.", true, "atmospheric", "distance fog").profile();
+            "MOTION's fog changes: distance, tint and haze. Off = Minecraft's own fog.", true, "atmospheric", "distance fog").profile();
     public static final BoolSetting FOG_SMOOTH = bool("world.fogSmooth", WORLD, "Fog", "Smooth fog transitions",
-            "BLOOD's fog distance and colour glide to new values over about a second (presets, sliders, weather) instead of jumping.",
+            "MOTION's fog distance and colour glide to new values over about a second (presets, sliders, weather) instead of jumping.",
             true, "transition").profile();
     public static final NumberSetting FOG_DISTANCE = num("world.fogDistance", WORLD, "Fog", "Fog distance",
             "Moves the Overworld's distance fog closer (below 100%) or further away (above 100%). Fog never extends past your render distance.",
@@ -370,17 +391,17 @@ public final class BloomSettings {
             ChoiceSetting.of("low", "Low", "medium", "Medium", "high", "High", "custom", "Custom"), "preset", "fps")
             .<ChoiceSetting>profile().alsoIn(WEATHER, PARTICLES);
     public static final NumberSetting MAX_PARTICLES = num("perf.maxParticles", PERFORMANCE, "Effect quality", "Particle limit",
-            "Maximum number of BLOOD particles (all effects together).", 1500f, 100f, 6000f, 100f, INTEGER, "", "limit", "count").profile();
+            "Maximum number of MOTION particles (all effects together).", 1500f, 100f, 6000f, 100f, INTEGER, "", "limit", "count").profile();
     public static final NumberSetting EFFECT_DISTANCE = num("perf.effectDistance", PERFORMANCE, "Effect quality", "Effect distance",
             "Particles beyond this distance are thinned out and then hidden.", 36f, 12f, 72f, 2f, INTEGER, " blocks", "lod", "cull").profile();
     public static final ChoiceSetting POST_QUALITY = choice("perf.postQuality", PERFORMANCE, "Shader effects", "Shader quality",
             "Low: colour grading only (one pass, glow off). Medium: adds glow from a 320×180 buffer. High: wider, smoother glow with three blur rounds.",
             "medium", ChoiceSetting.of("low", "Low", "medium", "Medium", "high", "High"), "glow", "bloom").profile();
     public static final BoolSetting LITE_MODE = bool("perf.lite", PERFORMANCE, "Shader effects", "Performance-friendly mode",
-            "Keeps colour grading but turns off glow and sharpening, halves BLOOD's particle budget and drops BLOOD's starfield. Your other settings are kept.",
+            "Keeps colour grading but turns off glow and sharpening, halves MOTION's particle budget and drops MOTION's starfield. Your other settings are kept.",
             false, "fps", "potato", "light").profile();
     public static final ChoiceSetting SKY_QUALITY = choice("perf.skyQuality", PERFORMANCE, "Skyboxes", "Skybox quality",
-            "Largest skybox face BLOOD loads: Performance 256 px, Balanced 512 px, High 1024 px (full 4K for the Halloween skies), Ultra up to 2048 px for your own imports. "
+            "Largest skybox face MOTION loads: Performance 256 px, Balanced 512 px, High 1024 px (full 4K for the Halloween skies), Ultra up to 2048 px for your own imports. "
                     + "Larger skies are shrunk on a background thread. Each step down uses a quarter of the video memory.",
             "high", ChoiceSetting.of("performance", "Performance", "balanced", "Balanced", "high", "High", "ultra", "Ultra"),
             "texture", "vram", "resolution", "4k", "8k").profile();
@@ -390,20 +411,20 @@ public final class BloomSettings {
     public static final BoolSetting SKY_LOAD_CUSTOM = bool("sky.loadCustom", PERFORMANCE, "Skyboxes", "Load custom skyboxes",
             "Off: your imported skyboxes are hidden and never loaded (the built-in ones still work).", true, "import");
     public static final BoolSetting ADAPTIVE = bool("perf.adaptive", PERFORMANCE, "Adaptive effects", "Reduce effects when FPS drops",
-            "While your frame rate is below the target, BLOOD temporarily draws fewer particles and, if needed, skips glow. Your saved settings are not changed.",
+            "While your frame rate is below the target, MOTION temporarily draws fewer particles and, if needed, skips glow. Your saved settings are not changed.",
             true, "auto", "dynamic");
     public static final NumberSetting ADAPTIVE_TARGET = num("perf.adaptiveTarget", PERFORMANCE, "Adaptive effects", "Target FPS",
-            "Frame rate BLOOD tries to protect.", 60f, 30f, 240f, 5f, INTEGER, " FPS").dependsOn(ADAPTIVE);
+            "Frame rate MOTION tries to protect.", 60f, 30f, 240f, 5f, INTEGER, " FPS").dependsOn(ADAPTIVE);
     public static final BoolSetting LOW_FPS_TIP = bool("perf.lowFpsTip", PERFORMANCE, "Recommendations", "Low FPS suggestions",
-            "If your FPS stays below the threshold, BLOOD suggests effects you could lower. It never changes them for you.", true, "tip");
+            "If your FPS stays below the threshold, MOTION suggests effects you could lower. It never changes them for you.", true, "tip");
     public static final NumberSetting LOW_FPS_THRESHOLD = num("perf.lowFpsThreshold", PERFORMANCE, "Recommendations", "Suggestion threshold",
             "Suggest lowering effects when FPS stays below this for 15 seconds.", 40f, 15f, 144f, 5f, INTEGER, " FPS").dependsOn(LOW_FPS_TIP);
 
     // =====================================================================
     // HUD (style; widget positions live in the HUD layout)
     // =====================================================================
-    public static final BoolSetting HUD_ENABLED = bool("hud.enabled", Category.HUD, "HUD", "BLOOD HUD",
-            "Show BLOOD's HUD widgets (FPS, coordinates, keystrokes…). Arrange them in the HUD editor.", true, "overlay", "widgets");
+    public static final BoolSetting HUD_ENABLED = bool("hud.enabled", Category.HUD, "HUD", "MOTION HUD",
+            "Show MOTION's HUD widgets (FPS, coordinates, keystrokes…). Arrange them in the HUD editor.", true, "overlay", "widgets");
     public static final BoolSetting HUD_SHADOW = bool("hud.shadow", HUD, "Style", "Text shadow",
             "Draw a shadow behind HUD text.", true).<BoolSetting>profile().dependsOn(HUD_ENABLED);
     public static final BoolSetting HUD_BACKGROUND = bool("hud.background", HUD, "Style", "Backgrounds",
@@ -415,7 +436,7 @@ public final class BloomSettings {
     public static final ColorSetting HUD_TEXT = color("hud.textColor", HUD, "Style", "Text colour",
             "Default text colour for widgets.", 0xFFFFFF).<ColorSetting>profile().dependsOn(HUD_ENABLED);
     public static final BoolSetting HUD_HIDE_IN_F3 = bool("hud.hideWithDebug", HUD, "HUD", "Hide with debug screen",
-            "Hide BLOOD widgets while the F3 debug screen is open.", true).dependsOn(HUD_ENABLED);
+            "Hide MOTION widgets while the F3 debug screen is open.", true).dependsOn(HUD_ENABLED);
 
     /** Vanilla status effects the potion widget can hide one by one (registry paths). */
     public static final List<ChoiceSetting.Option> EFFECTS = ChoiceSetting.of(
@@ -435,7 +456,7 @@ public final class BloomSettings {
 
     // ---------------------------------------------------------------- crosshair
     public static final BoolSetting CROSSHAIR = bool("crosshair.enabled", HUD, "Crosshair", "Custom crosshair",
-            "Draw BLOOD's crosshair instead of Minecraft's. While it's on, the crosshair-style attack indicator isn't drawn: set Attack Indicator to Hotbar in Minecraft's options to keep one.",
+            "Draw MOTION's crosshair instead of Minecraft's. While it's on, the crosshair-style attack indicator isn't drawn: set Attack Indicator to Hotbar in Minecraft's options to keep one.",
             false, "aim", "reticle").profile();
     public static final ChoiceSetting CROSSHAIR_STYLE = choice("crosshair.style", HUD, "Crosshair", "Style",
             "Shape of the crosshair.", "cross",
@@ -466,7 +487,7 @@ public final class BloomSettings {
     // Keybinds (the keys themselves are Minecraft key mappings, stored in options.txt)
     // =====================================================================
     public static final BoolSetting KEY_CONFLICT_WARNINGS = bool("keys.conflictWarnings", KEYBINDS, "Keybinds", "Warn about key conflicts",
-            "Show a warning in the menu when a BLOOD key is also used by Minecraft or another mod.", true, "conflict");
+            "Show a warning in the menu when a MOTION key is also used by Minecraft or another mod.", true, "conflict");
 
     // ---------------------------------------------------------------------
 

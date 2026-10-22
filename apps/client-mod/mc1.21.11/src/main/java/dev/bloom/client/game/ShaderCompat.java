@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 
 /**
  * Detects whether Iris (or Oculus) has a shader pack switched on, via Iris's public API and
- * reflection, so BLOOD never needs Iris at compile time and never breaks when it's absent.
+ * reflection, so MOTION never needs Iris at compile time and never breaks when it's absent.
  */
 public final class ShaderCompat {
     private static final Object API;

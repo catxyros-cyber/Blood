@@ -52,7 +52,7 @@ public class SkyboxPage extends GenericPage {
                 new Button("Open skybox folder", "folder", Button.Style.GHOST, this::openFolder),
                 resetPageButton(screen, category))));
         rows.add(new Rows.Info("info", "Tip: drag PNG images or OptiFine resource packs (.zip) onto the game window to import them. "
-                + "Imports are copied into BLOOD's skybox folder; the originals are never changed.", Theme.palette().textDim()));
+                + "Imports are copied into MOTION's skybox folder; the originals are never changed.", Theme.palette().textDim()));
         List<Setting> settings = new ArrayList<>();
         for (Setting s : BloomSettings.in(Category.SKYBOX)) {
             if (s != BloomSettings.SKY_DAY && s != BloomSettings.SKY_NIGHT) settings.add(s);
@@ -330,7 +330,7 @@ public class SkyboxPage extends GenericPage {
                 if (Ui.inside(mx, my, cx, cy, cw, ch)) {
                     ChoiceSetting.Option o = options.get(i);
                     SkyboxCatalog.Entry e = SkyboxCatalog.find(o.id());
-                    String desc = e != null ? e.description() : "Minecraft's own sky (BLOOD's other sky options still apply).";
+                    String desc = e != null ? e.description() : "Minecraft's own sky (MOTION's other sky options still apply).";
                     return List.of(desc, "Click: use " + (choosingNight ? "at night" : "by day") + " · Right-click: use at night");
                 }
             }

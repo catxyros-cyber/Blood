@@ -1,5 +1,5 @@
 /**
- * Typed bridge to BLOOD's Rust commands (src-tauri/src). The Platform object
+ * Typed bridge to MOTION's Rust commands (src-tauri/src). The Platform object
  * built here is what the launcher core runs against in the app.
  */
 

@@ -2,7 +2,7 @@
 interface ImportMetaEnv {
   /** Azure application (client) id used for Microsoft sign-in. */
   readonly VITE_MS_CLIENT_ID?: string;
-  /** Base URL of the BLOOD API, e.g. https://bloomlauncher.example. Empty = online features off. */
+  /** Base URL of the MOTION API, e.g. https://bloomlauncher.example. Empty = online features off. */
   readonly VITE_BLOOM_API_URL?: string;
 }
 

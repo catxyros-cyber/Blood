@@ -101,7 +101,7 @@ export function analyzeMods(mods: InstalledMod[], instance: { loader: LoaderId; 
           kind: "unknown_file",
           severity: "info",
           files: [m.fileName],
-          message: `${m.fileName} has no mod metadata BLOOD recognises. It may be a library or a mod for another loader.`,
+          message: `${m.fileName} has no mod metadata MOTION recognises. It may be a library or a mod for another loader.`,
         });
       }
       continue;

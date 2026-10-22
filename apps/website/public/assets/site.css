@@ -1,16 +1,16 @@
-/* BLOOD website — shares the launcher's palette. No external fonts or scripts. */
+/* MOTION website — shares the launcher's palette. No external fonts or scripts. */
 :root {
-  --bg: #0a0708;
-  --panel: #120d0e;
-  --panel-2: #171112;
-  --raised: #201718;
-  --line: #251b1c;
-  --line-strong: #3b2b2d;
-  --fg: #f6efef;
-  --muted: #b8a9aa;
-  --faint: #7c6d6f;
-  --accent: #e3192f;
-  --accent-ink: #ffffff;
+  --bg: #050706;
+  --panel: #0b0e0c;
+  --panel-2: #0f1311;
+  --raised: #161c19;
+  --line: #19201c;
+  --line-strong: #29342e;
+  --fg: #f2f7f4;
+  --muted: #a7b5ad;
+  --faint: #6b7a72;
+  --accent: #39ff88;
+  --accent-ink: #03140a;
   --danger: #f87171;
   --warn: #fbbf24;
   --radius: 16px;
@@ -205,3 +205,8 @@ section.u-pt8 { padding-top: 8px; }
 .admin-tag { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
 .admin-tag .admin-actions { margin-left: auto; }
 .admin-tag-pill { font-weight: 700; }
+
+/* Accessories (admin) */
+.admin-wing { background: #0b0e0c !important; object-fit: contain; }
+.admin-aura { width: 128px; height: 64px; border-radius: 6px; display: grid; place-items: center; font-size: 12px; color: #fff; text-transform: capitalize;
+  background: radial-gradient(circle at 50% 55%, var(--aura) 0%, color-mix(in srgb, var(--aura) 35%, transparent) 35%, #050706 75%); }

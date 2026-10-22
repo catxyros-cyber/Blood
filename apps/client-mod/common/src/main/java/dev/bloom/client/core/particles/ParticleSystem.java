@@ -3,7 +3,7 @@ package dev.bloom.client.core.particles;
 import dev.bloom.client.core.settings.BloomSettings;
 
 /**
- * BLOOD's decorative particles: cherry petals, leaves, snow, rain (+ splashes), fireflies and
+ * MOTION's decorative particles: cherry petals, leaves, snow, rain (+ splashes), fireflies and
  * floating motes. Client-side only, purely visual, and independent of Minecraft's particle
  * engine (so it can't fill up or slow down vanilla particles).
  *

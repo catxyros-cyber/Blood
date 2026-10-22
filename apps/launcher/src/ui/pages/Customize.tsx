@@ -1,6 +1,6 @@
 /**
- * Customize: BLOOD Client for an installation — install/update, visual profile, skyboxes,
- * quick effects, in-game menu theme and key. Everything here writes BLOOD Client's own config
+ * Customize: MOTION Client for an installation — install/update, visual profile, skyboxes,
+ * quick effects, in-game menu theme and key. Everything here writes MOTION Client's own config
  * (config/bloomclient/settings.json, options.txt key line); the game picks changes up within
  * seconds if it's running.
  */
@@ -30,7 +30,9 @@ import { getInstance, selectedInstance } from "../../services/instances";
 import { native } from "../../services/native";
 import { useStore } from "../../services/store";
 import { Petals } from "../backdrop";
+import { AccessoryCard } from "../accessoryCard";
 import { CapeCard } from "../capeCard";
+import { CapeMotionSection, MenuBackgroundSection } from "./customizeExtras";
 import { Badge, Button, Card, Callout, cx, PageHeader, Segmented, Select, Skeleton, Spinner, Toggle } from "../components";
 import { BloodMark, Icon } from "../icons";
 import { loaderLabel } from "../instanceParts";
@@ -43,8 +45,8 @@ export function CustomizePage({ instanceId }: { instanceId?: string }) {
   if (!inst) {
     return (
       <div>
-        <PageHeader title="Visuals" subtitle="BLOOD Client: custom skies, decorative weather, particles and visual profiles." />
-        <Card className="p-6 text-muted">Create an installation first, then come back to add BLOOD Client.</Card>
+        <PageHeader title="Visuals" subtitle="MOTION Client: custom skies, decorative weather, particles and visual profiles." />
+        <Card className="p-6 text-muted">Create an installation first, then come back to add MOTION Client.</Card>
       </div>
     );
   }
@@ -56,7 +58,7 @@ export function CustomizePage({ instanceId }: { instanceId?: string }) {
             <BloodMark size={30} /> Visuals
           </span>
         }
-        subtitle="Skies, weather, particles and visual profiles for BLOOD Client. Everything is client-side and visual only. HUD modules live in BLOOD Mods."
+        subtitle="Skies, weather, particles and visual profiles for MOTION Client. Everything is client-side and visual only. HUD modules live in MOTION Mods."
         actions={
           <Select
             value={inst.id}
@@ -67,6 +69,7 @@ export function CustomizePage({ instanceId }: { instanceId?: string }) {
         }
       />
       <CapeCard />
+      <AccessoryCard />
       <CustomizeInstance key={inst.id} inst={inst} />
     </div>
   );
@@ -109,7 +112,7 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
     try {
       setView(await writeSettings(getInstance(inst.id) ?? inst, patch));
     } catch (e) {
-      reportError("Couldn't save BLOOD Client settings", e);
+      reportError("Couldn't save MOTION Client settings", e);
     }
   };
 
@@ -135,7 +138,7 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
             try {
               await enable(getInstance(inst.id) ?? inst);
             } catch (e) {
-              reportError("Couldn't add BLOOD Client", e);
+              reportError("Couldn't add MOTION Client", e);
             } finally {
               setBusy(false);
               void reload();
@@ -145,9 +148,9 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
             setBusy(true);
             try {
               await disable(getInstance(inst.id) ?? inst);
-              toast({ kind: "info", title: "BLOOD Client removed", message: "The mod was moved to the Recycle Bin. Your BLOOD settings are kept." });
+              toast({ kind: "info", title: "MOTION Client removed", message: "The mod was moved to the Recycle Bin. Your MOTION settings are kept." });
             } catch (e) {
-              reportError("Couldn't remove BLOOD Client", e);
+              reportError("Couldn't remove MOTION Client", e);
             } finally {
               setBusy(false);
               void reload();
@@ -207,12 +210,12 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
               <Toggle checked={bool("leaves.enabled", true)} onChange={(v) => void write({ settings: { "leaves.enabled": v } })} label="Falling leaves" description="Leaves drifting down in forests." />
               <Toggle checked={bool("fireflies.enabled", true)} onChange={(v) => void write({ settings: { "fireflies.enabled": v } })} label="Fireflies" description="Soft glowing fireflies at night." />
               <Toggle checked={bool("wind.enabled", true)} onChange={(v) => void write({ settings: { "wind.enabled": v } })} label="Wind" description="Pushes petals, leaves, snow and rain." />
-              <Toggle checked={bool("hud.enabled", true)} onChange={(v) => void write({ settings: { "hud.enabled": v } })} label="BLOOD HUD" description="FPS, coordinates, keystrokes… (arrange in game)." />
+              <Toggle checked={bool("hud.enabled", true)} onChange={(v) => void write({ settings: { "hud.enabled": v } })} label="MOTION HUD" description="FPS, coordinates, keystrokes… (arrange in game)." />
             </div>
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-line">
               <div>
                 <div className="font-medium text-[13.5px]">Effect quality</div>
-                <div className="text-[12.5px] text-muted">Particle limits and effect distance. BLOOD also lowers effects briefly if your FPS drops.</div>
+                <div className="text-[12.5px] text-muted">Particle limits and effect distance. MOTION also lowers effects briefly if your FPS drops.</div>
               </div>
               <Segmented
                 value={get<string>("perf.quality", "medium") as "low" | "medium" | "high"}
@@ -222,16 +225,20 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
             </div>
           </Section>
 
-          <Section title="In-game menu" subtitle="The BLOOD menu has every setting, the HUD editor and profile management.">
+          <MenuBackgroundSection inst={inst} get={get} write={(settings) => write({ settings })} />
+
+          <CapeMotionSection get={get} write={(settings) => write({ settings })} />
+
+          <Section title="In-game menu" subtitle="The MOTION menu has every setting, the HUD editor and profile management.">
             <div className="flex items-center justify-between gap-6">
               <div>
                 <div className="font-medium text-[13.5px]">Menu theme</div>
-                <div className="text-[12.5px] text-muted">Colours of the BLOOD menu and HUD accents.</div>
+                <div className="text-[12.5px] text-muted">Colours of the MOTION menu and HUD accents.</div>
               </div>
               <div className="flex items-center gap-2">
                 {MENU_THEMES.map((t) => {
                   const accent = THEMES.find((x) => x.id === t.id)?.accent ?? "#fff";
-                  const active = get<string>("ui.theme", "crimson") === t.id;
+                  const active = get<string>("ui.theme", "motion") === t.id;
                   return (
                     <button
                       key={t.id}
@@ -286,15 +293,15 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="font-display text-[18px] font-semibold">BLOOD Client</div>
+            <div className="font-display text-[18px] font-semibold">MOTION Client</div>
             {st.enabled ? <Badge tone="accent">Installed {st.installedVersion}</Badge> : sup.ok ? <Badge>Not installed</Badge> : <Badge tone="warn">Not available here</Badge>}
             {st.bundle && <Badge>Bundled {st.bundle.version}</Badge>}
           </div>
           <p className="text-[13px] text-muted mt-1 leading-relaxed">
             {st.enabled
-              ? "Press Right Shift in game to open the BLOOD menu. Changes you make here are picked up by the game within a few seconds."
+              ? "Press Right Shift in game to open the MOTION menu. Changes you make here are picked up by the game within a few seconds."
               : sup.ok
-                ? `Adds the BLOOD Client mod to "${inst.name}"${inst.loader === "fabric" || inst.loader === "quilt" ? " (plus Fabric API from Modrinth if it's missing)" : ""}. Your other mods aren't touched.`
+                ? `Adds the MOTION Client mod to "${inst.name}"${inst.loader === "fabric" || inst.loader === "quilt" ? " (plus Fabric API from Modrinth if it's missing)" : ""}. Your other mods aren't touched.`
                 : sup.message}
           </p>
           {st.updateAvailable && <p className="text-[13px] text-accent mt-1">Version {st.bundle?.version} is ready — it's installed automatically the next time you press Play, or now:</p>}
@@ -316,7 +323,7 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
         <div className="flex flex-col items-end gap-2 shrink-0">
           {sup.ok && !st.enabled && (
             <Button variant="primary" loading={busy} disabled={running} icon={<Icon.Plus size={16} />} onClick={onEnable}>
-              Add BLOOD Client
+              Add MOTION Client
             </Button>
           )}
           {sup.ok && st.enabled && st.updateAvailable && (
@@ -376,7 +383,7 @@ function SkyboxSection({ inst, view, custom, onPick, onImported }: {
     }
   };
   return (
-    <Section title="Skybox" subtitle="BLOOD crossfades between your day and night skies. Brightness, tint, rotation and more are in game (Right Shift → Skyboxes).">
+    <Section title="Skybox" subtitle="MOTION crossfades between your day and night skies. Brightness, tint, rotation and more are in game (Right Shift → Skyboxes).">
       <div className="flex items-center justify-between mb-3">
         <Segmented value={slot} onChange={setSlot} options={[{ value: "day", label: "Day sky" }, { value: "night", label: "Night sky" }]} />
         <Button size="sm" loading={importing} icon={<Icon.Upload size={14} />} onClick={() => void doImport()}>
@@ -473,7 +480,7 @@ function Preview({ view, custom, installed }: { view: SettingsView | null; custo
   const customSky = custom.find((c) => c.id === id);
   const petals = s["petals.enabled"] !== false;
   const snow = s["snow.enabled"] === true;
-  const theme = (s["ui.theme"] as string | undefined) ?? "crimson";
+  const theme = (s["ui.theme"] as string | undefined) ?? "motion";
   const accent = THEMES.find((t) => t.id === theme)?.accent ?? "#e3192f";
   const petalColor = typeof s["petals.colorA"] === "string" ? (s["petals.colorA"] as string) : "#d3203a";
   const reduce = useStore(app, (st) => st.settings.reduceMotion);
@@ -499,7 +506,7 @@ function Preview({ view, custom, installed }: { view: SettingsView | null; custo
           </div>
           {/* mini in-game menu chip */}
           <div className="absolute left-3 bottom-3 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-white" style={{ background: "rgba(20,12,18,0.82)", borderLeft: `3px solid ${accent}` }}>
-            BLOOD menu · {MENU_THEMES.find((t) => t.id === theme)?.name ?? "Crimson"}
+            MOTION menu · {MENU_THEMES.find((t) => t.id === theme)?.name ?? "Crimson"}
           </div>
         </div>
         <div className="p-3.5 text-[12.5px] text-muted leading-relaxed">
@@ -509,7 +516,7 @@ function Preview({ view, custom, installed }: { view: SettingsView | null; custo
           <div className="text-faint mt-1.5">A preview: in game the look also depends on your world, time of day, weather and shaders.</div>
         </div>
       </Card>
-      {!installed && <div className="text-[12.5px] text-faint px-1">Add BLOOD Client to this installation to change these settings.</div>}
+      {!installed && <div className="text-[12.5px] text-faint px-1">Add MOTION Client to this installation to change these settings.</div>}
     </div>
   );
 }

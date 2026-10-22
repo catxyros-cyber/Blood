@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 
 import java.util.List;
 
-/** The visual profiles that ship with BLOOD. Values not listed use the setting's default. */
+/** The visual profiles that ship with MOTION. Values not listed use the setting's default. */
 public final class BuiltInProfiles {
     public static final String DEFAULT_ID = "blood_moon";
 
@@ -14,7 +14,7 @@ public final class BuiltInProfiles {
 
     public static List<Profile> create() {
         return List.of(
-                p("blood_moon", "Blood Red", "BLOOD's signature look: crimson dusk, a blood-red moon, red petals and haze, and a dark, dramatic crimson grade with glow.",
+                p("blood_moon", "Blood Red", "MOTION's signature look: crimson dusk, a blood-red moon, red petals and haze, and a dark, dramatic crimson grade with glow.",
                         v().n("post.contrast", 1.12).n("post.saturation", 1.05).n("post.warmth", 0.1).c("post.tint", "#E3192F")
                                 .n("post.tintStrength", 0.12).n("post.vignette", 0.35).b("post.glow", true).n("post.glowStrength", 0.35)
                                 .n("post.glowThreshold", 0.72).n("post.brightness", -0.1).n("world.netherFogStrength", 0.25)),
@@ -60,7 +60,7 @@ public final class BuiltInProfiles {
                                 .s("perf.quality", "low").b("sky.enabled", false).b("sky.stars", false).b("sky.clouds", false)
                                 .b("petals.enabled", false).b("leaves.enabled", false).b("fireflies.enabled", false).b("dust.enabled", false)
                                 .b("rain.enabled", false).b("snow.enabled", false).b("glow.sun", false).n("env.haze", 0).n("sky.horizonBlend", 0)),
-                p("vanilla", "Vanilla", "Plain Minecraft visuals: BLOOD's sky, shaders, fog changes, particles and outline are all off. The HUD still works.",
+                p("vanilla", "Vanilla", "Plain Minecraft visuals: MOTION's sky, shaders, fog changes, particles and outline are all off. The HUD still works.",
                         v().b("post.enabled", false).b("sky.enabled", false).b("world.fogEnabled", false).b("sky.stars", false)
                                 .b("petals.enabled", false).b("leaves.enabled", false).b("fireflies.enabled", false).b("dust.enabled", false)
                                 .b("rain.enabled", false).b("snow.enabled", false).b("glow.sun", false).b("outline.enabled", false)

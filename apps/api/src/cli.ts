@@ -33,7 +33,7 @@ async function main() {
         const { rows } = await pool.query<{ minecraft_uuid: string }>("SELECT minecraft_uuid FROM users WHERE lower(username) = lower($1)", [who]);
         if (rows[0]) user = await store.getUserByMinecraft(rows[0].minecraft_uuid);
       }
-      if (!user) throw new Error(`No BLOOD account for ${who}. They must sign in from the launcher once.`);
+      if (!user) throw new Error(`No MOTION account for ${who}. They must sign in from the launcher once.`);
       if (daysArg === "revoke") {
         await store.setGrant({ userId: user.id, reason: "revoked", expiresAt: Date.now() - 1 });
         console.log(`Revoked the Premium grant for ${user.username}.`);

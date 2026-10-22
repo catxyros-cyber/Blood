@@ -1,5 +1,5 @@
 /**
- * Read and write Minecraft's options.txt without disturbing anything BLOOD
+ * Read and write Minecraft's options.txt without disturbing anything MOTION
  * doesn't change: key order, unknown keys and keybinds are preserved.
  */
 

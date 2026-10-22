@@ -2,7 +2,7 @@
  * Java heap and garbage-collection statistics from the JVM's own unified GC
  * log (`-Xlog:gc`, Java 9+). These are measured values: heap in use after each
  * collection, committed heap, and stop-the-world pause times — long pauses are
- * the most common cause of Minecraft "stutter". BLOOD does not estimate FPS.
+ * the most common cause of Minecraft "stutter". MOTION does not estimate FPS.
  */
 
 export interface GcEvent {

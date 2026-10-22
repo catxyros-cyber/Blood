@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, TaggedPlayer, User } from "./types";
+import type { Accessory, Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, TaggedPlayer, User } from "./types";
 
 const key = (b: Buffer) => b.toString("hex");
 
@@ -17,6 +17,9 @@ export class MemoryStore implements Store {
   licenses = new Map<string, LicenseKey>();
   capes = new Map<string, Cape>();
   playerCapeMap = new Map<string, string>();
+  accessories = new Map<string, Accessory>();
+  /** `${uuid}|${kind}` → accessory id */
+  playerAccessoryMap = new Map<string, string>();
   tags = new Map<string, { text: string; color: string }>();
   presence = new Map<string, { at: number; playing: boolean }>();
   events = new Map<string, string>();
@@ -231,7 +234,50 @@ export class MemoryStore implements Store {
       if (id && this.capes.get(id)?.enabled) out[u] = id;
     }
     return out;
+  }  async createAccessory(a: Accessory) {
+    this.accessories.set(a.id, { ...a });
   }
+  async getAccessory(id: string) {
+    const a = this.accessories.get(id);
+    return a ? { ...a } : null;
+  }
+  async listAccessories(includeDisabled: boolean) {
+    return [...this.accessories.values()]
+      .filter((a) => includeDisabled || a.enabled)
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map((a) => ({ ...a, png: null }));
+  }
+  async updateAccessory(id: string, patch: { enabled?: boolean; access?: Accessory["access"] }) {
+    const a = this.accessories.get(id);
+    if (!a) return false;
+    if (patch.enabled !== undefined) a.enabled = patch.enabled;
+    if (patch.access !== undefined) a.access = patch.access;
+    return true;
+  }
+  async deleteAccessory(id: string) {
+    for (const [k, v] of this.playerAccessoryMap) if (v === id) this.playerAccessoryMap.delete(k);
+    return this.accessories.delete(id);
+  }
+  async setPlayerAccessory(minecraftUuid: string, kind: Accessory["kind"], id: string | null) {
+    const k = `${minecraftUuid}|${kind}`;
+    if (id) this.playerAccessoryMap.set(k, id);
+    else this.playerAccessoryMap.delete(k);
+  }
+  async getPlayerAccessories(minecraftUuid: string) {
+    return { wings: this.playerAccessoryMap.get(`${minecraftUuid}|wings`) ?? null, aura: this.playerAccessoryMap.get(`${minecraftUuid}|aura`) ?? null };
+  }
+  async playerAccessories(uuids: string[]) {
+    const wings: Record<string, string> = {};
+    const auras: Record<string, { color: string; style: string }> = {};
+    for (const u of uuids) {
+      const w = this.accessories.get(this.playerAccessoryMap.get(`${u}|wings`) ?? "");
+      if (w?.enabled) wings[u] = w.id;
+      const a = this.accessories.get(this.playerAccessoryMap.get(`${u}|aura`) ?? "");
+      if (a?.enabled) auras[u] = { color: a.color, style: a.style ?? "glow" };
+    }
+    return { wings, auras };
+  }
+
 
   async getUserByUsername(username: string) {
     const n = username.toLowerCase();

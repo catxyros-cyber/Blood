@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>BLOOD key admin</title>
-  <meta name="theme-color" content="#130d11" />
+  <title>MOTION MOTION admin</title>
+  <meta name="theme-color" content="#050706" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="stylesheet" href="/assets/site.css" />
   <script src="/assets/admin.js" defer></script>
@@ -13,7 +13,7 @@
 <body>
   <header class="site-header">
     <div class="wrap">
-      <a class="brand" href="/"><img src="/img/blood-mark.svg" alt="" width="30" height="30" />BLOOD</a>
+      <a class="brand" href="/"><img src="/img/motion-mark.svg" alt="" width="30" height="30" />MOTION MOTION</a>
       <nav class="nav" aria-label="Main"><a href="/">Home</a></nav>
     </div>
   </header>
@@ -65,15 +65,15 @@
 
           <div class="card u-mt20">
             <h3>Capes</h3>
-            <p class="muted">Publish capes for BLOOD players. Use Minecraft's cape layout: 64×32, or <b>HD</b> up to 1024×512 (recommended). Any other picture (a wallpaper, a 4K artwork) is wrapped onto an HD cape for you. PNG, JPG, WebP or an <b>animated GIF</b> (up to 64 frames); for animations you can also upload a PNG strip with the frames stacked top to bottom. Only players using BLOOD see these capes.</p>
+            <p class="muted">Publish capes for MOTION players. Use Minecraft's cape layout: 64×32, or <b>HD</b> up to 1024×512 (recommended). Any other picture (a wallpaper, a 4K artwork) is wrapped onto an HD cape for you. PNG, JPG, WebP or an <b>animated GIF</b> (up to 64 frames); for animations you can also upload a PNG strip with the frames stacked top to bottom. Only players using MOTION see these capes.</p>
             <form class="admin-form u-mt16" data-cape-form>
               <div class="row">
                 <label class="grow">Cape name
-                  <input type="text" name="name" maxlength="40" required placeholder="e.g. Crimson Founder" />
+                  <input type="text" name="name" maxlength="40" required placeholder="e.g. Motion Founder" />
                 </label>
                 <label>Who can wear it
                   <select name="access">
-                    <option value="everyone">Every BLOOD player</option>
+                    <option value="everyone">Every MOTION player</option>
                     <option value="premium">Premium only</option>
                   </select>
                 </label>
@@ -91,8 +91,49 @@
           </div>
 
           <div class="card u-mt20">
+            <h3>Accessories</h3>
+            <p class="muted">Wings and auras for MOTION players. Players wear one of each, pick them in the launcher (Customize), and only MOTION players see them. <b>Wings:</b> upload a PNG of <b>one wing</b> with a transparent background, the shoulder about halfway down the <b>left</b> edge and the tip on the right (the other wing is mirrored); any size up to 2048 px. They rest folded, breathe when you stand still and spread and flap as you move. <b>Auras:</b> a colour and a particle style.</p>
+            <form class="admin-form u-mt16" data-acc-form>
+              <div class="row">
+                <label class="grow">Name
+                  <input type="text" name="name" maxlength="40" required placeholder="e.g. Neon Wings" />
+                </label>
+                <label>Type
+                  <select name="kind" data-acc-kind>
+                    <option value="wings">Wings</option>
+                    <option value="aura">Aura</option>
+                  </select>
+                </label>
+                <label>Who can wear it
+                  <select name="access">
+                    <option value="everyone">Every player</option>
+                    <option value="premium">Premium only</option>
+                  </select>
+                </label>
+                <label>Colour
+                  <input type="color" name="color" value="#39ff88" />
+                </label>
+                <label data-acc-style class="hidden">Aura style
+                  <select name="style">
+                    <option value="glow">Glow</option>
+                    <option value="embers">Embers</option>
+                    <option value="sparkles">Sparkles</option>
+                    <option value="orbit">Orbit</option>
+                  </select>
+                </label>
+                <label data-acc-file>Wing image
+                  <input type="file" name="file" accept="image/png,image/webp,image/gif,image/jpeg" />
+                </label>
+                <button class="btn btn-primary" type="submit">Publish</button>
+              </div>
+            </form>
+            <p class="admin-msg" data-acc-msg></p>
+            <div class="admin-capes u-mt14" data-accs></div>
+          </div>
+
+          <div class="card u-mt20">
             <h3>Tags</h3>
-            <p class="muted">Give a player a tag shown before their name in game, like <b>[OWNER]</b>. Only BLOOD players see tags. The player must have signed in to the BLOOD launcher once. Leave the tag empty to remove it.</p>
+            <p class="muted">Give a player a tag shown before their name in game, like <b>[OWNER]</b>. Only MOTION players see tags. The player must have signed in to the MOTION launcher once. Leave the tag empty to remove it.</p>
             <form class="admin-form u-mt16" data-tag-form>
               <div class="row">
                 <label class="grow">Minecraft name

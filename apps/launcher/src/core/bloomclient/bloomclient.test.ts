@@ -109,7 +109,7 @@ test("png header and skybox rules", () => {
   assert.equal(pngSize(new Uint8Array(10)), null);
 });
 
-// ---------------------------------------------------------------- BLOOD Mods (HUD block)
+// ---------------------------------------------------------------- MOTION Mods (HUD block)
 
 import { activeLayout, HUD_WIDGETS, MOD_PRESETS, MODULES, patchHud, readHud, widgetOption, widgetVisible } from "./modules";
 

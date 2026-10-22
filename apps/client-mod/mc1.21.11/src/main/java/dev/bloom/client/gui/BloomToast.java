@@ -8,7 +8,7 @@ import net.minecraft.util.FormattedCharSequence;
 
 import java.util.List;
 
-/** BLOOD's notification, styled like the menu. Shown for about five seconds. */
+/** MOTION's notification, styled like the menu. Shown for about five seconds. */
 public final class BloomToast implements Toast {
     private static final int WIDTH = 200;
     private final String title;

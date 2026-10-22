@@ -42,13 +42,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * BLOOD Client's shared (loader-independent) entry point. The Fabric and NeoForge entrypoints
+ * MOTION Client's shared (loader-independent) entry point. The Fabric and NeoForge entrypoints
  * call {@link #init}, register {@link BloomKeys}, and forward ticks, HUD rendering and world
  * rendering here.
  */
 public final class BloomClient {
     public static final String MOD_ID = "bloomclient";
-    private static final Logger LOGGER = LoggerFactory.getLogger("BLOOD Client");
+    private static final Logger LOGGER = LoggerFactory.getLogger("MOTION Client");
     private static BloomClient instance;
 
     private final Platform platform;
@@ -137,7 +137,7 @@ public final class BloomClient {
             skyboxes.scan();
             BloomSettings.SKY_DAY.revalidate();
             BloomSettings.SKY_NIGHT.revalidate();
-            toast("Settings updated", "Changes from the BLOOD launcher were applied.");
+            toast("Settings updated", "Changes from the MOTION launcher were applied.");
         });
         profiles.addListener((Profile p, ProfileManager.Reason reason) -> {
             if (reason == ProfileManager.Reason.BIOME || reason == ProfileManager.Reason.EXTERNAL) {
@@ -145,8 +145,8 @@ public final class BloomClient {
             }
             if (p.hudLayout() != null) hudLayouts.setActive(p.hudLayout());
         });
-        Runtime.getRuntime().addShutdownHook(new Thread(this::saveNow, "BLOOD settings save"));
-        Log.info("BLOOD Client " + platform.modVersion() + " ready on " + platform.loaderName());
+        Runtime.getRuntime().addShutdownHook(new Thread(this::saveNow, "MOTION settings save"));
+        Log.info("MOTION Client " + platform.modVersion() + " ready on " + platform.loaderName());
     }
 
     public static void init(Platform platform) {
@@ -159,7 +159,7 @@ public final class BloomClient {
     /** Logs a rendering failure (rate-limited) instead of crashing the game. */
     public static void reportRenderError(String what, Throwable t) {
         int n = RENDER_ERRORS.merge(what, 1, Integer::sum);
-        if (n == 1 || n % 1000 == 0) Log.warn("BLOOD " + what + " rendering failed (" + n + "x)", t);
+        if (n == 1 || n % 1000 == 0) Log.warn("MOTION " + what + " rendering failed (" + n + "x)", t);
     }
 
     public static BloomClient get() {
@@ -264,7 +264,7 @@ public final class BloomClient {
             store.tick();
             profiles.tick();
             if (pendingLoadProblem != null && mc.level != null) {
-                toast("BLOOD settings", pendingLoadProblem);
+                toast("MOTION settings", pendingLoadProblem);
                 pendingLoadProblem = null;
             }
             env.update(mc.level);
@@ -274,10 +274,11 @@ public final class BloomClient {
             } else {
                 hadLevel = true;
                 CapeManager.tick(mc);
+                dev.bloom.client.game.Auras.tick(mc);
             }
             if (mc.level != null && mc.gameRenderer != null) {
                 Vec3 cam = mc.gameRenderer.getMainCamera().position();
-                // Performance-friendly mode halves BLOOD's particle budget.
+                // Performance-friendly mode halves MOTION's particle budget.
                 float factor = budget.factor() * (BloomSettings.LITE_MODE.on() ? 0.5f : 1f);
                 if (!mc.isPaused()) particles.tick(env, cam.x, cam.y, cam.z, factor);
             } else {
@@ -289,8 +290,8 @@ public final class BloomClient {
                 everySecond(mc, now);
             }
         } catch (RuntimeException e) {
-            // Never let a BLOOD bug crash the game.
-            if (ticks % 200 == 1) Log.warn("BLOOD tick failed", e);
+            // Never let a MOTION bug crash the game.
+            if (ticks % 200 == 1) Log.warn("MOTION tick failed", e);
         }
     }
 
@@ -343,7 +344,7 @@ public final class BloomClient {
         }
         while (BloomKeys.TOGGLE_VISUALS.consumeClick()) {
             BloomSettings.ENABLED.toggle();
-            toast("BLOOD visuals", BloomSettings.ENABLED.on() ? "On" : "Off — plain Minecraft");
+            toast("MOTION visuals", BloomSettings.ENABLED.on() ? "On" : "Off — plain Minecraft");
         }
         while (BloomKeys.TOGGLE_HUD.consumeClick()) {
             hudHidden = !hudHidden;
@@ -383,7 +384,7 @@ public final class BloomClient {
             store.flush();
             profiles.flush();
         } catch (RuntimeException e) {
-            Log.warn("Saving BLOOD settings failed", e);
+            Log.warn("Saving MOTION settings failed", e);
         }
     }
 

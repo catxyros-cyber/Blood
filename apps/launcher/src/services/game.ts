@@ -46,7 +46,7 @@ async function resolveJava(inst: Instance, required: number, managed?: { path: s
   if (info.major < required) {
     throw new BloomError(
       "java_too_old",
-      `Minecraft ${inst.gameVersion} needs Java ${required}, but ${custom} is Java ${info.major}. Remove the custom Java path to let BLOOD use the right version.`,
+      `Minecraft ${inst.gameVersion} needs Java ${required}, but ${custom} is Java ${info.major}. Remove the custom Java path to let MOTION use the right version.`,
     );
   }
   if (!info.is64bit) toast({ kind: "warning", title: "32-bit Java", message: "This Java is 32-bit and can only use about 1.5 GB of RAM." });
@@ -110,10 +110,10 @@ export async function play(instanceId: string, opts: { repair?: boolean; ignoreM
     const java = await resolveJava(inst, required, prepared.managedJava);
 
     await applyPendingPreset(inst).catch((e) => console.warn("preset", e));
-    // Keep BLOOD Client on the version bundled with this launcher (never blocks the launch).
-    updateTask(taskId, { stage: "Checking BLOOD Client", progress: null, detail: undefined });
+    // Keep MOTION Client on the version bundled with this launcher (never blocks the launch).
+    updateTask(taskId, { stage: "Checking MOTION Client", progress: null, detail: undefined });
     await bloomClientBeforeLaunch(inst).catch((e) =>
-      toast({ kind: "warning", title: "BLOOD Client wasn't updated", message: errorMessage(e) }),
+      toast({ kind: "warning", title: "MOTION Client wasn't updated", message: errorMessage(e) }),
     );
     await writeOverlayConfig(inst).catch((e) => console.warn("overlay", e));
 
@@ -143,7 +143,7 @@ export async function play(instanceId: string, opts: { repair?: boolean; ignoreM
       launcherVersion: app.get().paths?.version ?? "0",
       loggingConfigPath: prepared.loggingConfigPath,
       memory: { minMb: Math.min(memory.minMb, memory.maxMb), maxMb: memory.maxMb },
-      // BLOOD Client asks this server which capes players wear.
+      // MOTION Client asks this server which capes players wear.
       systemProps: API_URL ? { "bloodclient.api": API_URL } : undefined,
       extraJvmArgs: [...presetArgs, ...s.jvmArgs, ...(inst.jvmArgs ?? []), ...(gcArg ? [gcArg] : [])],
       extraGameArgs: [...s.gameArgs, ...(inst.gameArgs ?? [])],

@@ -1,4 +1,4 @@
-/** Types for Mojang's launcher metadata (piston-meta). Only fields BLOOD uses are declared. */
+/** Types for Mojang's launcher metadata (piston-meta). Only fields MOTION uses are declared. */
 
 export const VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
 export const JAVA_RUNTIME_INDEX_URL =

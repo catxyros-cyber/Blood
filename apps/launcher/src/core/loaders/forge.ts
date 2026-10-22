@@ -4,7 +4,7 @@
  * Both loaders ship an installer jar whose `install_profile.json` describes
  * libraries to download and "processors" — small Java programs from the
  * loader's own Maven that patch the vanilla client (binary patches, mappings).
- * BLOOD performs the same steps as the official installer: it downloads the
+ * MOTION performs the same steps as the official installer: it downloads the
  * installer and libraries with checksum verification, runs the processors in a
  * separate Java process (never inside the launcher) and checks their outputs
  * against the hashes the installer declares.
@@ -363,7 +363,7 @@ async function installModern(
       n++;
       const args = pr.args.map((a) => resolveToken(a, baseCtx));
 
-      // BLOOD downloads the official mappings itself (verified), instead of letting the tool fetch them.
+      // MOTION downloads the official mappings itself (verified), instead of letting the tool fetch them.
       const task = args[args.indexOf("--task") + 1];
       if (args.includes("--task") && task === "DOWNLOAD_MOJMAPS") {
         const mappings = o.vanilla.downloads?.client_mappings;
@@ -424,7 +424,7 @@ async function installModern(
 /**
  * The official launcher runs an inherited version from versions/<id>/<id>.jar
  * (a copy of the vanilla jar). Forge 1.17+ relies on this name to keep the
- * vanilla jar off its module layer, so BLOOD does the same.
+ * vanilla jar off its module layer, so MOTION does the same.
  */
 async function finish(p: Platform, o: ForgeInstallOptions, profile: VersionJson): Promise<ForgeInstallResult> {
   const L = layout(p.dataDir, p.sep);

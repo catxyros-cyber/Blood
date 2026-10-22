@@ -1,5 +1,5 @@
 /**
- * Performance mods BLOOD knows how to recommend, and well-known conflicts
+ * Performance mods MOTION knows how to recommend, and well-known conflicts
  * between rendering/optimization mods. Availability for a specific Minecraft
  * version and loader is always checked live against Modrinth — nothing here
  * claims a mod exists for a version or promises an FPS gain.
@@ -87,7 +87,7 @@ export const PERF_MODS: PerfModInfo[] = [
     modIds: ["sodium-extra"],
     title: "Sodium Extra",
     category: "overlay",
-    what: "Adds extra video options and the optional in-game FPS overlay BLOOD configures.",
+    what: "Adds extra video options and the optional in-game FPS overlay MOTION configures.",
     presets: [],
   },
 ];

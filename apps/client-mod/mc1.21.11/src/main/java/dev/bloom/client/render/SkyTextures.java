@@ -267,7 +267,7 @@ public final class SkyTextures {
             int faceSize = img.getWidth() / 3;
             // A new texture each time: the GPU texture's size is fixed when it's created.
             if (e.texture != null) Minecraft.getInstance().getTextureManager().release(e.location);
-            String label = "BLOOD sky " + e.skyboxId;
+            String label = "MOTION sky " + e.skyboxId;
             e.texture = new DynamicTexture(() -> label, img);
             Minecraft.getInstance().getTextureManager().register(e.location, e.texture);
             e.faceSize = faceSize;
@@ -368,7 +368,7 @@ public final class SkyTextures {
                 }
             }
             Identifier rl = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "dynamic/sky_preview_" + (counter++));
-            Minecraft.getInstance().getTextureManager().register(rl, new DynamicTexture(() -> "BLOOD sky preview", thumb));
+            Minecraft.getInstance().getTextureManager().register(rl, new DynamicTexture(() -> "MOTION sky preview", thumb));
             PREVIEWS.put(id, rl);
             return rl;
         } catch (Exception e) {

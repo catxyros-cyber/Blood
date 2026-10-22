@@ -22,7 +22,7 @@ import java.util.zip.ZipFile;
 
 /**
  * Reads OptiFine/MCPatcher custom sky layers ({@code optifine/sky/world0/skyN.properties})
- * from a resource pack (.zip or folder) so they can be imported as BLOOD skyboxes.
+ * from a resource pack (.zip or folder) so they can be imported as MOTION skyboxes.
  *
  * <p>Supported: the layer texture (3×2 layout), fade times (used to suggest day or night),
  * blend (add / alpha-style modes), rotate/speed/axis. Not supported and reported to the

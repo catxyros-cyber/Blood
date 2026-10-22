@@ -80,6 +80,27 @@ export interface Cape {
   createdAt: number;
 }
 
+export interface Accessory {
+  id: string;
+  name: string;
+  kind: "wings" | "aura";
+  access: "everyone" | "premium";
+  /** Wings image (PNG); null for auras. */
+  png: Buffer | null;
+  width: number;
+  height: number;
+  color: string;
+  style: string | null;
+  enabled: boolean;
+  createdAt: number;
+}
+
+/** What one player wears: accessory ids by kind. */
+export interface PlayerAccessories {
+  wings: string | null;
+  aura: string | null;
+}
+
 export interface TaggedPlayer {
   minecraftUuid: string;
   username: string;
@@ -97,7 +118,7 @@ export interface Store {
   getUserByMinecraft(minecraftUuid: string): Promise<User | null>;
   getUserByCustomer(customerId: string): Promise<User | null>;
   setStripeCustomer(userId: string, customerId: string): Promise<void>;
-  /** Remove the user and everything BLOOD stores about them (sessions, sync, records). */
+  /** Remove the user and everything MOTION stores about them (sessions, sync, records). */
   deleteUser(userId: string): Promise<void>;
 
   createChallenge(c: Challenge): Promise<void>;
@@ -153,6 +174,18 @@ export interface Store {
   getPlayerCape(minecraftUuid: string): Promise<string | null>;
   /** Cape id per player, for enabled capes only. */
   playerCapes(minecraftUuids: string[]): Promise<Record<string, string>>;
+
+  createAccessory(a: Accessory): Promise<void>;
+  getAccessory(id: string): Promise<Accessory | null>;
+  /** Without image bytes. */
+  listAccessories(includeDisabled: boolean): Promise<Accessory[]>;
+  updateAccessory(id: string, patch: { enabled?: boolean; access?: Accessory["access"] }): Promise<boolean>;
+  deleteAccessory(id: string): Promise<boolean>;
+  /** id null removes that kind. */
+  setPlayerAccessory(minecraftUuid: string, kind: Accessory["kind"], id: string | null, now: number): Promise<void>;
+  getPlayerAccessories(minecraftUuid: string): Promise<PlayerAccessories>;
+  /** Enabled accessories worn by these players. */
+  playerAccessories(minecraftUuids: string[]): Promise<{ wings: Record<string, string>; auras: Record<string, { color: string; style: string }> }>;
 
   /** Case-insensitive. */
   getUserByUsername(username: string): Promise<User | null>;

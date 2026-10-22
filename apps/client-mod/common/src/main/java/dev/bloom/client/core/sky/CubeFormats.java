@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Other cubemap formats, converted to BLOOD's 3×2 atlas ({@link CubeLayout}), plus atlas resizing
+ * Other cubemap formats, converted to MOTION's 3×2 atlas ({@link CubeLayout}), plus atlas resizing
  * and direction sampling. Pure Java (no Minecraft classes), unit tested.
  *
  * <p>Cubemap faces follow the OpenGL convention (+X right, +Y up, +Z front), as used by most skybox

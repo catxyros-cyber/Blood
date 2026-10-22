@@ -73,10 +73,12 @@ public class SettingsTest {
     @Test
     public void choicesRejectUnknownIds() {
         assertFalse(BloomSettings.THEME.fromJson(new JsonPrimitive("neon")));
+        assertTrue(BloomSettings.THEME.is("motion")); // the default since the MOTION MOTION rebrand
+        BloomSettings.THEME.cycle(1);
         assertTrue(BloomSettings.THEME.is("crimson"));
         BloomSettings.THEME.cycle(1);
-        assertTrue(BloomSettings.THEME.is("blood_moon")); // the Halloween themes follow Classic BLOOD
-        BloomSettings.THEME.cycle(-2);
+        assertTrue(BloomSettings.THEME.is("blood_moon")); // the Halloween themes follow Crimson
+        BloomSettings.THEME.cycle(-3);
         assertTrue(BloomSettings.THEME.is("mono"));
     }
 

@@ -83,7 +83,7 @@ export class LogParser {
 }
 
 /**
- * Milestones BLOOD uses to measure real load times from the game's own log.
+ * Milestones MOTION uses to measure real load times from the game's own log.
  * "ready" fires when the game has finished loading resources (around the title screen).
  */
 export function detectMilestone(message: string): "window" | "ready" | null {

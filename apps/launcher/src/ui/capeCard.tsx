@@ -105,7 +105,7 @@ export function CapeCard() {
         <h3 className="font-semibold flex-1">Cape</h3>
         {st.status === "loading" && <Spinner size={14} />}
       </div>
-      <p className="text-[13px] text-muted mt-1">BLOOD capes are shown by BLOOD Client: you and other BLOOD players see them in game. Players on other launchers see your normal Minecraft cape.</p>
+      <p className="text-[13px] text-muted mt-1">MOTION capes are shown by MOTION Client: you and other MOTION players see them in game. Players on other launchers see your normal Minecraft cape.</p>
       {!account ? (
         <p className="text-[13px] text-faint mt-3">Sign in with Microsoft to choose a cape.</p>
       ) : st.status === "error" ? (
@@ -131,7 +131,7 @@ export function CapeCard() {
               type="button"
               disabled={!c.allowed || busy !== null}
               onClick={() => void pick(c.id)}
-              title={c.allowed ? c.name : `${c.name} · BLOOD Premium`}
+              title={c.allowed ? c.name : `${c.name} · MOTION Premium`}
               className={cx("w-[104px] h-[146px] rounded-xl border flex flex-col items-center justify-center gap-1.5 cursor-pointer disabled:cursor-default",
                 st.capeId === c.id ? "border-accent bg-accent/10" : "border-line bg-panel-2 hover:border-white/20", !c.allowed && "opacity-50")}
             >

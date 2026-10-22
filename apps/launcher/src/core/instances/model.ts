@@ -27,7 +27,7 @@ export interface Instance {
   fullscreen?: boolean;
   performancePreset?: PresetId;
   modpack?: { projectId?: string; versionId?: string; name: string; version?: string };
-  /** BLOOD Client (the in-game mod) managed by the launcher for this installation. */
+  /** MOTION Client (the in-game mod) managed by the launcher for this installation. */
   bloomClient?: { enabled: boolean; version?: string; file?: string };
   /** Last measured launch timings, from the game's own log. */
   lastLaunch?: { prepareMs: number; startupMs?: number; at: number };
@@ -70,7 +70,7 @@ export function gameDirOf(l: Layout, sep: string, inst: Instance): string {
   return inst.gameDir || instanceDir(l, sep, inst.id);
 }
 
-/** BLOOD's own metadata lives in a hidden folder inside the instance folder. */
+/** MOTION's own metadata lives in a hidden folder inside the instance folder. */
 export function instanceMetaPath(l: Layout, sep: string, id: string): string {
   return join(sep, l.instances, id, ".bloom", "instance.json");
 }

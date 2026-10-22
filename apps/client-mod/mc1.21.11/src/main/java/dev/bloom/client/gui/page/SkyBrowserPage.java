@@ -381,7 +381,7 @@ public final class SkyBrowserPage implements Page {
 
         private void upload() {
             if (texture == null) {
-                texture = new DynamicTexture(() -> "BLOOD sky browser", new NativeImage(W, H, false));
+                texture = new DynamicTexture(() -> "MOTION sky browser", new NativeImage(W, H, false));
                 Minecraft.getInstance().getTextureManager().register(TEX, texture);
             }
             NativeImage img = texture.getPixels();
@@ -451,7 +451,7 @@ public final class SkyBrowserPage implements Page {
 
     // ------------------------------------------------------------------ filters
 
-    static final String[][] FILTERS = {{"all", "All"}, {"favorites", "Favourites"}, {"halloween", "Halloween"}, {"blood", "BLOOD"},
+    static final String[][] FILTERS = {{"all", "All"}, {"favorites", "Favourites"}, {"halloween", "Halloween"}, {"blood", "MOTION"},
             {"cloudy", "Cloudy"}, {"custom", "Yours"}};
 
     // One search field per menu, kept across page rebuilds so typing keeps its cursor and focus.

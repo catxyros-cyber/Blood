@@ -1,5 +1,5 @@
 /**
- * Editing BLOOD Client's settings.json (<game dir>/config/bloomclient/settings.json) from
+ * Editing MOTION Client's settings.json (<game dir>/config/bloomclient/settings.json) from
  * the launcher. Only the keys the launcher changes are touched; everything else (including
  * keys from newer mod versions) is preserved. The revision is bumped and `updatedBy` is set
  * to "launcher" so a running game picks up the change and merges it per key.
@@ -33,7 +33,7 @@ export function parseSettings(text: string | null): SettingsView {
     if (!v || typeof v !== "object" || Array.isArray(v)) throw new Error("not an object");
     root = v as Record<string, unknown>;
   } catch {
-    throw new SettingsFileError("BLOOD Client's settings file is damaged. Start the game once to repair it.");
+    throw new SettingsFileError("MOTION Client's settings file is damaged. Start the game once to repair it.");
   }
   const settings = root.settings && typeof root.settings === "object" && !Array.isArray(root.settings) ? (root.settings as Record<string, unknown>) : {};
   const profiles = root.profiles as { active?: unknown } | undefined;

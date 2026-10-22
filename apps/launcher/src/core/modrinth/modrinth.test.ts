@@ -134,7 +134,7 @@ test("mrpack: validates paths and hosts, skips server-only files, detects loader
     formatVersion: 1,
     game: "minecraft",
     versionId: "1.0.0",
-    name: "BLOOD Test Pack",
+    name: "MOTION Test Pack",
     dependencies: { minecraft: "1.21.1", "fabric-loader": "0.16.5" },
     files: [
       { path: "mods/sodium.jar", hashes: { sha1: "a", sha512: "b" }, env: { client: "required", server: "optional" }, downloads: ["https://cdn.modrinth.com/data/x/sodium.jar"], fileSize: 10 },

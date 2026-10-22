@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original launcher background art for BLOOD: a blocky crimson forest under a blood moon,
+"""Original launcher background art for MOTION: a blocky crimson forest under a blood moon,
 one palette per theme.
 
 Run: python3 branding/tools/gen_backgrounds.py
@@ -18,6 +18,9 @@ S = 4                      # pixel-art scale
 LW, LH = W // S, H // S    # low-res canvas 480x270
 
 THEMES = {
+    "motion": dict(sky=["#020403", "#06120b", "#0b2a18", "#0f4a2a"], moon="#e6fff0", moon_glow="#39ff88", far="#082014", mid="#05130c",
+                   ground="#020604", rim="#2be07a", cap=["#14a85a", "#39ff88", "#0d7a41", "#c6ff3d"], stem="#0b2a19", stem_hi="#155c35",
+                   light="#d6ff5c", ember=["#39ff88", "#c6ff3d", "#eafff2"], haze="#0a3a20"),
     "crimson": dict(sky=["#050203", "#1c0509", "#4a0a14", "#8c1424"], moon="#ffc9c0", moon_glow="#ff2a3c", far="#2b0910", mid="#1a060a",
                     ground="#0c0405", rim="#8a1020", cap=["#b3142a", "#d41c33", "#86101f", "#e8324a"], stem="#4a0d16", stem_hi="#7a1826",
                     light="#ff9a4a", ember=["#ff3b3b", "#ff6a3d", "#ffb070"], haze="#5c0a16"),

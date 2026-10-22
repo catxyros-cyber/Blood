@@ -55,12 +55,12 @@ export function PremiumPage() {
 
   return (
     <div className="animate-in">
-      <PageHeader title={<span className="flex items-center gap-3">BLOOD Premium {hasPremium && <PremiumBadge label="Active" />}</span>} subtitle="Support BLOOD and unlock its advanced tools. Launching and mod management stay free." />
+      <PageHeader title={<span className="flex items-center gap-3">MOTION Premium {hasPremium && <PremiumBadge label="Active" />}</span>} subtitle="Support MOTION and unlock its advanced tools. Launching and mod management stay free." />
 
       {!premium.configured && (
         <div className="mb-6">
           <Callout tone="warn" title="Online services aren't configured in this build">
-            Premium needs BLOOD's server. Developers: set VITE_BLOOM_API_URL when building (see docs/STRIPE.md). Everything else in BLOOD works without it.
+            Premium needs MOTION's server. Developers: set VITE_BLOOM_API_URL when building (see docs/STRIPE.md). Everything else in MOTION works without it.
           </Callout>
         </div>
       )}
@@ -82,7 +82,7 @@ export function PremiumPage() {
             }
           >
             <span className="inline-flex items-center gap-2">
-              <Spinner size={13} /> BLOOD is waiting for Stripe to confirm your payment. This page updates automatically.
+              <Spinner size={13} /> MOTION is waiting for Stripe to confirm your payment. This page updates automatically.
             </span>
           </Callout>
         </div>
@@ -146,7 +146,7 @@ export function PremiumPage() {
             ))}
           </Card>
           <p className="text-[12px] text-faint leading-relaxed">
-            Premium doesn't guarantee a higher frame rate: presets and analytics help you find good settings, but FPS depends on your hardware, settings, world and mods. Payments are processed by Stripe; BLOOD never sees your card details.
+            Premium doesn't guarantee a higher frame rate: presets and analytics help you find good settings, but FPS depends on your hardware, settings, world and mods. Payments are processed by Stripe; MOTION never sees your card details.
           </p>
         </div>
 
@@ -159,7 +159,7 @@ export function PremiumPage() {
               <div className="min-w-0 flex-1">
                 <div className="font-semibold">{premium.user ? premium.user.username : account ? account.username : "Not signed in"}</div>
                 <div className="text-[12.5px] text-muted">
-                  {premium.status === "connecting" ? "Connecting…" : premium.status === "error" ? "Couldn't reach BLOOD's server" : premium.user ? "BLOOD account" : account ? "Not connected yet" : "Sign in with Microsoft first"}
+                  {premium.status === "connecting" ? "Connecting…" : premium.status === "error" ? "Couldn't reach MOTION's server" : premium.user ? "MOTION account" : account ? "Not connected yet" : "Sign in with Microsoft first"}
                 </div>
               </div>
               {premium.status === "connecting" && <Spinner size={16} />}
@@ -255,7 +255,7 @@ export function PremiumPage() {
 
           {premium.user && (
             <button type="button" className="text-[12.5px] text-faint hover:text-muted cursor-pointer" onClick={() => run("signout", signOutBloom)}>
-              Disconnect BLOOD account on this PC
+              Disconnect MOTION account on this PC
             </button>
           )}
         </div>
@@ -271,7 +271,7 @@ export function PremiumWelcome() {
     <Modal
       open={Boolean(welcome)}
       onClose={close}
-      title="Welcome to BLOOD Premium"
+      title="Welcome to MOTION Premium"
       width={460}
       footer={
         <Button variant="primary" onClick={close}>
@@ -283,7 +283,7 @@ export function PremiumWelcome() {
         <div className="mx-auto h-16 w-16 rounded-2xl bg-amber-300/10 text-amber-200 grid place-items-center">
           <Icon.Crown size={30} />
         </div>
-        <p className="text-muted mt-4">Thank you for supporting BLOOD! Competitive and Extreme FPS presets, GC analytics, any accent colour and cloud sync are now unlocked on every PC you sign in to.</p>
+        <p className="text-muted mt-4">Thank you for supporting MOTION! Competitive and Extreme FPS presets, GC analytics, any accent colour and cloud sync are now unlocked on every PC you sign in to.</p>
       </div>
     </Modal>
   );

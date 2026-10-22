@@ -1,6 +1,6 @@
 /**
- * BLOOD capes: pick one of the capes the owner published. The choice is stored on BLOOD's server
- * against your Minecraft account; BLOOD Client shows it in game (to other BLOOD users too).
+ * MOTION capes: pick one of the capes the owner published. The choice is stored on MOTION's server
+ * against your Minecraft account; MOTION Client shows it in game (to other MOTION users too).
  */
 
 import type { CapeInfo } from "@bloom/shared";
@@ -24,7 +24,7 @@ export function capeImage(c: CapeInfo): string {
 
 export async function loadCapes(): Promise<void> {
   if (!API_URL) {
-    capeState.set({ status: "error", error: "This build isn't connected to BLOOD's server." });
+    capeState.set({ status: "error", error: "This build isn't connected to MOTION's server." });
     return;
   }
   capeState.set({ status: "loading", error: undefined });

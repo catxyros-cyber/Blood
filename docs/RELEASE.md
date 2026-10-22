@@ -1,19 +1,19 @@
-# Releasing BLOOD
+# Releasing MOTION
 
 ## How players get updates
 
-Every installed BLOOD checks `https://github.com/<your repo>/releases/latest/download/latest.json`
+Every installed MOTION checks `https://github.com/<your repo>/releases/latest/download/latest.json`
 4 seconds after it starts and then every 4 hours. When there's a newer version it:
 
 1. downloads it quietly in the background and verifies its signature;
 2. waits until nobody is playing (no Minecraft running, no downloads or launches in progress);
-3. shows "Updating BLOOD to x.y.z in 15 s" with a **Later** button (Later or closing the
+3. shows "Updating MOTION to x.y.z in 15 s" with a **Later** button (Later or closing the
    notification postpones it by an hour, or until the next start);
-4. installs it (a small progress window, no questions) and restarts BLOOD.
+4. installs it (a small progress window, no questions) and restarts MOTION.
 
-Players can turn this off in Settings → Launcher → *Update BLOOD automatically*; they then get a
-notification with an **Update now** button instead. **BLOOD Client updates too.** The mod jar ships
-inside the launcher, and before each launch BLOOD replaces the jar in installations that use it when
+Players can turn this off in Settings → Launcher → *Update MOTION automatically*; they then get a
+notification with an **Update now** button instead. **MOTION Client updates too.** The mod jar ships
+inside the launcher, and before each launch MOTION replaces the jar in installations that use it when
 the bundled version is newer.
 
 ## One-time setup
@@ -56,7 +56,7 @@ git push --follow-tags
 
 - sets the version in `tauri.conf.json`, both `package.json` files and `Cargo.toml`, and refuses a
   version that isn't higher than the current one, because launchers only update to higher versions;
-- bumps BLOOD Client's patch version if anything under `apps/client-mod` changed since the last
+- bumps MOTION Client's patch version if anything under `apps/client-mod` changed since the last
   release, so players' in-game mod is replaced too;
 - adds the notes to `apps/api/content/releases.json`;
 - commits and tags `vX.Y.Z`.
@@ -65,7 +65,7 @@ git push --follow-tags
 
 Pushing the tag runs the **Release** workflow:
 
-1. It builds the BLOOD Client jars on Ubuntu (JDK 21) and runs their tests.
+1. It builds the MOTION Client jars on Ubuntu (JDK 21) and runs their tests.
 2. On Windows, it checks that the tag matches the version and that the updater keys are set, then
    bundles the jars into the launcher.
 3. It runs the TypeScript and Rust tests.
@@ -83,14 +83,14 @@ build made before that has to install the new version once by hand.
 
 ## What is and isn't in the installer
 
-- **Included:** the launcher, its icons and theme art, and the BLOOD Client jars with their manifest.
+- **Included:** the launcher, its icons and theme art, and the MOTION Client jars with their manifest.
 - **Not included:** any Minecraft game files, Java runtimes or loader libraries. Those are downloaded from Mojang (game files and Mojang's own Java runtimes), Fabric, Quilt, Forge and NeoForge when an installation is created, and checked against their published hashes.
 
 ## Local builds
 
 ```bash
-cd apps/client-mod && ./gradlew build && node tools/bundle.mjs   # optional: include BLOOD Client
+cd apps/client-mod && ./gradlew build && node tools/bundle.mjs   # optional: include MOTION Client
 cd ../.. && npm run build                                         # tauri build (Windows)
 ```
 
-Without the mod step, the launcher still builds. The Customize page then says BLOOD Client is "not included in this build".
+Without the mod step, the launcher still builds. The Customize page then says MOTION Client is "not included in this build".

@@ -1,10 +1,10 @@
 /**
- * BLOOD account, Premium entitlement and checkout.
+ * MOTION account, Premium entitlement and checkout.
  *
- * Signing in to BLOOD's API works like joining a Minecraft server: the API
- * hands out a random serverId, BLOOD calls Mojang's session server "join"
+ * Signing in to MOTION's API works like joining a Minecraft server: the API
+ * hands out a random serverId, MOTION calls Mojang's session server "join"
  * with the player's own Minecraft session, and the API confirms it with
- * Mojang. The Minecraft token is sent only to Mojang, never to BLOOD's API.
+ * Mojang. The Minecraft token is sent only to Mojang, never to MOTION's API.
  *
  * Premium is whatever the server says. The last answer is cached so Premium
  * features keep working briefly while offline; the server re-checks on every
@@ -33,13 +33,13 @@ export function isPremium(): boolean {
   return p.entitlement?.premium === true || p.license?.status === "active";
 }
 
-/** Premium owned by the signed-in BLOOD account (needed for server features like cloud sync). */
+/** Premium owned by the signed-in MOTION account (needed for server features like cloud sync). */
 export function hasAccountPremium(): boolean {
   return app.get().premium.entitlement?.premium === true;
 }
 
 export async function apiCall<T>(method: HttpRequest["method"], route: string, opts: { token?: string; json?: unknown; headers?: Record<string, string> } = {}): Promise<{ status: number; body: T }> {
-  if (!API_URL) throw new BloomError("api_unconfigured", "BLOOD's online services aren't configured in this build.");
+  if (!API_URL) throw new BloomError("api_unconfigured", "MOTION's online services aren't configured in this build.");
   const headers: Record<string, string> = { Accept: "application/json", ...opts.headers };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
   const res = await P().request({ method, url: `${API_URL}${route}`, headers, json: opts.json, timeoutMs: 20_000 });
@@ -51,7 +51,7 @@ export async function apiCall<T>(method: HttpRequest["method"], route: string, o
   }
   if (res.status >= 200 && res.status < 300) return { status: res.status, body: body as T };
   const err = (body as { error?: { code?: string; message?: string } } | null)?.error;
-  throw new BloomError(err?.code ?? `http_${res.status}`, err?.message ?? `BLOOD's server returned HTTP ${res.status}`);
+  throw new BloomError(err?.code ?? `http_${res.status}`, err?.message ?? `MOTION's server returned HTTP ${res.status}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -90,7 +90,7 @@ async function readCache(accountId: string): Promise<CacheFile | null> {
 // Sign-in
 // ---------------------------------------------------------------------------
 
-/** Prove ownership of the active Minecraft account to BLOOD's API and get a BLOOD session. */
+/** Prove ownership of the active Minecraft account to MOTION's API and get a MOTION session. */
 async function connect(account: Account): Promise<string> {
   const creds = await launchCredentials(account);
   if (creds.offline) throw new BloomError("offline", "You're offline.");
@@ -104,7 +104,7 @@ async function connect(account: Account): Promise<string> {
   if (join.status !== 204 && join.status !== 200) {
     throw new BloomError("auth_failed", `Minecraft's session server refused the sign-in (HTTP ${join.status}). Try signing in to your Microsoft account again.`);
   }
-  const { body } = await apiCall<SessionResponse>("POST", "/v1/auth/verify", { json: { challengeId: ch.challengeId, username: creds.username, device: "BLOOD for Windows" } });
+  const { body } = await apiCall<SessionResponse>("POST", "/v1/auth/verify", { json: { challengeId: ch.challengeId, username: creds.username, device: "MOTION for Windows" } });
   await native.secretSet(tokenKey(account.id), body.token);
   return body.token;
 }
@@ -123,7 +123,7 @@ export function setLicenseHeaders(fn: () => Promise<Record<string, string>>) {
   extraHeaders = fn;
 }
 
-/** Call an authenticated route, reconnecting once if the BLOOD session expired. */
+/** Call an authenticated route, reconnecting once if the MOTION session expired. */
 async function authed<T>(method: HttpRequest["method"], route: string, json?: unknown): Promise<T> {
   const account = activeAccount();
   if (!account) throw new BloomError("signed_out", "Sign in with your Microsoft account first.");
@@ -139,7 +139,7 @@ async function authed<T>(method: HttpRequest["method"], route: string, json?: un
   }
 }
 
-/** Load (or refresh) the BLOOD account for the active Minecraft account. Safe to call any time. */
+/** Load (or refresh) the MOTION account for the active Minecraft account. Safe to call any time. */
 export async function refreshPremium(opts: { quiet?: boolean } = {}): Promise<void> {
   if (!API_URL) {
     setPremium({ configured: false, status: "signed_out", entitlement: undefined, user: undefined });
@@ -168,7 +168,7 @@ export async function refreshPremium(opts: { quiet?: boolean } = {}): Promise<vo
     } else {
       setPremium({ status: "error", error: errorMessage(err) });
     }
-    if (!opts.quiet && !["offline", "timeout", "network"].includes(err.code)) reportError("Couldn't reach BLOOD's servers", err);
+    if (!opts.quiet && !["offline", "timeout", "network"].includes(err.code)) reportError("Couldn't reach MOTION's servers", err);
   }
 }
 
@@ -234,7 +234,7 @@ export async function restorePurchases(): Promise<void> {
   setPremium({ status: "ready", user: me.user, entitlement: me.entitlement, cached: false });
   const account = activeAccount();
   if (account) await writeCache(account.id, me);
-  toast(me.entitlement.premium ? { kind: "success", title: "Premium is active" } : { kind: "info", title: "No purchases found", message: "This Minecraft account has no BLOOD Premium purchase." });
+  toast(me.entitlement.premium ? { kind: "success", title: "Premium is active" } : { kind: "info", title: "No purchases found", message: "This Minecraft account has no MOTION Premium purchase." });
 }
 
 /** Open the website's account page, already signed in (one-time link). */
@@ -243,7 +243,7 @@ export async function openWebAccount(): Promise<void> {
   await native.openUrl(url);
 }
 
-/** Forget the BLOOD session on this PC (the Microsoft account stays signed in). */
+/** Forget the MOTION session on this PC (the Microsoft account stays signed in). */
 export async function signOutBloom(): Promise<void> {
   const account = activeAccount();
   if (!account) return;

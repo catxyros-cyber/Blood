@@ -1,4 +1,4 @@
-# BLOOD Client visuals: the Right Ctrl menu, shader effects and skies
+# MOTION Client visuals: the Right Ctrl menu, shader effects and skies
 
 ## The Right Ctrl menu
 
@@ -7,7 +7,7 @@ under General → Menu position), so you can watch every change live in the worl
 again, or Esc, to close it.
 
 - **Tab / Shift+Tab** switch sections.
-- Type anywhere to search every BLOOD setting.
+- Type anywhere to search every MOTION setting.
 - Rebind the key under General (or in Minecraft's Controls).
 - The full menu is still on **Right Shift**. Both menus show the same settings, and changes apply
   immediately and are saved automatically.
@@ -55,7 +55,7 @@ and enhances the finished image, which is cheap and works with Sodium.
 - Glow uses small fixed-size buffers, so its cost doesn't grow with your resolution.
 - After 10 seconds unused, the GPU buffers are released.
 
-**Shader packs:** while an Iris shader pack is on, BLOOD's sky, fog and shader effects pause (the pack
+**Shader packs:** while an Iris shader pack is on, MOTION's sky, fog and shader effects pause (the pack
 does its own). Override this under Skyboxes → Compatibility → Use with shader packs.
 
 **If a shader can't load** (very old drivers, or a resource pack replacing it), the error is
@@ -69,7 +69,7 @@ shown under the "Shader effects" switch and in the log, and the game carries on 
 | **Cinematic** | Amber Dusk / Violet Night skies, softer warm colours, stronger glow (high quality), vignette, haze. |
 | **Clean PvP** | No skybox or particles, punchier colours, light sharpening, thinner fog, clear block outline. |
 | **Performance** | Plain sky, no particles, glow, stars or clouds, half-size sky textures, grading off. |
-| **Vanilla** | All of BLOOD's world visuals off. The HUD still works. |
+| **Vanilla** | All of MOTION's world visuals off. The HUD still works. |
 
 Click a preset to apply it, then change anything you like: your edits are saved into it (the card
 shows **EDITED**). Click the active edited preset to restore its original look.
@@ -85,7 +85,7 @@ Blossom, Snowfall, …) and per-biome switching are under Right Shift → Profil
   away, without saving it. It ends when you close the menu or apply something.
 - **Cards** show the preview, name and **real resolution** ("4K · 1024 px faces"), DAY/NIGHT badges,
   and a star for favourites. Favourites are listed first.
-- **Filters:** All, Favourites, Halloween, BLOOD, Cloudy, Yours, plus search by name or description.
+- **Filters:** All, Favourites, Halloween, MOTION, Cloudy, Yours, plus search by name or description.
 - **Apply:** Use day & night, By day, At night, or **Restore vanilla** (fades back to Minecraft's sky).
 - A **Matches <theme>** badge shows when a sky is the current theme's recommended sky.
 
@@ -122,12 +122,12 @@ Blood Storm and Monochrome Night.
 - **No seams or distortion:** every pixel is computed from its own view direction, with edge texels
   on the cube edges, so faces meet without seams and moons stay round.
 - **Clean gradients and moons:** the images are dithered against banding. Their moon is painted in,
-  so BLOOD's extra sun and moon are skipped on these skies.
+  so MOTION's extra sun and moon are skipped on these skies.
 - **About 3.5–4.5 MB each** as PNG, and about 24 MB of video memory each at High.
 
 ## Themes
 
-Classic BLOOD, Blood Moon, Pumpkin Night, Haunted Forest, Midnight Halloween, Ghostfire, Spiderweb and
+Classic MOTION, Blood Moon, Pumpkin Night, Haunted Forest, Midnight Halloween, Ghostfire, Spiderweb and
 Crimson Eclipse, plus Obsidian, Ash, Ember and Monochrome.
 
 - Each theme sets the menu palette and accent, and draws a light backdrop decoration: embers, a
@@ -149,7 +149,7 @@ Crimson Eclipse, plus Obsidian, Ash, Ember and Monochrome.
 - **Shrinking:** larger skies are shrunk face by face (area average, no bleeding between faces) on a
   background thread.
 - **Fallbacks:** if Minecraft has less than 2 GB of memory, or the graphics card can't take the
-  texture size, BLOOD lowers the size and says why on the Performance page.
+  texture size, MOTION lowers the size and says why on the Performance page.
 - **Skybox cache** (1–6) sets how many skies stay loaded for instant switching; older ones are released.
 - **Skybox switch fade** (0–5 s) sets how long sky changes crossfade. 0 switches instantly.
 
@@ -168,7 +168,7 @@ same mapping the mod uses for imported panoramas:
 
 ## Settings file
 
-All options are normal BLOOD settings in `config/bloomclient/settings.json` (keys `post.*`,
+All options are normal MOTION settings in `config/bloomclient/settings.json` (keys `post.*`,
 `world.fog*`, `world.netherFog*`, `world.endFog*`, `perf.postQuality`, `perf.lite`,
 `perf.skyQuality`, `ui.visualsPosition`, `ui.visualsDim`). Presets are profiles in
 `config/bloomclient/profiles/`. The Right Ctrl key is a Minecraft key binding, so it's saved in

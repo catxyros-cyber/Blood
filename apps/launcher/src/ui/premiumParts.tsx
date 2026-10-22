@@ -58,7 +58,7 @@ export function UpgradeCard() {
       <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-300/10 blur-2xl pointer-events-none" />
       <div className="relative">
         <div className="flex items-center gap-2 text-amber-200 font-semibold text-[13px]">
-          <Icon.Crown size={15} /> BLOOD Premium
+          <Icon.Crown size={15} /> MOTION Premium
         </div>
         <div className="font-display text-[17px] font-semibold mt-2 leading-snug">Advanced presets, measured GC analytics, any accent colour and cloud sync.</div>
         <div className="text-[12.5px] text-muted mt-1.5">Launching and mod management stay free.</div>

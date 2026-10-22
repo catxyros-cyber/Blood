@@ -33,8 +33,8 @@ import org.joml.Vector4f;
 import java.util.OptionalInt;
 
 /**
- * BLOOD's post-processing on Minecraft 1.21.11: real GLSL passes run right after the world (and
- * hand) are drawn, before the HUD. Each pass is a full-screen quad drawn with one of BLOOD's
+ * MOTION's post-processing on Minecraft 1.21.11: real GLSL passes run right after the world (and
+ * hand) are drawn, before the HUD. Each pass is a full-screen quad drawn with one of MOTION's
  * render pipelines; parameters travel in Minecraft's per-draw uniform block, so sliders update
  * live without rebuilding anything.
  *
@@ -129,7 +129,7 @@ public final class PostEffects {
             running = null;
             failedChain = want;
             failure = "Couldn't run shader effects: " + e.getMessage();
-            Log.warn("BLOOD shader effects failed (" + want.file + "); they stay off until a setting changes", e);
+            Log.warn("MOTION shader effects failed (" + want.file + "); they stay off until a setting changes", e);
             release();
         }
     }
@@ -141,7 +141,7 @@ public final class PostEffects {
         if (w <= 0 || h <= 0) return;
         if (swap == null || swap.width() != w || swap.height() != h) {
             if (swap != null) swap.close();
-            swap = Target.create("BLOOD post swap", w, h);
+            swap = Target.create("MOTION post swap", w, h);
         }
         PostParams.uniforms(in, want, TARGET);
         if (smoothedFor != want) {
@@ -160,8 +160,8 @@ public final class PostEffects {
             if (glowA == null || glowA.width() != gw || glowA.height() != gh) {
                 if (glowA != null) glowA.close();
                 if (glowB != null) glowB.close();
-                glowA = Target.create("BLOOD glow A", gw, gh);
-                glowB = Target.create("BLOOD glow B", gw, gh);
+                glowA = Target.create("MOTION glow A", gw, gh);
+                glowB = Target.create("MOTION glow B", gw, gh);
             }
             Matrix4f p = params(v);
             pass(bright, glowA, mainView, null, p, new Vector4f(), sizes(w, h, gw, gh));
@@ -210,7 +210,7 @@ public final class PostEffects {
                 GpuBuffer vertices = pipeline.getVertexFormat().uploadImmediateVertexBuffer(mesh.vertexBuffer());
                 RenderSystem.AutoStorageIndexBuffer seq = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
                 GpuBuffer indices = seq.getBuffer(6);
-                try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "BLOOD post", out, OptionalInt.empty())) {
+                try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "MOTION post", out, OptionalInt.empty())) {
                     pass.setPipeline(pipeline);
                     pass.setVertexBuffer(0, vertices);
                     pass.setIndexBuffer(indices, seq.type());

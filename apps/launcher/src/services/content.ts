@@ -418,7 +418,7 @@ async function installMrpackFile(mrpackPath: string, info: { icon?: string; proj
   const probe = parseMrpackIndex(raw, "C:", p.sep);
   const loaderInfo = LOADERS.find((l) => l.id === probe.loader);
   if (!loaderInfo?.supported) {
-    throw new BloomError("loader_unsupported", `${probe.name} uses ${loaderInfo?.name ?? probe.loader}, which this version of BLOOD can't install yet.`);
+    throw new BloomError("loader_unsupported", `${probe.name} uses ${loaderInfo?.name ?? probe.loader}, which this version of MOTION can't install yet.`);
   }
   let loaderVersion = probe.loaderVersion;
   if (probe.loader !== "vanilla" && !loaderVersion) loaderVersion = pickLoaderVersion(await loaderVersions(p, probe.loader, probe.gameVersion)).version;

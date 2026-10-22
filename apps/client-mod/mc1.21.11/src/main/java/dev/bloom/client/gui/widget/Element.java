@@ -4,7 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import java.util.List;
 
-/** Base for BLOOD's menu elements. Coordinates are GUI pixels; bounds are set by {@link #layout}. */
+/** Base for MOTION's menu elements. Coordinates are GUI pixels; bounds are set by {@link #layout}. */
 public abstract class Element {
     public int x, y, w, h;
 

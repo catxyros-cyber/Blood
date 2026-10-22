@@ -5,7 +5,7 @@ import dev.bloom.client.gui.widget.Element;
 import java.nio.file.Path;
 import java.util.List;
 
-/** One category page of the BLOOD menu. */
+/** One category page of the MOTION menu. */
 public interface Page {
     List<Element> build();
 

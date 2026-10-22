@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Built-in BLOOD skyboxes (33 from "Fantasy Skybox FREE" and 25 CC0 "Cloudy Skyboxes" by Screaming Brain Studios)
+ * Built-in MOTION skyboxes (33 from "Fantasy Skybox FREE" and 25 CC0 "Cloudy Skyboxes" by Screaming Brain Studios)
  * plus any the player imported. Built-in textures live in
  * assets/bloomclient/textures/skybox/&lt;id&gt;.png (3x2 atlas, see docs/CUSTOM_SKYBOXES.md).
  */
@@ -43,9 +43,9 @@ public final class SkyboxCatalog {
             new Entry("fs_003_rainy", "Cloudscape Rain", "Heavy grey storm clouds.", true, 0x708692),
             new Entry("fs_003_snowy", "Cloudscape Snow", "Soft white clouds in a cold blue sky.", true, 0xAEEAFB),
             new Entry("fs_013_day", "Sunbeam Day", "Light rays breaking through blue cloud.", true, 0x8EC5DB),
-            new Entry("fs_013_night", "Crimson Night", "A dark, maroon night sky. Great for BLOOD.", true, 0x231824),
+            new Entry("fs_013_night", "Crimson Night", "A dark, maroon night sky. Great for MOTION.", true, 0x231824),
             new Entry("fs_013_sunrise", "Ember Sunrise", "A fiery sun rising over dark hills.", true, 0xA58353),
-            new Entry("fs_013_sunset", "Crimson Sunset", "A deep red sunset. BLOOD's default day sky.", true, 0x985047),
+            new Entry("fs_013_sunset", "Crimson Sunset", "A deep red sunset. MOTION's default day sky.", true, 0x985047),
             new Entry("fs_013_rainy", "Dark Storm", "Near-black storm clouds.", true, 0x1D2D2E),
             new Entry("fs_013_snowy", "Whiteout Snow", "A bright white snowy sky.", true, 0xEEFCFF),
             new Entry("fs_017_day", "Wisp Day", "Clear sky with long white wisps.", true, 0x85DAED),
@@ -73,7 +73,7 @@ public final class SkyboxCatalog {
             new Entry("sbs_cloud_tide", "Cloud Tide", "Dramatic blue-white clouds sweeping overhead.", true, 0x8386BA),
             new Entry("sbs_plum_sunset", "Plum Sunset", "Plum and magenta clouds over a red sunset.", true, 0x825367),
             new Entry("sbs_steel_horizon", "Steel Horizon", "Steel-blue cloud layers over a bright horizon.", true, 0x626978),
-            new Entry("sbs_crimson_storm", "Crimson Storm", "A red sky under heavy crimson cloud. Made for BLOOD.", true, 0x96504A),
+            new Entry("sbs_crimson_storm", "Crimson Storm", "A red sky under heavy crimson cloud. Made for MOTION.", true, 0x96504A),
             new Entry("sbs_whiteout", "Whiteout", "Bright white fog with a soft glowing sun.", true, 0x9193AB),
             new Entry("sbs_fire_sunset", "Fire Sunset", "Orange fire-lit clouds over a blazing sunset.", true, 0x864C26),
             new Entry("sbs_rust_sunset", "Rust Sunset", "Rust-brown clouds and a deep orange sunset.", true, 0x7D412D),

@@ -1,10 +1,10 @@
 /**
- * The BLOOD API contract (apps/api). All routes are under /v1 and exchange
+ * The MOTION API contract (apps/api). All routes are under /v1 and exchange
  * JSON. Authenticated routes take `Authorization: Bearer <token>`.
  *
  * Sign-in works like a Minecraft multiplayer server: the API issues a random
  * serverId, the launcher performs Mojang's standard "join" call with its own
- * session, and the API checks `hasJoined` with Mojang. BLOOD's servers never
+ * session, and the API checks `hasJoined` with Mojang. MOTION's servers never
  * receive the player's Minecraft or Microsoft tokens.
  */
 

@@ -1,5 +1,5 @@
 /**
- * What the BLOOD Client mod offers, mirrored for the launcher's Customize page.
+ * What the MOTION Client mod offers, mirrored for the launcher's Customize page.
  * Keep in sync with apps/client-mod (SkyboxCatalog, BuiltInProfiles, BloomSettings).
  */
 
@@ -35,9 +35,9 @@ export const BUILT_IN_SKYBOXES: SkyboxInfo[] = [
   ["fs_003_rainy", "Cloudscape Rain", "Heavy grey storm clouds."],
   ["fs_003_snowy", "Cloudscape Snow", "Soft white clouds in a cold blue sky."],
   ["fs_013_day", "Sunbeam Day", "Light rays breaking through blue cloud."],
-  ["fs_013_night", "Crimson Night", "A dark, maroon night sky. Great for BLOOD."],
+  ["fs_013_night", "Crimson Night", "A dark, maroon night sky. Great for MOTION."],
   ["fs_013_sunrise", "Ember Sunrise", "A fiery sun rising over dark hills."],
-  ["fs_013_sunset", "Crimson Sunset", "A deep red sunset. BLOOD's default day sky."],
+  ["fs_013_sunset", "Crimson Sunset", "A deep red sunset. MOTION's default day sky."],
   ["fs_013_rainy", "Dark Storm", "Near-black storm clouds."],
   ["fs_013_snowy", "Whiteout Snow", "A bright white snowy sky."],
   ["fs_017_day", "Wisp Day", "Clear sky with long white wisps."],
@@ -65,7 +65,7 @@ export const BUILT_IN_SKYBOXES: SkyboxInfo[] = [
   ["sbs_cloud_tide", "Cloud Tide", "Dramatic blue-white clouds sweeping overhead."],
   ["sbs_plum_sunset", "Plum Sunset", "Plum and magenta clouds over a red sunset."],
   ["sbs_steel_horizon", "Steel Horizon", "Steel-blue cloud layers over a bright horizon."],
-  ["sbs_crimson_storm", "Crimson Storm", "A red sky under heavy crimson cloud. Made for BLOOD."],
+  ["sbs_crimson_storm", "Crimson Storm", "A red sky under heavy crimson cloud. Made for MOTION."],
   ["sbs_whiteout", "Whiteout", "Bright white fog with a soft glowing sun."],
   ["sbs_fire_sunset", "Fire Sunset", "Orange fire-lit clouds over a blazing sunset."],
   ["sbs_rust_sunset", "Rust Sunset", "Rust-brown clouds and a deep orange sunset."],
@@ -93,12 +93,13 @@ export const BUILT_IN_PROFILES: ProfileInfo[] = [
   ["night_sky", "Night Sky", "Always night (client-side only): a galaxy sky, dense stars and fireflies."],
   ["cinematic", "Cinematic", "Soft golden-hour colours, atmospheric haze, film-like glow and vignette for screenshots and videos."],
   ["performance", "Performance", "Lightweight: plain sky, no particles or glow, half-size textures, colour grading off. For low-end PCs."],
-  ["vanilla", "Vanilla", "Plain Minecraft visuals: BLOOD's sky, shaders, fog changes, particles and outline are all off. The HUD still works."],
+  ["vanilla", "Vanilla", "Plain Minecraft visuals: MOTION's sky, shaders, fog changes, particles and outline are all off. The HUD still works."],
 ].map(([id, name, description]) => ({ id: id!, name: name!, description: description!, builtIn: true }));
 
 /** In-game menu themes (Theme.java); the same ids and names as the launcher's themes. */
 export const MENU_THEMES = [
-  { id: "crimson", name: "Classic BLOOD" },
+  { id: "motion", name: "Motion (green)" },
+  { id: "crimson", name: "Crimson (classic)" },
   { id: "blood_moon", name: "Blood Moon" },
   { id: "pumpkin_night", name: "Pumpkin Night" },
   { id: "haunted_forest", name: "Haunted Forest" },
@@ -140,7 +141,7 @@ export function menuKeyLabel(key: string | null): string {
   return MENU_KEYS.find((k) => k.key === key)?.label ?? key.replace(/^key\.(keyboard|mouse)\./, "").replace(/\./g, " ");
 }
 
-/** Skies removed from BLOOD, mapped to the closest built-in (same table as SkyboxCatalog.migrate). */
+/** Skies removed from MOTION, mapped to the closest built-in (same table as SkyboxCatalog.migrate). */
 const RENAMED_SKIES: Record<string, string> = {
   "crimson_dusk": "fs_013_sunset",
   "blood_moon": "fs_013_night",

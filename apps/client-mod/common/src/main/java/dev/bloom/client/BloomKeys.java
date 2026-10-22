@@ -6,7 +6,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-/** BLOOD's key mappings. They're normal Minecraft key mappings, so they're saved in options.txt. */
+/** MOTION's key mappings. They're normal Minecraft key mappings, so they're saved in options.txt. */
 public final class BloomKeys {
     public static final String CATEGORY = "key.categories.bloomclient";
 
@@ -23,12 +23,12 @@ public final class BloomKeys {
     }
 
     public static String label(KeyMapping k) {
-        if (k == MENU) return "Open BLOOD menu";
+        if (k == MENU) return "Open MOTION menu";
         if (k == VISUALS_MENU) return "Open visuals menu";
         if (k == HUD_EDITOR) return "Open HUD editor";
-        if (k == TOGGLE_VISUALS) return "Turn BLOOD visuals on/off";
+        if (k == TOGGLE_VISUALS) return "Turn MOTION visuals on/off";
         if (k == NEXT_PROFILE) return "Next visual profile";
-        if (k == TOGGLE_HUD) return "Show/hide BLOOD HUD";
+        if (k == TOGGLE_HUD) return "Show/hide MOTION HUD";
         return k.getName();
     }
 
@@ -36,9 +36,9 @@ public final class BloomKeys {
         if (k == MENU) return "Opens this menu from anywhere in game. Press it again or Esc to close.";
         if (k == VISUALS_MENU) return "Skyboxes, shader effects, fog, presets and performance in a compact menu. Press it again to close.";
         if (k == HUD_EDITOR) return "Jumps straight into the HUD editor.";
-        if (k == TOGGLE_VISUALS) return "Quickly compare BLOOD's visuals with plain Minecraft.";
+        if (k == TOGGLE_VISUALS) return "Quickly compare MOTION's visuals with plain Minecraft.";
         if (k == NEXT_PROFILE) return "Cycles through your visual profiles.";
-        if (k == TOGGLE_HUD) return "Hides or shows all BLOOD HUD widgets.";
+        if (k == TOGGLE_HUD) return "Hides or shows all MOTION HUD widgets.";
         return "";
     }
 }

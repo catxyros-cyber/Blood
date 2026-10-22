@@ -1,5 +1,5 @@
 /**
- * Cloud sync (BLOOD Premium): which settings and installation metadata travel
+ * Cloud sync (MOTION Premium): which settings and installation metadata travel
  * between PCs, and how a downloaded document is merged in. Only portable data
  * is synced — never tokens, Java paths, custom folders, worlds or mod files.
  * Mods tracked from Modrinth are synced as (project, version) references so

@@ -1,4 +1,4 @@
-/** Which installations BLOOD Client can run on, and what to do about the others. */
+/** Which installations MOTION Client can run on, and what to do about the others. */
 
 import type { Instance } from "../instances/model";
 
@@ -47,14 +47,14 @@ export function preferredVersion(bundle: Bundle): string {
 
 export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: Bundle | null): SupportStatus {
   if (!bundle) {
-    return { ok: false, reason: "not_bundled", message: "This build of the launcher doesn't include BLOOD Client. Official BLOOD releases do." };
+    return { ok: false, reason: "not_bundled", message: "This build of the launcher doesn't include MOTION Client. Official MOTION releases do." };
   }
   const versions = bundle.minecraft.join(", ");
   if (inst.loader === "vanilla") {
     return {
       ok: false,
       reason: "vanilla",
-      message: `BLOOD Client is a mod, so it needs a mod loader. Create a Fabric installation for Minecraft ${versions} to use it.`,
+      message: `MOTION Client is a mod, so it needs a mod loader. Create a Fabric installation for Minecraft ${versions} to use it.`,
       fix: "create_fabric_copy",
     };
   }
@@ -62,20 +62,20 @@ export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: 
     return {
       ok: false,
       reason: "forge",
-      message: `BLOOD Client isn't available for Forge. Use Fabric, Quilt or NeoForge on Minecraft ${versions}.`,
+      message: `MOTION Client isn't available for Forge. Use Fabric, Quilt or NeoForge on Minecraft ${versions}.`,
       fix: "create_fabric_copy",
     };
   }
   const lf = bundleLoaderFor(inst.loader);
   if (!lf || !bundle.files.some((f) => f.loader === lf)) {
-    return { ok: false, reason: "loader", message: `BLOOD Client isn't available for this mod loader.` };
+    return { ok: false, reason: "loader", message: `MOTION Client isn't available for this mod loader.` };
   }
   const file = bundleFileFor(bundle, lf, inst.gameVersion);
   if (!file) {
     return {
       ok: false,
       reason: "version",
-      message: `BLOOD Client ${bundle.version} supports Minecraft ${versions}; this installation is ${inst.gameVersion}.`,
+      message: `MOTION Client ${bundle.version} supports Minecraft ${versions}; this installation is ${inst.gameVersion}.`,
       fix: "create_fabric_copy",
     };
   }
@@ -111,15 +111,15 @@ export function compatNotes(loader: Instance["loader"], modIds: Set<string>): Co
   const out: CompatNote[] = [];
   const has = (...ids: string[]) => ids.some((i) => modIds.has(i));
   if ((loader === "fabric" || loader === "quilt") && !has("fabric-api", "fabric", "quilted_fabric_api")) {
-    out.push({ level: "error", title: "Fabric API is missing", message: "BLOOD Client needs Fabric API. BLOOD installs it from Modrinth when you turn BLOOD Client on." });
+    out.push({ level: "error", title: "Fabric API is missing", message: "MOTION Client needs Fabric API. MOTION installs it from Modrinth when you turn MOTION Client on." });
   }
   if (has("sodium", "embeddium")) out.push({ level: "ok", title: "Sodium", message: "Supported." });
   if (has("iris", "oculus")) {
-    out.push({ level: "info", title: "Iris shaders", message: "While a shader pack is on, BLOOD's skybox, fog and world particles pause unless you allow them in the in-game menu. The HUD keeps working." });
+    out.push({ level: "info", title: "Iris shaders", message: "While a shader pack is on, MOTION's skybox, fog and world particles pause unless you allow them in the in-game menu. The HUD keeps working." });
   }
-  if (has("optifabric")) out.push({ level: "warning", title: "OptiFine (OptiFabric)", message: "Not supported together with BLOOD Client. Use Sodium + Iris instead." });
+  if (has("optifabric")) out.push({ level: "warning", title: "OptiFine (OptiFabric)", message: "Not supported together with MOTION Client. Use Sodium + Iris instead." });
   if (has("fabricskyboxes", "nuit")) {
-    out.push({ level: "warning", title: "Another skybox mod", message: "FabricSkyBoxes/Nuit replaces BLOOD's skybox whenever it has one active. Remove one to choose." });
+    out.push({ level: "warning", title: "Another skybox mod", message: "FabricSkyBoxes/Nuit replaces MOTION's skybox whenever it has one active. Remove one to choose." });
   }
   if (has("particlerain")) out.push({ level: "warning", title: "Particle Rain", message: "Also adds rain and snow; turn off one of them to avoid doubled weather." });
   return out;

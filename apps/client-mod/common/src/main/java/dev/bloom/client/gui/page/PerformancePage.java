@@ -52,7 +52,7 @@ public class PerformancePage extends GenericPage {
             double low = f.onePercentLowFps(now, 10_000_000_000L);
             stat(g, x + 8 + 2 * col, y + 6, "1% low (10 s)", low > 0 ? String.format(Locale.ROOT, "%.0f FPS", low) : "measuring…", p);
             ParticleSystem ps = bc.particles();
-            stat(g, x + 8 + 3 * col, y + 6, "BLOOD particles", ps.count() + " / " + BloomSettings.MAX_PARTICLES.intValue(), p);
+            stat(g, x + 8 + 3 * col, y + 6, "MOTION particles", ps.count() + " / " + BloomSettings.MAX_PARTICLES.intValue(), p);
             String budget = BloomSettings.ADAPTIVE.on()
                     ? (Math.round(bc.budget().factor() * 100) + "% of limit" + (bc.budget().factor() < 0.99f ? " (FPS below target)" : ""))
                     : "adaptive off";

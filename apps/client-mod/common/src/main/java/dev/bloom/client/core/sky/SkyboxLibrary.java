@@ -23,7 +23,7 @@ import java.util.Locale;
 /**
  * The player's own skyboxes in {@code config/bloomclient/skyboxes/}: {@code <id>.png} (a 3×2
  * atlas) plus an optional {@code <id>.json} with its name and render options. Imports always
- * write new files under names BLOOD chooses, so an import can never overwrite or escape the
+ * write new files under names MOTION chooses, so an import can never overwrite or escape the
  * folder. Removing a skybox moves it to {@code skyboxes/deleted/}.
  */
 public final class SkyboxLibrary {
@@ -37,7 +37,7 @@ public final class SkyboxLibrary {
             return new Meta(name, "alpha", false, 1f, new float[]{0, 0, 1}, "any", tint, origin);
         }
 
-        /** Blend modes BLOOD can draw. Others fall back to alpha blending. */
+        /** Blend modes MOTION can draw. Others fall back to alpha blending. */
         public boolean additive() {
             return switch (blend) {
                 case "add", "screen", "dodge" -> true;
@@ -271,7 +271,7 @@ public final class SkyboxLibrary {
         RgbaImage atlas = codec.decodePng(png);
         List<String> notes = new ArrayList<>();
         if (!layer.unsupported().isEmpty()) {
-            notes.add("Ignored OptiFine options: " + String.join(", ", layer.unsupported()) + ". BLOOD shows the layer whenever it's selected.");
+            notes.add("Ignored OptiFine options: " + String.join(", ", layer.unsupported()) + ". MOTION shows the layer whenever it's selected.");
         }
         Meta base = new Meta(ProfileCodec.cleanName(displayName(packName) + " " + layer.name()), layer.blend(), layer.rotate(), layer.speed(), layer.axis(),
                 layer.suggestedTime(), averageColor(atlas), ProfileCodec.cleanText(baseName(packName), 64));

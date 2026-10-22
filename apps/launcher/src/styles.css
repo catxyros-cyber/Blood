@@ -23,7 +23,7 @@
 }
 
 /* ---------------------------------------------------------------- Themes
-   Crimson is the default BLOOD look. Each theme sets surfaces, text and its own accent
+   Motion (black + electric green) is the default MOTION look. Each theme sets surfaces, text and its own accent
    (--accent-base). A custom accent (Settings → Appearance) overrides --accent-base inline.
    --intensity (0..1, Settings → Appearance → Accent intensity) mixes the accent towards a
    muted tone and scales every glow, so the whole UI can go from flat to vivid. */
@@ -34,6 +34,23 @@
   --glow: calc(var(--intensity) * 1);
 }
 :root,
+:root[data-theme="motion"] {
+  --bg: #050706;
+  --panel: #0b0e0c;
+  --panel-2: #0f1311;
+  --raised: #161c19;
+  --line: #19201c;
+  --line-strong: #29342e;
+  --fg: #f2f7f4;
+  --muted: #a7b5ad;
+  --faint: #6b7a72;
+  --accent-base: #39ff88;
+  --accent-2: #c6ff3d;
+  --accent-ink: #03140a;
+  --glass: rgb(8 11 9 / 0.76);
+  --accent-muted: #4f6158;
+  color-scheme: dark;
+}
 :root[data-theme="crimson"] {
   --bg: #0a0708;
   --panel: #120d0e;
@@ -347,7 +364,7 @@ input[type="range"].bloom-range::-webkit-slider-thumb:hover {
   image-rendering: pixelated;
 }
 
-/* ---------------------------------------------------------------- BLOOD look */
+/* ---------------------------------------------------------------- MOTION look */
 .glass {
   background: var(--glass);
   backdrop-filter: blur(18px) saturate(1.15);
@@ -409,3 +426,26 @@ input[type="range"].bloom-range::-webkit-slider-thumb:hover {
 .wordmark {
   filter: drop-shadow(0 0 10px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 35%), transparent));
 }
+
+/* Accessory previews (Customize → Wings & aura) */
+@keyframes motion-wing-l {
+  0%, 100% { transform: scaleX(-1) rotate(-4deg); }
+  50% { transform: scaleX(-1) rotate(6deg); }
+}
+@keyframes motion-wing-r {
+  0%, 100% { transform: rotate(4deg); }
+  50% { transform: rotate(-6deg); }
+}
+.wing-l { transform-origin: right center; animation: motion-wing-l 3.2s ease-in-out infinite; }
+.wing-r { transform-origin: left center; animation: motion-wing-r 3.2s ease-in-out infinite; }
+@keyframes motion-aura {
+  0%, 100% { opacity: 0.55; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.aura-glow {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--aura) 85%, transparent), color-mix(in srgb, var(--aura) 25%, transparent) 60%, transparent);
+  animation: motion-aura 2.6s ease-in-out infinite;
+}
+:root[data-motion="reduce"] .wing-l,
+:root[data-motion="reduce"] .wing-r,
+:root[data-motion="reduce"] .aura-glow { animation: none; }

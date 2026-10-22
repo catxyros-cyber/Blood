@@ -86,7 +86,7 @@ export class Stripe {
   }
 }
 
-// --- Objects (only the fields BLOOD reads) ------------------------------------
+// --- Objects (only the fields MOTION reads) ------------------------------------
 
 export interface StripePrice {
   id: string;

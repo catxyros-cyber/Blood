@@ -1,8 +1,8 @@
 # Premium keys
 
-You can sell or give away BLOOD Premium as keys instead of (or as well as) Stripe payments.
+You can sell or give away MOTION Premium as keys instead of (or as well as) Stripe payments.
 
-- A key looks like `BLOOD-7K2QF-M9XRT-4HZ8W-PN3D6`. Players paste it into **Premium key** on the
+- A key looks like `MOTION-7K2QF-M9XRT-4HZ8W-PN3D6`. Players paste it into **Premium key** on the
   dashboard (or the Premium page) and press **Redeem key**.
 - The first PC that redeems a key owns it. Only that PC gets Premium.
 - If someone else enters the same key, they see "active on another PC" and get nothing.
@@ -29,7 +29,7 @@ be bypassed. Keys stop casual sharing, which is what matters in practice.
 
 ## Setup (once)
 
-Keys need the BLOOD server running (the same one Stripe uses: see `docs/STRIPE.md` for hosting on
+Keys need the MOTION server running (the same one Stripe uses: see `docs/STRIPE.md` for hosting on
 Railway with PostgreSQL).
 
 1. On the server, add the variable `ADMIN_TOKEN` with a long random password (at least 24
@@ -58,7 +58,7 @@ All admin calls need `Authorization: Bearer <ADMIN_TOKEN>`.
 
 | Call | Body | Result |
 | --- | --- | --- |
-| `POST /v1/admin/keys` | `{"count": 1, "days": 30, "label": "giveaway"}` (omit `days` for lifetime) | `{"keys": ["BLOOD-…"]}` |
+| `POST /v1/admin/keys` | `{"count": 1, "days": 30, "label": "giveaway"}` (omit `days` for lifetime) | `{"keys": ["MOTION-…"]}` |
 | `GET /v1/admin/keys` | | `{"keys": [{ id, hint, label, durationDays, redeemedAt, expiresAt, bound, revoked, … }]}` |
 | `POST /v1/admin/keys/update` | `{"id": "…", "action": "revoke" \| "restore" \| "unbind"}` | the updated key |
 

@@ -27,7 +27,7 @@ export interface ModMeta {
   nestedJars: number;
 }
 
-/** Files BLOOD reads from a jar to identify a mod, in priority order. */
+/** Files MOTION reads from a jar to identify a mod, in priority order. */
 export const METADATA_ENTRIES = [
   "fabric.mod.json",
   "quilt.mod.json",

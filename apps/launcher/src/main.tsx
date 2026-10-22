@@ -11,7 +11,7 @@ try {
   /* storage unavailable */
 }
 
-// BLOOD is a desktop app: no browser context menu (except in text fields) and no file drops into the page itself.
+// MOTION is a desktop app: no browser context menu (except in text fields) and no file drops into the page itself.
 window.addEventListener("contextmenu", (e) => {
   const t = e.target as HTMLElement;
   if (!t.closest("input, textarea, .selectable")) e.preventDefault();

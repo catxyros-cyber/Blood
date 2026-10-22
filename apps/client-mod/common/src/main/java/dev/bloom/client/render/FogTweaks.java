@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
  * Fog distance/tint and atmospheric haze in the Overworld, fog tints in the Nether and the End,
  * and the vanilla sky colour tint. Visual only.
  *
- * <p>With "Smooth fog transitions" on, BLOOD's own fog changes glide to new values over about a
+ * <p>With "Smooth fog transitions" on, MOTION's own fog changes glide to new values over about a
  * second (switching presets, dragging sliders, leaving water) instead of jumping. Minecraft's own
  * fog changes (weather, biomes) are left exactly as vanilla does them.
  */
@@ -45,7 +45,7 @@ public final class FogTweaks {
         return !(camera.getEntity() instanceof LivingEntity le && (le.hasEffect(MobEffects.BLINDNESS) || le.hasEffect(MobEffects.DARKNESS)));
     }
 
-    /** Smoothed Overworld values; heads back to neutral while BLOOD's fog doesn't apply. */
+    /** Smoothed Overworld values; heads back to neutral while MOTION's fog doesn't apply. */
     private static float[] overworld(boolean applies) {
         int tint = BloomSettings.FOG_TINT.rgb(), hz = BloomSettings.HAZE_COLOR.rgb();
         TARGET[0] = applies ? BloomSettings.FOG_DISTANCE.value() : 1f;

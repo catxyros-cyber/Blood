@@ -1,5 +1,5 @@
 /**
- * BLOOD tags & presence. While the launcher is open it tells BLOOD's server you're online (and
+ * MOTION tags & presence. While the launcher is open it tells MOTION's server you're online (and
  * whether a game is running) about once a minute; the Home page shows the tagged team (owner etc.)
  * with who's online right now.
  */
@@ -27,7 +27,7 @@ async function heartbeat(): Promise<void> {
   try {
     await premiumRequest("POST", "/v1/me/online", { playing: Object.keys(app.get().running).length > 0 });
   } catch {
-    /* not signed in to BLOOD yet, or offline */
+    /* not signed in to MOTION yet, or offline */
   }
 }
 

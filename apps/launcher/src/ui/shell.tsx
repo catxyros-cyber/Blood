@@ -119,10 +119,11 @@ export function Sidebar() {
           onClick={() => navigate({ page: "library" })}
           badge={runningCount > 0 ? <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" title="Running" /> : undefined}
         />
-        <NavItem icon={<Icon.Hud size={19} />} label="BLOOD Mods" active={isActive(route, "mods")} onClick={() => navigate({ page: "mods" })} />
+        <NavItem icon={<Icon.Hud size={19} />} label="MOTION Mods" active={isActive(route, "mods")} onClick={() => navigate({ page: "mods" })} />
         <NavItem icon={<Icon.Gauge size={19} />} label="Performance" active={isActive(route, "performance")} onClick={() => navigate({ page: "performance" })} />
         <NavItem icon={<Icon.Compass size={19} />} label="Browse" active={isActive(route, "browse")} onClick={() => navigate({ page: "browse" })} />
         <NavItem icon={<Icon.Paint size={19} />} label="Visuals" active={isActive(route, "customize")} onClick={() => navigate({ page: "customize" })} />
+        <NavItem icon={<Icon.User size={19} />} label="My Skin" active={isActive(route, "skins")} onClick={() => navigate({ page: "skins" })} />
         <NavItem
           icon={<Icon.Crown size={19} />}
           label="Premium"
@@ -144,7 +145,7 @@ export function Sidebar() {
             <div className="text-[13.5px] font-semibold truncate flex items-center gap-1.5">
               {account?.username ?? "Sign in"}
               {premium && (
-                <span className="text-amber-200" title="BLOOD Premium supporter">
+                <span className="text-amber-200" title="MOTION Premium supporter">
                   <Icon.Crown size={13} />
                 </span>
               )}

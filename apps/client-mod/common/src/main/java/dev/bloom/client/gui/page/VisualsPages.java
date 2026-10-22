@@ -494,7 +494,7 @@ public final class VisualsPages {
             section(rows, screen, used, "Particles", PARTICLES);
             section(rows, screen, used, "Automatic quality", AUTO);
             rows.add(new Rows.Info("info", "Everything here changes real rendering work: glow buffers, sharpening taps, skybox texture size, "
-                    + "the starfield and the particle budget. With all shader values neutral, BLOOD skips the shader pass entirely.",
+                    + "the starfield and the particle budget. With all shader values neutral, MOTION skips the shader pass entirely.",
                     Theme.palette().textDim()));
             rows.add(new Rows.Buttons(List.of(resetButton(screen, "Performance", used))));
             return rows;
@@ -524,7 +524,7 @@ public final class VisualsPages {
             rows.add(new Rows.Buttons(List.of(
                     new Button("Save now", "check", Button.Style.PRIMARY, () -> {
                         BloomClient.get().saveNow();
-                        screen.message("Saved", "Your settings and presets are written to disk. (BLOOD also saves automatically a moment after every change.)");
+                        screen.message("Saved", "Your settings and presets are written to disk. (MOTION also saves automatically a moment after every change.)");
                     }).tooltip("Write settings to disk immediately"),
                     new Button("Save as preset…", "plus", Button.Style.NORMAL, () -> saveAsPreset(screen)),
                     load,
@@ -541,7 +541,7 @@ public final class VisualsPages {
             rows.add(new Rows.Info("info", "Tab / Shift+Tab switch sections. Type anywhere to search. Esc or the menu key closes the menu.",
                     Theme.palette().textDim()));
             rows.add(new Rows.Buttons(List.of(
-                    new Button("Open full BLOOD menu", "grid", Button.Style.GHOST,
+                    new Button("Open full MOTION menu", "grid", Button.Style.GHOST,
                             () -> Minecraft.getInstance().setScreen(new BloomMenuScreen(screen.parentScreen()))),
                     resetButton(screen, "General", used))));
             return rows;

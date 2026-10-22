@@ -22,7 +22,7 @@ import java.util.function.LongSupplier;
 
 /**
  * Persists {@link BloomSettings} to {@code config/bloomclient/settings.json}, which the
- * BLOOD launcher also reads and edits.
+ * MOTION launcher also reads and edits.
  *
  * <ul>
  *   <li>Changes are saved automatically shortly after they happen (debounced) and on exit.</li>
@@ -31,7 +31,7 @@ import java.util.function.LongSupplier;
  *       the change is picked up within a couple of seconds. Keys changed in-game since the last
  *       save are kept; everything else takes the file's (newer) value. Nothing newer is
  *       overwritten by an older copy.</li>
- *   <li>Unknown keys (from a newer BLOOD version) are preserved, never dropped.</li>
+ *   <li>Unknown keys (from a newer MOTION version) are preserved, never dropped.</li>
  *   <li>Invalid values are ignored one by one; a corrupt file is backed up, never deleted.</li>
  * </ul>
  */
@@ -191,7 +191,7 @@ public final class SettingsStore {
             return el.getAsJsonObject();
         } catch (Exception e) {
             Log.warn("Could not read " + file.getFileName(), e);
-            if (report) loadProblem = "BLOOD settings could not be read (" + e.getClass().getSimpleName() + "). Defaults are in use; the old file was kept as a backup.";
+            if (report) loadProblem = "MOTION settings could not be read (" + e.getClass().getSimpleName() + "). Defaults are in use; the old file was kept as a backup.";
             return null;
         }
     }
@@ -363,7 +363,7 @@ public final class SettingsStore {
             dirtyKeys.clear();
             dirtySections.clear();
         } catch (IOException e) {
-            Log.warn("Could not save BLOOD settings; will retry", e);
+            Log.warn("Could not save MOTION settings; will retry", e);
             saveDueAt = clock.getAsLong() + 5000;
         }
     }

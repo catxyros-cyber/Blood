@@ -7,6 +7,10 @@
   "mixins": [],
   "client": [
     "AbstractClientPlayerMixin",
+    "AvatarRendererMixin",
+    "ScreenBackgroundMixin",
+    "LevelLoadingScreenMixin",
+    "LoadingOverlayMixin",
     "PlayerDisplayNameMixin",
     "PlayerTabOverlayMixin",
     "ClientLevelDataMixin",

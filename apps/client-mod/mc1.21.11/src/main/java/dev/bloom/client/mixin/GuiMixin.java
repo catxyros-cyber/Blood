@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Custom crosshair: when it's enabled BLOOD draws its own and skips the vanilla one. The
+ * Custom crosshair: when it's enabled MOTION draws its own and skips the vanilla one. The
  * injection is optional ("defaultRequire": 0), so if another mod replaces this method the
  * game still starts and simply keeps the vanilla crosshair.
  */

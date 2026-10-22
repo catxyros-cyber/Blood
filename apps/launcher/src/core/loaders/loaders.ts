@@ -7,7 +7,7 @@ export type LoaderId = "vanilla" | "fabric" | "quilt" | "neoforge" | "forge";
 export interface LoaderInfo {
   id: LoaderId;
   name: string;
-  /** Whether BLOOD can install this loader in the current release. */
+  /** Whether MOTION can install this loader in the current release. */
   supported: boolean;
   note?: string;
 }
@@ -92,7 +92,7 @@ export async function loaderProfile(
   return profile;
 }
 
-/** Version id BLOOD stores a loader profile under. */
+/** Version id MOTION stores a loader profile under. */
 export function loaderProfileId(loader: LoaderId, gameVersion: string, loaderVersion: string): string {
   return `${loader}-loader-${loaderVersion}-${gameVersion}`;
 }

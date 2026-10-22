@@ -1,4 +1,4 @@
-// BLOOD key admin page. Talks to /v1/admin/* on this server with the ADMIN_TOKEN as a bearer
+// MOTION key admin page. Talks to /v1/admin/* on this server with the ADMIN_TOKEN as a bearer
 // token. The token is kept for this browser tab only (sessionStorage).
 (() => {
   const $ = (sel) => document.querySelector(sel);
@@ -295,7 +295,7 @@
     msg(capeMsg, "Publishing…");
     try {
       await api("POST", "/v1/admin/capes", { name: String(f.get("name")).trim(), access: f.get("access"), png: data, ...(cape.frames > 1 ? { frameMs } : {}) });
-      msg(capeMsg, cape.frames > 1 ? `Published an animated cape (${cape.frames} frames). Players can pick it in the BLOOD launcher.` : "Published. Players can pick it in the BLOOD launcher.");
+      msg(capeMsg, cape.frames > 1 ? `Published an animated cape (${cape.frames} frames). Players can pick it in the MOTION launcher.` : "Published. Players can pick it in the MOTION launcher.");
       ev.target.reset();
       await loadCapes();
     } catch (e) {
@@ -370,11 +370,124 @@
     const text = String(f.get("text") || "").trim();
     try {
       const r = await api("POST", "/v1/admin/tags", { username: String(f.get("username")).trim(), text, color: f.get("color") });
-      msg(tagMsg, text ? `Saved. ${r.username} now shows [${text}] to BLOOD players.` : `Removed ${r.username}'s tag.`);
+      msg(tagMsg, text ? `Saved. ${r.username} now shows [${text}] to MOTION players.` : `Removed ${r.username}'s tag.`);
       ev.target.reset();
       await loadTags();
     } catch (e) {
       msg(tagMsg, e.message, true);
+    }
+  });
+
+  // ---------------------------------------------------------------- accessories
+
+  const kindSelect = $("[data-acc-kind]");
+  const syncKind = () => {
+    const aura = kindSelect.value === "aura";
+    $("[data-acc-style]").classList.toggle("hidden", !aura);
+    $("[data-acc-file]").classList.toggle("hidden", aura);
+  };
+  kindSelect.addEventListener("change", syncKind);
+  syncKind();
+
+  /** One wing as a PNG (kept smooth; large images are scaled down to 1024 px on the long side). */
+  async function wingPng(file) {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, 1024 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.max(16, Math.round(bmp.width * scale));
+    c.height = Math.max(16, Math.round(bmp.height * scale));
+    const g = c.getContext("2d");
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL("image/png");
+  }
+
+  async function loadAccessories() {
+    const box = $("[data-accs]");
+    try {
+      const { accessories } = await api("GET", "/v1/admin/accessories");
+      box.replaceChildren();
+      if (!accessories.length) {
+        box.textContent = "No accessories yet.";
+        return;
+      }
+      for (const a of accessories) {
+        const card = document.createElement("div");
+        card.className = "admin-cape" + (a.enabled ? "" : " off");
+        let preview;
+        if (a.kind === "wings") {
+          preview = document.createElement("img");
+          preview.src = a.image;
+          preview.alt = "";
+          preview.className = "hd admin-wing";
+        } else {
+          preview = document.createElement("div");
+          preview.className = "admin-aura";
+          preview.style.setProperty("--aura", a.color);
+          preview.textContent = a.style;
+        }
+        const name = document.createElement("div");
+        name.className = "admin-cape-name";
+        name.textContent = a.name;
+        const meta = document.createElement("div");
+        meta.className = "muted";
+        meta.textContent = `${a.kind === "wings" ? `Wings · ${a.width}×${a.height}` : `Aura · ${a.style} · ${a.color}`} · ${a.access === "premium" ? "Premium only" : "Everyone"}${a.enabled ? "" : " · hidden"}`;
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+        const act = (label, action, danger) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = danger ? "btn btn-danger" : "btn";
+          b.textContent = label;
+          b.addEventListener("click", async () => {
+            if (action === "delete" && !confirm(`Delete "${a.name}"? Players wearing it lose it.`)) return;
+            b.disabled = true;
+            try {
+              await api("POST", "/v1/admin/accessories/update", { id: a.id, action });
+              await loadAccessories();
+            } catch (e) {
+              msg($("[data-acc-msg]"), e.message, true);
+              b.disabled = false;
+            }
+          });
+          return b;
+        };
+        actions.append(act(a.enabled ? "Hide" : "Show", a.enabled ? "disable" : "enable"));
+        actions.append(act(a.access === "premium" ? "Make free" : "Premium only", a.access === "premium" ? "everyone" : "premium"));
+        actions.append(act("Delete", "delete", true));
+        card.append(preview, name, meta, actions);
+        box.append(card);
+      }
+    } catch (e) {
+      msg($("[data-acc-msg]"), e.message, true);
+    }
+  }
+
+  $("[data-acc-form]").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const accMsg = $("[data-acc-msg]");
+    const kind = f.get("kind");
+    const body = { name: String(f.get("name")).trim(), kind, access: f.get("access"), color: f.get("color") };
+    try {
+      if (kind === "wings") {
+        const file = f.get("file");
+        if (!file || !file.size) return msg(accMsg, "Choose a wing image.", true);
+        msg(accMsg, "Preparing the image…");
+        body.png = await wingPng(file);
+        if (body.png.length * 0.75 > 4 * 1024 * 1024) return msg(accMsg, "That image is over 4 MB after conversion. Use a smaller one.", true);
+      } else {
+        body.style = f.get("style");
+      }
+      msg(accMsg, "Publishing…");
+      await api("POST", "/v1/admin/accessories", body);
+      msg(accMsg, "Published. Players can pick it in the launcher (Customize).");
+      ev.target.reset();
+      syncKind();
+      await loadAccessories();
+    } catch (e) {
+      msg(accMsg, e.message, true);
     }
   });
 
@@ -386,6 +499,7 @@
     show(true);
     await load();
     await loadCapes();
+    await loadAccessories();
     await loadTags();
   });
 
@@ -430,6 +544,7 @@
     show(true);
     void load();
     void loadCapes();
+    void loadAccessories();
     void loadTags();
   }
   setInterval(() => { if (token) void loadTags(); }, 30_000);

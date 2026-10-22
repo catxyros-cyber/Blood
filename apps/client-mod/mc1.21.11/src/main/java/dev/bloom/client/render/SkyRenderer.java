@@ -20,9 +20,9 @@ import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 /**
- * Draws BLOOD's sky on top of the vanilla sky (called at the end of Minecraft's sky pass):
+ * Draws MOTION's sky on top of the vanilla sky (called at the end of Minecraft's sky pass):
  * day/night skyboxes with crossfade, horizon blending and haze, the sun and moon, a soft glow
- * around them and BLOOD's starfield. Nothing here touches world state.
+ * around them and MOTION's starfield. Nothing here touches world state.
  */
 public final class SkyRenderer {
     private static final Identifier SUN = Identifier.withDefaultNamespace("textures/environment/celestial/sun.png");

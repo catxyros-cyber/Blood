@@ -47,7 +47,7 @@ async function main() {
   server.headersTimeout = 20_000;
   server.requestTimeout = 30_000;
   server.listen(config.port, config.host, () => {
-    console.log(`BLOOD API (${config.env}) listening on http://${config.host}:${config.port} — public URL ${config.publicUrl}`);
+    console.log(`MOTION API (${config.env}) listening on http://${config.host}:${config.port} — public URL ${config.publicUrl}`);
   });
 
   const shutdown = async () => {

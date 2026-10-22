@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Drawing helpers for BLOOD's menus: tinted nine-slice panels, icons, text and gradients. */
+/** Drawing helpers for MOTION's menus: tinted nine-slice panels, icons, text and gradients. */
 public final class Ui {
     private static final Map<String, ResourceLocation> SPRITES = new HashMap<>();
 

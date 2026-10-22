@@ -2,7 +2,7 @@ import { OptionsFile } from "./options";
 
 export type PresetId = "potato" | "balanced" | "competitive" | "extreme" | "custom";
 
-/** Video settings BLOOD can manage, in version-independent form. */
+/** Video settings MOTION can manage, in version-independent form. */
 export interface VideoSettings {
   renderDistance: number;
   simulationDistance: number;

@@ -1,6 +1,6 @@
-# BLOOD Client
+# MOTION Client
 
-BLOOD Client is the in-game half of BLOOD: a client-side, purely visual mod. It never
+MOTION Client is the in-game half of MOTION: a client-side, purely visual mod. It never
 changes gameplay, sends nothing to servers, and does nothing on a dedicated server.
 It isn't loaded on servers at all.
 
@@ -8,7 +8,7 @@ It isn't loaded on servers at all.
 
 | | Supported | Notes |
 | --- | --- | --- |
-| Minecraft | **1.21.1** | Other versions: the launcher explains that BLOOD Client isn't available yet and offers to create a Fabric 1.21.1 installation. |
+| Minecraft | **1.21.1** | Other versions: the launcher explains that MOTION Client isn't available yet and offers to create a Fabric 1.21.1 installation. |
 | Fabric (Loader ≥ 0.16) | ✅ | Needs **Fabric API**. The launcher installs it from Modrinth if it's missing. |
 | Quilt | ✅ | Runs the Fabric build through Quilt's Fabric compatibility (QFAPI/Fabric API required). |
 | NeoForge 21.1.x | ✅ | Separate NeoForge build. |
@@ -16,22 +16,22 @@ It isn't loaded on servers at all.
 | Vanilla | ❌ | Mods need a loader. The launcher offers "Create Fabric 1.21.1 installation". |
 | Sodium / Embeddium | ✅ | Sky, fog, particles and HUD work alongside it. |
 | Iris / Oculus (shader pack **off**) | ✅ | |
-| Iris / Oculus (shader pack **on**) | ⚠️ | Shaders draw their own sky and fog, so BLOOD pauses its skybox, sky tint, fog and world particles. HUD and menu keep working. Override in Skyboxes → Compatibility. |
+| Iris / Oculus (shader pack **on**) | ⚠️ | Shaders draw their own sky and fog, so MOTION pauses its skybox, sky tint, fog and world particles. HUD and menu keep working. Override in Skyboxes → Compatibility. |
 | OptiFine via OptiFabric | ❌ | Declared incompatible (`breaks` in fabric.mod.json). Use Sodium + Iris. |
-| FabricSkyBoxes / Nuit | ⚠️ | An active FSB skybox replaces BLOOD's; turn one off. |
+| FabricSkyBoxes / Nuit | ⚠️ | An active FSB skybox replaces MOTION's; turn one off. |
 | Particle Rain | ⚠️ | Double weather. Turn off one of the two rain/snow effects. |
 
-**Fail-safe mixins.** If another mod changes a method BLOOD hooks, that single feature is skipped instead of crashing the game: `defaultRequire = 0`, and Mixin logs a warning. HUD widgets are isolated, so a widget that throws three times is turned off and marked in the HUD page.
+**Fail-safe mixins.** If another mod changes a method MOTION hooks, that single feature is skipped instead of crashing the game: `defaultRequire = 0`, and Mixin logs a warning. HUD widgets are isolated, so a widget that throws three times is turned off and marked in the HUD page.
 
 ## Controls
 
 | Key | Default | Action |
 | --- | --- | --- |
-| Open BLOOD menu | **Right Shift** | Opens the menu. Change it in Minecraft's Controls, the menu's Keybinds page or the launcher. |
+| Open MOTION menu | **Right Shift** | Opens the menu. Change it in Minecraft's Controls, the menu's Keybinds page or the launcher. |
 | HUD editor | unbound | Opens the drag-and-drop HUD editor. |
-| Toggle BLOOD visuals | unbound | Turns all of BLOOD's visuals on or off at once. |
+| Toggle MOTION visuals | unbound | Turns all of MOTION's visuals on or off at once. |
 | Next profile | unbound | Cycles through visual profiles. |
-| Toggle HUD | unbound | Shows or hides BLOOD's HUD widgets. |
+| Toggle HUD | unbound | Shows or hides MOTION's HUD widgets. |
 
 ## The menu
 
@@ -81,7 +81,7 @@ There are ten pages: General, HUD Editor, Skyboxes, Weather & Environment, Parti
   - Built-ins you edit can be reset; deleted profiles go to `profiles/deleted/`.
 - **Performance page.**
   - Measured FPS, 1% lows and frame-time graph.
-  - The **low-FPS advisor** lists the heaviest BLOOD effects that are on when FPS stays low. It only suggests; nothing changes until you click.
+  - The **low-FPS advisor** lists the heaviest MOTION effects that are on when FPS stays low. It only suggests; nothing changes until you click.
   - Performance mode turns off menu animations and decorative extras.
 
 ## Files
@@ -135,19 +135,19 @@ All files live in the installation's `config/bloomclient/`:
 - **Two writers.**
   - **The game** writes `updatedBy: "game"`. It checks the file every ~2 s while running. When the file changed on disk, keys changed in-game since the last save are kept, and everything else takes the file's newer values.
   - **The launcher** writes `updatedBy: "launcher"` and bumps `revision`. To switch profile it sets `profiles.active` and `profiles.apply: true`, which tells the game to apply that profile's values once.
-- **HUD block.** Widgets missing from a layout keep their defaults; unknown widget ids are ignored. The launcher's BLOOD Mods page edits only the active layout (visibility, options, scale, and positions for presets), merging into what's there.
+- **HUD block.** Widgets missing from a layout keep their defaults; unknown widget ids are ignored. The launcher's MOTION Mods page edits only the active layout (visibility, options, scale, and positions for presets), merging into what's there.
 - **Running games.** The launcher refuses to change the menu key or Toggle Sprint/Sneak while the game runs, because Minecraft rewrites `options.txt` on exit. Other settings (HUD included) can be changed and are picked up live.
 
 ## Launcher integration
 
-The launcher's **BLOOD Mods** page switches HUD modules, the crosshair and other module settings, applies the Performance / Minimal HUD / Full HUD presets (backing up `settings.json` to the installation's `.bloom/client-backups/` first), and restores backups.
+The launcher's **MOTION Mods** page switches HUD modules, the crosshair and other module settings, applies the Performance / Minimal HUD / Full HUD presets (backing up `settings.json` to the installation's `.bloom/client-backups/` first), and restores backups.
 
 The launcher's **Visuals** page:
 
-- **Install, update or remove.** It installs, updates or removes the BLOOD Client jar bundled with the launcher. The jar is checked against the manifest's sha1. Files are never overwritten, and removing moves the jar to the Recycle Bin.
+- **Install, update or remove.** It installs, updates or removes the MOTION Client jar bundled with the launcher. The jar is checked against the manifest's sha1. Files are never overwritten, and removing moves the jar to the Recycle Bin.
 - **Choose the look.** Pick a profile, day and night skybox, weather toggles, quality, menu theme and menu key, with a live preview. You can import a skybox image.
-- **Before each launch,** for installations with BLOOD Client turned on, it makes sure the bundled version is installed (updating the jar if the launcher has a newer one). If that fails, you get a warning and the game still launches.
-- **Removing** moves only the jar to the Recycle Bin; your BLOOD Client settings, profiles and skyboxes stay.
+- **Before each launch,** for installations with MOTION Client turned on, it makes sure the bundled version is installed (updating the jar if the launcher has a newer one). If that fails, you get a warning and the game still launches.
+- **Removing** moves only the jar to the Recycle Bin; your MOTION Client settings, profiles and skyboxes stay.
 
 ## Building
 

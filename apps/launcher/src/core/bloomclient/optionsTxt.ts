@@ -1,4 +1,4 @@
-/** Reading and changing BLOOD's key binding in Minecraft's options.txt (one "key:value" per line). */
+/** Reading and changing MOTION's key binding in Minecraft's options.txt (one "key:value" per line). */
 
 export const MENU_KEY_OPTION = "key_key.bloomclient.menu";
 

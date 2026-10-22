@@ -1,4 +1,4 @@
-/** Modrinth API v2 types (https://docs.modrinth.com/api/). Only fields BLOOD uses. */
+/** Modrinth API v2 types (https://docs.modrinth.com/api/). Only fields MOTION uses. */
 
 export type ProjectType = "mod" | "modpack" | "resourcepack" | "shader" | "datapack" | "plugin";
 export type SideSupport = "required" | "optional" | "unsupported" | "unknown";

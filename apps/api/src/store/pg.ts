@@ -2,9 +2,9 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Accessory, Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
-/** The subset of pg.Pool that BLOOD uses (keeps this file free of @types/pg). */
+/** The subset of pg.Pool that MOTION uses (keeps this file free of @types/pg). */
 export interface PgPool {
   query<R = Record<string, unknown>>(text: string, values?: unknown[]): Promise<{ rows: R[]; rowCount: number | null }>;
   connect(): Promise<PgClient>;
@@ -441,6 +441,77 @@ export class PgStore implements Store {
     for (const r of rows) out[r.minecraft_uuid] = r.cape_id;
     return out;
   }
+  // ------------------------------------------------------------------ accessories
+
+  async createAccessory(a: Accessory) {
+    await this.pool.query(
+      "INSERT INTO accessories (id, name, kind, access, png, width, height, color, style, enabled, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+      [a.id, a.name, a.kind, a.access, a.png, a.width, a.height, a.color, a.style, a.enabled, ts(a.createdAt)],
+    );
+  }
+  async getAccessory(id: string) {
+    const { rows } = await this.pool.query<AccessoryRow>("SELECT * FROM accessories WHERE id = $1", [id]);
+    return rows[0] ? toAccessory(rows[0]) : null;
+  }
+  async listAccessories(includeDisabled: boolean) {
+    const { rows } = await this.pool.query<AccessoryRow>(
+      `SELECT id, name, kind, access, NULL::bytea AS png, width, height, color, style, enabled, created_at FROM accessories ${includeDisabled ? "" : "WHERE enabled"} ORDER BY created_at`,
+    );
+    return rows.map(toAccessory);
+  }
+  async updateAccessory(id: string, patch: { enabled?: boolean; access?: Accessory["access"] }) {
+    const sets: string[] = [];
+    const vals: unknown[] = [id];
+    if (patch.enabled !== undefined) {
+      vals.push(patch.enabled);
+      sets.push(`enabled = $${vals.length}`);
+    }
+    if (patch.access !== undefined) {
+      vals.push(patch.access);
+      sets.push(`access = $${vals.length}`);
+    }
+    if (!sets.length) return (await this.getAccessory(id)) !== null;
+    const r = await this.pool.query(`UPDATE accessories SET ${sets.join(", ")} WHERE id = $1`, vals);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async deleteAccessory(id: string) {
+    const r = await this.pool.query("DELETE FROM accessories WHERE id = $1", [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async setPlayerAccessory(minecraftUuid: string, kind: Accessory["kind"], id: string | null, now: number) {
+    if (!id) {
+      await this.pool.query("DELETE FROM player_accessories WHERE minecraft_uuid = $1 AND kind = $2", [minecraftUuid, kind]);
+      return;
+    }
+    await this.pool.query(
+      `INSERT INTO player_accessories (minecraft_uuid, kind, accessory_id, updated_at) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (minecraft_uuid, kind) DO UPDATE SET accessory_id = EXCLUDED.accessory_id, updated_at = EXCLUDED.updated_at`,
+      [minecraftUuid, kind, id, ts(now)],
+    );
+  }
+  async getPlayerAccessories(minecraftUuid: string) {
+    const { rows } = await this.pool.query<{ kind: string; accessory_id: string }>(
+      "SELECT kind, accessory_id FROM player_accessories WHERE minecraft_uuid = $1",
+      [minecraftUuid],
+    );
+    return { wings: rows.find((r) => r.kind === "wings")?.accessory_id ?? null, aura: rows.find((r) => r.kind === "aura")?.accessory_id ?? null };
+  }
+  async playerAccessories(uuids: string[]) {
+    const wings: Record<string, string> = {};
+    const auras: Record<string, { color: string; style: string }> = {};
+    if (!uuids.length) return { wings, auras };
+    const { rows } = await this.pool.query<{ minecraft_uuid: string; kind: string; id: string; color: string; style: string | null }>(
+      `SELECT p.minecraft_uuid, p.kind, a.id, a.color, a.style FROM player_accessories p JOIN accessories a ON a.id = p.accessory_id
+       WHERE a.enabled AND p.minecraft_uuid = ANY($1::text[])`,
+      [uuids],
+    );
+    for (const r of rows) {
+      if (r.kind === "wings") wings[r.minecraft_uuid] = r.id;
+      else auras[r.minecraft_uuid] = { color: r.color, style: r.style ?? "glow" };
+    }
+    return { wings, auras };
+  }
+
 }
 
 interface CapeRow {
@@ -467,3 +538,30 @@ const toCape = (r: CapeRow): Cape => ({
   createdAt: r.created_at.getTime(),
 });
 
+interface AccessoryRow {
+  id: string;
+  name: string;
+  kind: "wings" | "aura";
+  access: "everyone" | "premium";
+  png: Buffer | null;
+  width: number;
+  height: number;
+  color: string;
+  style: string | null;
+  enabled: boolean;
+  created_at: Date;
+}
+
+const toAccessory = (r: AccessoryRow): Accessory => ({
+  id: r.id,
+  name: r.name,
+  kind: r.kind,
+  access: r.access,
+  png: r.png,
+  width: r.width,
+  height: r.height,
+  color: r.color,
+  style: r.style,
+  enabled: r.enabled,
+  createdAt: r.created_at.getTime(),
+});

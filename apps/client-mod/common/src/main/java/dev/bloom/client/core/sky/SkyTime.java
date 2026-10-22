@@ -2,7 +2,7 @@ package dev.bloom.client.core.sky;
 
 /**
  * Minecraft's celestial maths, version-independent. Newer Minecraft versions moved these into
- * "environment attributes"; BLOOD only needs the classic Overworld curve, so it computes it from
+ * "environment attributes"; MOTION only needs the classic Overworld curve, so it computes it from
  * the day time itself.
  */
 public final class SkyTime {

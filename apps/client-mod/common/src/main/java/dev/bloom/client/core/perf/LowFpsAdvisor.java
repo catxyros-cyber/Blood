@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Watches the measured FPS and, when it stays below the threshold for a while, produces a
- * suggestion listing the heaviest BLOOD effects that are on. It only suggests: the player
+ * suggestion listing the heaviest MOTION effects that are on. It only suggests: the player
  * decides, and nothing is changed automatically. It won't nag: after a suggestion it waits
  * 10 minutes, and "Don't show again this session" silences it.
  */

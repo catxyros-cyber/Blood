@@ -1,10 +1,10 @@
-# BLOOD
+# MOTION MOTION
 
-**Built for frames.** A crimson-and-black Minecraft: Java Edition launcher for Windows, focused on
-performance, with **BLOOD Client**: an in-game mod that adds a customizable HUD, a custom
+**Built for frames.** A black-and-electric-green Minecraft: Java Edition launcher for Windows, focused on
+performance, with **MOTION Client**: an in-game mod that adds a customizable HUD, a custom
 crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shader effects, and optional visuals.
 
-> BLOOD is not affiliated with Mojang Studios or Microsoft. It ships no Minecraft game
+> MOTION is not affiliated with Mojang Studios or Microsoft. It ships no Minecraft game
 > files. Players sign in with their own Microsoft account and must own Minecraft.
 
 ## What's in the repo
@@ -12,7 +12,7 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 | Path | What it is |
 | --- | --- |
 | `apps/launcher` | The desktop launcher (Tauri 2 + React + TypeScript, Rust backend). Builds the Windows `.exe`/`.msi`. |
-| `apps/client-mod` | **BLOOD Client**, the in-game mod (Fabric/Quilt + NeoForge, Minecraft 1.21.1). It adds the HUD modules, the custom crosshair, the Right Shift menu, the Right Ctrl visuals menu, shader effects (colour grading, glow, sharpening), 36 skyboxes, decorative weather and visual profiles. |
+| `apps/client-mod` | **MOTION Client**, the in-game mod (Fabric/Quilt + NeoForge, Minecraft 1.21.1). It adds the HUD modules, the custom crosshair, the Right Shift menu, the Right Ctrl visuals menu, shader effects (colour grading, glow, sharpening), 36 skyboxes, decorative weather and visual profiles. |
 | `apps/api` | Node API: Minecraft-verified sign-in, Stripe Premium (server-side only), settings sync, news and releases. It also serves the website. |
 | `apps/website` | Static marketing site: home, pricing, download, account, legal. |
 | `packages/shared` | Shared API types, plan definitions and validation. |
@@ -21,7 +21,10 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 
 ## Launcher features
 
-- **Microsoft sign-in.** Microsoft's own sign-in page opens in a window inside the launcher (a code-in-browser option is the fallback), so BLOOD never sees your password. Tokens are kept in Windows Credential Manager. Several accounts are supported.
+- **Microsoft sign-in.** Microsoft's own sign-in page opens in a window inside the launcher (a code-in-browser option is the fallback), so MOTION never sees your password. Tokens are kept in Windows Credential Manager. Several accounts are supported.
+- **My Skin.** Upload skins (file picker or drag and drop, 64×64 and old 64×32), keep a library with favourites and recents, preview them on an interactive 3D character (drag to turn, scroll to zoom, classic/slim, outer layer), edit them in a pixel editor (per part and face, brush/eraser/fill/picker, undo/redo, import/export) and **apply one to your real Minecraft account**. Mojang's skin API takes the skin by URL: the MOTION server serves the PNG for ten minutes and the launcher asks Mojang to use it with your own token. A skin only shows as applied once Mojang confirms it.
+- **Capes, wings and auras.** Pick a cape, wings and an aura (Visuals). The owner publishes them on the admin page; MOTION Client shows them in game to every MOTION player (Minecraft 1.21.11). Capes move smoothly: they hang still when you stand and drift back gently as you move.
+- **In-game background.** Replace the title-screen panorama, pause/option menu backgrounds and loading screens with fully red, fully black, fully white, Motion green or your own image (Visuals → In-game background; Minecraft 1.21.11).
 - **Installations.** Vanilla, Fabric, Quilt, Forge and NeoForge. Each gets its own folder, Java, memory and JVM arguments, and can be duplicated.
 - **Mods and content.**
   - Browse Modrinth for mods, modpacks (`.mrpack`), resource packs and shaders, with dependency resolution.
@@ -31,23 +34,23 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 - **Performance.**
   - Reversible presets that edit `options.txt`. A backup is made before every change.
   - Recommended performance mods.
-  - Stats measured from the running game (memory, CPU, launch time; GC pauses from the game's GC log). BLOOD never estimates or invents numbers.
+  - Stats measured from the running game (memory, CPU, launch time; GC pauses from the game's GC log). MOTION never estimates or invents numbers.
 - **Customize.**
   - Five themes (Crimson, Obsidian, Ash, Ember, Monochrome) with original crimson-forest art, an **accent intensity** slider (flat to vivid), your own background image (also used on the loading screen), rising embers and Reduce motion.
-  - BLOOD Client setup: install or update it, then pick a profile, skybox, weather, menu theme and menu key. You see a live preview first.
+  - MOTION Client setup: install or update it, then pick a profile, skybox, weather, menu theme and menu key. You see a live preview first.
 - **Premium (optional).**
   - Stripe Checkout runs on the server. Premium is unlocked **only** by verified webhooks, never by the client saying it paid.
-  - Adds cloud sync, the Competitive and Extreme FPS presets, advanced analytics (heap, GC pauses, stutter) and any accent colour. Launching, mods, themes and BLOOD Client are free.
+  - Adds cloud sync, the Competitive and Extreme FPS presets, advanced analytics (heap, GC pauses, stutter) and any accent colour. Launching, mods, themes and MOTION Client are free.
 - **Automatic updates.** New versions download in the background and install by themselves when nobody is playing (15-second countdown with "Later"). Releases are one command: `npm run release -- x.y.z "notes"` then `git push --follow-tags`. See [docs/RELEASE.md](docs/RELEASE.md).
 
-- **BLOOD Mods page.** Every built-in module in one place, per installation:
+- **MOTION Mods page.** Every built-in module in one place, per installation:
   - **HUD:** FPS, frame time, memory, coordinates, direction, keystrokes, CPS, armor, potion effects, clock & session timer, held item, sprint & sneak status, info panel (ping, server, day, time), and a custom crosshair with a live preview.
   - **Performance:** Sodium, Lithium, FerriteCore, ImmediatelyFast, Entity Culling and ModernFix. Switching one on installs the best compatible version from Modrinth (with its required libraries); switching it off renames the file to `.disabled`.
   - **Visuals** and **Utility:** block outline, low fire, skybox, ambient particles, Minecraft's Toggle Sprint/Sneak, widget backgrounds and more.
-  - Categories, search, compatibility labels, and **Performance**, **Minimal HUD** and **Full HUD** presets. BLOOD Client's settings are backed up before each preset and can be restored from **Backups**.
+  - Categories, search, compatibility labels, and **Performance**, **Minimal HUD** and **Full HUD** presets. MOTION Client's settings are backed up before each preset and can be restored from **Backups**.
 - **Dashboard.** Play button, quick version switching, allocated RAM, Java version, game-file status, installed-mods overview (with the core performance mods), recently played, quick access, launcher update status and news.
 
-## BLOOD Client features (in game)
+## MOTION Client features (in game)
 
 - **Right Ctrl visuals menu.** Presets (Blood Red, Cinematic, Clean PvP, Performance, Vanilla), skybox picker, real GLSL shader effects, fog and performance controls, docked beside the world for live preview. See `docs/VISUALS.md`.
 - **Right Shift menu.** Ten categories, search, every kind of control, per-setting and per-page reset, autosave, and five crimson menu themes.
@@ -75,7 +78,7 @@ npm run dev                                        # launcher in dev mode
 cp apps/api/.env.example apps/api/.env             # Stripe test keys etc. (docs/STRIPE.md)
 npm run dev:api                                    # API + website on http://localhost:8787
 
-cd apps/client-mod && ./gradlew build              # BLOOD Client jars + core tests
+cd apps/client-mod && ./gradlew build              # MOTION Client jars + core tests
 node tools/bundle.mjs                              # put them into the launcher bundle
 ```
 
@@ -84,14 +87,14 @@ Tests:
 ```bash
 npm run typecheck && npm test                      # TypeScript (shared, api, launcher)
 npm run test:rust                                  # Rust backend
-cd apps/client-mod && ./gradlew :common:test       # BLOOD Client core
+cd apps/client-mod && ./gradlew :common:test       # MOTION Client core
 ```
 
 ## Building the Windows installer
 
 Builds run in GitHub Actions (`.github/workflows/ci.yml` for unsigned CI builds, `release.yml` for signed releases):
 
-1. **Build the mod.** An Ubuntu job builds the BLOOD Client jars and runs their tests.
+1. **Build the mod.** An Ubuntu job builds the MOTION Client jars and runs their tests.
 2. **Bundle it.** The Windows job runs `tools/bundle.mjs` to copy the jars and a `manifest.json` (with sha1 hashes) into `apps/launcher/src-tauri/resources/bloomclient/`.
 3. **Build the installer.** The Windows job then builds the NSIS `.exe` and the `.msi`.
 
@@ -110,4 +113,4 @@ Release signing, the updater keys and the code-signing certificate are covered i
 
 ## License
 
-The BLOOD Client mod is under `apps/client-mod/LICENSE`. Minecraft is a trademark of Mojang Studios.
+The MOTION Client mod is under `apps/client-mod/LICENSE`. Minecraft is a trademark of Mojang Studios.

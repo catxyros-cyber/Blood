@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** "Clouds" off in BLOOD's sky settings: skip Minecraft's clouds while a BLOOD skybox is shown. */
+/** "Clouds" off in MOTION's sky settings: skip Minecraft's clouds while a MOTION skybox is shown. */
 @Mixin(CloudRenderer.class)
 public abstract class CloudRendererMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)

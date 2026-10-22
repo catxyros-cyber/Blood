@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
 
-/** BLOOD tags in the Tab player list too. */
+/** MOTION tags in the Tab player list too. */
 @Mixin(PlayerTabOverlay.class)
 public abstract class PlayerTabOverlayMixin {
     @Inject(method = "getNameForDisplay", at = @At("RETURN"), cancellable = true)

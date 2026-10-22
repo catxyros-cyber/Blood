@@ -1,6 +1,6 @@
 package dev.bloom.client.core.sky;
 
-/** Converts an equirectangular (2:1) panorama into BLOOD's 3×2 skybox atlas. */
+/** Converts an equirectangular (2:1) panorama into MOTION's 3×2 skybox atlas. */
 public final class Panorama {
     private Panorama() {
     }

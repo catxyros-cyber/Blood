@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""4K launcher backgrounds for BLOOD: a misty crimson fungus forest under a blood moon, painted
+"""4K launcher backgrounds for MOTION: a misty crimson fungus forest under a blood moon, painted
 smoothly at 3840x2160 (the older gen_backgrounds.py makes the 1080p pixel-art versions).
 
 Run: python3 branding/tools/gen_backgrounds_4k.py [theme ...]

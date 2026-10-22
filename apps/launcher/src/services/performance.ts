@@ -1,5 +1,5 @@
 /**
- * BLOOD Performance: reversible presets (with automatic backups), performance
+ * MOTION Performance: reversible presets (with automatic backups), performance
  * mod recommendations checked live against Modrinth, and the optional
  * in-game FPS overlay (via the Sodium Extra mod).
  */
@@ -60,7 +60,7 @@ export async function listBackups(inst: Instance): Promise<BackupInfo[]> {
   return out.sort((a, b) => b.at - a.at);
 }
 
-/** Save options.txt and BLOOD's per-installation settings so any change can be undone. */
+/** Save options.txt and MOTION's per-installation settings so any change can be undone. */
 export async function backupSettings(inst: Instance, reason: string): Promise<BackupInfo | null> {
   const p = P();
   const options = await p.readText(optionsPath(inst));
@@ -161,7 +161,7 @@ export async function perfModStatus(inst: Instance): Promise<PerfModStatus[]> {
       try {
         const versions = await modrinth().versions(mod.slug, { loaders, gameVersions: [inst.gameVersion] });
         const best = compatibleVersions(versions, { gameVersion: inst.gameVersion, loaders })[0];
-        // Also count files BLOOD installed from Modrinth (by project id), even before their metadata is read.
+        // Also count files MOTION installed from Modrinth (by project id), even before their metadata is read.
         if (best && tracked.has(best.project_id)) installed = true;
         return { mod, installed, version: best, projectId: best?.project_id };
       } catch {
@@ -176,8 +176,8 @@ export async function perfModStatus(inst: Instance): Promise<PerfModStatus[]> {
 // ---------------------------------------------------------------------------
 
 /**
- * BLOOD doesn't inject anything into the game. The FPS overlay is provided by
- * the Sodium Extra mod; BLOOD writes its overlay options before launch. Only
+ * MOTION doesn't inject anything into the game. The FPS overlay is provided by
+ * the Sodium Extra mod; MOTION writes its overlay options before launch. Only
  * the overlay keys are touched — the rest of the file is preserved.
  */
 export async function writeOverlayConfig(inst: Instance): Promise<void> {

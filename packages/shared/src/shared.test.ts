@@ -29,11 +29,14 @@ test("plans and helpers", () => {
 test("license keys are normalised and formatted", async () => {
   const { normalizeKey, formatKey, keyHint } = await import("./license");
   const k = "7K2QFM9XRT4HZ8WPN3D6";
-  assert.equal(formatKey(k), "BLOOD-7K2QF-M9XRT-4HZ8W-PN3D6");
+  assert.equal(formatKey(k), "MOTION-7K2QF-M9XRT-4HZ8W-PN3D6");
+  assert.equal(normalizeKey("motion-7k2qf-m9xrt-4hz8w-pn3d6"), k);
+  // Keys handed out before the rename (BLOOD-…) still work.
   assert.equal(normalizeKey("blood-7k2qf-m9xrt-4hz8w-pn3d6"), k);
+  assert.equal(normalizeKey("BLOOD-7K2QF-M9XRT-4HZ8W-PN3D6"), k);
   assert.equal(normalizeKey(" 7K2QF M9XRT 4HZ8W PN3D6 "), k);
-  assert.equal(normalizeKey("BLOOD-OOOOO-IIIII-LLLLL-00000"), "00000111111111100000");
-  assert.equal(normalizeKey("BLOOD-7K2QF-M9XRT-4HZ8W"), null);
-  assert.equal(normalizeKey("BLOOD-UUUUU-M9XRT-4HZ8W-PN3D6"), null);
+  assert.equal(normalizeKey("MOTION-OOOOO-IIIII-LLLLL-00000"), "00000111111111100000");
+  assert.equal(normalizeKey("MOTION-7K2QF-M9XRT-4HZ8W"), null);
+  assert.equal(normalizeKey("MOTION-UUUUU-M9XRT-4HZ8W-PN3D6"), null);
   assert.equal(keyHint(k), "PN3D6");
 });

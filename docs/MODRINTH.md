@@ -1,6 +1,6 @@
 # Modrinth integration
 
-BLOOD browses and installs mods, modpacks, resource packs and shaders from the public
+MOTION browses and installs mods, modpacks, resource packs and shaders from the public
 [Modrinth API v2](https://docs.modrinth.com/api/). No API key is needed for public data.
 
 ## Being a good API citizen
@@ -22,4 +22,4 @@ BLOOD browses and installs mods, modpacks, resource packs and shaders from the p
 
 ## Your own files
 
-Mods you drop on the window are added from local files. BLOOD reads their `fabric.mod.json`, `quilt.mod.json` or `mods.toml` to show the name, version and loader, and warns if a mod is for a different loader or Minecraft version. Jars without readable metadata can still be added; they are listed by file name.
+Mods you drop on the window are added from local files. MOTION reads their `fabric.mod.json`, `quilt.mod.json` or `mods.toml` to show the name, version and loader, and warns if a mod is for a different loader or Minecraft version. Jars without readable metadata can still be added; they are listed by file name.

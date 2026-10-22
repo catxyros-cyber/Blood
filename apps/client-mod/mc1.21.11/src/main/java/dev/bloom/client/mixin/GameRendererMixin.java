@@ -16,7 +16,7 @@ public abstract class GameRendererMixin {
         if (BloomClient.ready()) BloomClient.get().onFrame();
     }
 
-    /** After the world (and hand) are drawn, before the HUD: BLOOD's shader effects. */
+    /** After the world (and hand) are drawn, before the HUD: MOTION's shader effects. */
     @Inject(method = "renderLevel", at = @At("TAIL"))
     private void bloom$postEffects(DeltaTracker deltaTracker, CallbackInfo ci) {
         if (!BloomClient.ready()) return;

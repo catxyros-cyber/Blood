@@ -50,4 +50,16 @@ public class CapeDirectoryTest {
         assertNull(d.tagOf(B));
         assertNull(d.capeOf(A));
     }
+
+    @Test
+    public void readsWingsAndAurasAndIgnoresJunk() {
+        CapeDirectory d = new CapeDirectory();
+        List<String> due = d.due(List.of(A, B), 0);
+        d.answer(due, "{\"capes\":{},\"wings\":{\"" + A32 + "\":\"" + CAPE + "\",\"" + B + "\":\"../x\"},"
+                + "\"auras\":{\"" + A32 + "\":{\"color\":\"#39ff88\",\"style\":\"embers\"},\"" + B + "\":{\"color\":\"#fff\",\"style\":\"glow\"}}}", 0);
+        assertEquals(CAPE, d.wingsOf(A));
+        assertNull("bad wing ids are ignored", d.wingsOf(B));
+        assertEquals(new CapeDirectory.Aura(0x39FF88, "embers"), d.auraOf(A));
+        assertNull("bad colours are ignored", d.auraOf(B));
+    }
 }

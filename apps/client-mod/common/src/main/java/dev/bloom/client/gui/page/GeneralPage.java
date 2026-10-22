@@ -28,13 +28,13 @@ public class GeneralPage extends GenericPage {
         BloomClient bc = BloomClient.get();
         Theme.Palette p = Theme.palette();
         List<Element> rows = new ArrayList<>();
-        rows.add(new Rows.Info("info", "BLOOD Client " + bc.platform().modVersion() + " on " + bc.platform().loaderName()
+        rows.add(new Rows.Info("info", "MOTION Client " + bc.platform().modVersion() + " on " + bc.platform().loaderName()
                 + " · Minecraft " + SharedConstants.getCurrentVersion().getName()
                 + ". Everything here is visual and client-side: it never changes the world, the server or other players.", Theme.accentArgb()));
         if (bc.shaderActive()) {
             rows.add(new Rows.Info("warning", BloomSettings.SKY_WITH_SHADERS.on()
                     ? "A shader pack is active and \"Use with shader packs\" is on. Results depend on the shader pack."
-                    : "A shader pack is active, so BLOOD's skybox, fog changes and world particles are paused. The HUD and menu still work. You can override this under Skyboxes → Compatibility.", p.warn()));
+                    : "A shader pack is active, so MOTION's skybox, fog changes and world particles are paused. The HUD and menu still work. You can override this under Skyboxes → Compatibility.", p.warn()));
         }
         for (CompatReport.Note n : bc.compatNotes()) {
             int col = switch (n.level()) {
@@ -56,8 +56,8 @@ public class GeneralPage extends GenericPage {
                     }
                 }).tooltip("Settings, profiles and custom skyboxes live here"),
                 resetPageButton(screen, category),
-                new Button("Reset everything…", "trash", Button.Style.DANGER, () -> screen.confirm("Reset all BLOOD settings?",
-                        "Every BLOOD setting goes back to its default and the Blood Moon profile is selected. Your saved profiles, HUD layouts and imported skyboxes are kept.",
+                new Button("Reset everything…", "trash", Button.Style.DANGER, () -> screen.confirm("Reset all MOTION settings?",
+                        "Every MOTION setting goes back to its default and the Blood Moon profile is selected. Your saved profiles, HUD layouts and imported skyboxes are kept.",
                         "Reset all", true, () -> {
                             BloomSettings.resetAll();
                             bc.profiles().select(dev.bloom.client.core.profile.BuiltInProfiles.DEFAULT_ID);

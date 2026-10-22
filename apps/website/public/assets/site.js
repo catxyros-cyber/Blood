@@ -1,4 +1,4 @@
-// BLOOD website behaviour. Talks only to this server's /v1 API (same origin, cookie session).
+// MOTION website behaviour. Talks only to this server's /v1 API (same origin, cookie session).
 "use strict";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -71,7 +71,7 @@ const PLAN_NAMES = { monthly: "Premium Monthly", yearly: "Premium Yearly", lifet
 
 function describe(ent) {
   if (ent.premium) {
-    if (ent.source === "lifetime") return { badge: "Premium · Lifetime", on: true, detail: "You own BLOOD Premium for life. Thank you!" };
+    if (ent.source === "lifetime") return { badge: "Premium · Lifetime", on: true, detail: "You own MOTION Premium for life. Thank you!" };
     if (ent.source === "grant") return { badge: "Premium", on: true, detail: ent.currentPeriodEnd ? `Complimentary Premium until ${new Date(ent.currentPeriodEnd).toLocaleDateString()}.` : "Complimentary Premium." };
     const end = ent.currentPeriodEnd ? new Date(ent.currentPeriodEnd).toLocaleDateString() : "";
     if (ent.status === "past_due") return { badge: "Premium · payment due", on: false, bad: true, detail: "Your last payment failed. Update your card in the billing portal to keep Premium." };
@@ -83,7 +83,7 @@ function describe(ent) {
   }
   if (ent.status === "canceled") return { badge: "Free", on: false, detail: "Your subscription has ended. You can resubscribe any time." };
   if (ent.status === "unpaid" || ent.status === "incomplete") return { badge: "Free", on: false, bad: true, detail: "The last payment didn't go through." };
-  return { badge: "Free", on: false, detail: "You're on BLOOD Free. Everything you need to play is included." };
+  return { badge: "Free", on: false, detail: "You're on MOTION Free. Everything you need to play is included." };
 }
 
 async function initAccount() {
@@ -175,10 +175,10 @@ async function initAccount() {
   );
   $("[data-delete]", root).addEventListener("click", (e) =>
     run(e.currentTarget, async () => {
-      if (!confirm("Delete your BLOOD account? Synced settings are removed permanently. Your Minecraft account is not affected.")) return;
+      if (!confirm("Delete your MOTION account? Synced settings are removed permanently. Your Minecraft account is not affected.")) return;
       await api("DELETE", "/v1/me");
       show(signedOut);
-      text(status, "Your BLOOD account was deleted.");
+      text(status, "Your MOTION account was deleted.");
     }),
   );
 }
@@ -191,18 +191,18 @@ async function initSuccess() {
     try {
       const me = await api("GET", "/v1/me");
       if (me.entitlement.premium) {
-        text(el, `Premium is active for ${me.user.username}. BLOOD picks it up automatically — or press “Refresh” on the Premium page.`);
+        text(el, `Premium is active for ${me.user.username}. MOTION picks it up automatically — or press “Refresh” on the Premium page.`);
         return;
       }
     } catch (e) {
       if (e.status === 401) {
-        text(el, "Return to BLOOD — your Premium status refreshes automatically within a few seconds.");
+        text(el, "Return to MOTION — your Premium status refreshes automatically within a few seconds.");
         return;
       }
     }
     await new Promise((r) => setTimeout(r, 3000));
   }
-  text(el, "Payment received. It can take a minute to activate; use “Restore purchases” in BLOOD if it doesn't appear.");
+  text(el, "Payment received. It can take a minute to activate; use “Restore purchases” in MOTION if it doesn't appear.");
 }
 
 // --- Releases -----------------------------------------------------------------------
@@ -220,7 +220,7 @@ async function initReleases() {
       const item = document.createElement("article");
       item.className = "release";
       const h = document.createElement("h2");
-      h.textContent = `BLOOD ${r.version}`;
+      h.textContent = `MOTION ${r.version}`;
       const date = document.createElement("div");
       date.className = "faint small";
       date.textContent = new Date(r.date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });

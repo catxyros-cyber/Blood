@@ -1,4 +1,4 @@
-//! BLOOD's native layer.
+//! MOTION's native layer.
 //!
 //! Deliberately small: the launcher logic (version resolution, launch
 //! arguments, Modrinth, compatibility checks, presets) lives in TypeScript
@@ -30,7 +30,7 @@ struct DragPayload {
 
 pub fn run() {
     tauri::Builder::default()
-        // Must be registered first: focus the existing window instead of starting a second BLOOD.
+        // Must be registered first: focus the existing window instead of starting a second MOTION.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.unminimize();
@@ -56,7 +56,7 @@ pub fn run() {
             let data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&data_dir)?;
             log::info!(
-                "BLOOD {} starting; data dir {}",
+                "MOTION {} starting; data dir {}",
                 env!("CARGO_PKG_VERSION"),
                 data_dir.display()
             );
@@ -144,5 +144,5 @@ pub fn run() {
             authwin::ms_login_window,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running BLOOD");
+        .expect("error while running MOTION");
 }

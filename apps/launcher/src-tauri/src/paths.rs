@@ -2,7 +2,7 @@
 //!
 //! The webview never gets unrestricted filesystem access. Every path it sends
 //! is resolved here and must fall inside:
-//!   * BLOOD's data directory, or
+//!   * MOTION's data directory, or
 //!   * a folder the user explicitly picked in a native dialog (custom game
 //!     directories), which is remembered in `roots.json`.
 //! Files *outside* those roots can only be read as import sources, and only if
@@ -72,12 +72,12 @@ impl Roots {
         } else {
             Err(AppError::new(
                 "forbidden_path",
-                format!("BLOOD is not allowed to access {}", full.display()),
+                format!("MOTION is not allowed to access {}", full.display()),
             ))
         }
     }
 
-    /// Like `resolve`, but only for BLOOD's own caches, which may be hard-deleted.
+    /// Like `resolve`, but only for MOTION's own caches, which may be hard-deleted.
     pub fn resolve_internal(&self, raw: &str) -> Result<PathBuf> {
         let p = self.resolve(raw)?;
         let rel = p

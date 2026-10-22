@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Small reflective helpers for the parts of Minecraft's player-skin and profile API that change
  * between versions (PlayerSkin's cape is a texture location in some versions and a "client
  * asset" in others; GameProfile became a record). Everything is looked up once and cached; if
- * nothing fits, BLOOD simply leaves the skin alone.
+ * nothing fits, MOTION simply leaves the skin alone.
  */
 public final class SkinCompat {
     private static final Map<Class<?>, Plan> PLANS = new ConcurrentHashMap<>();
@@ -132,6 +132,6 @@ public final class SkinCompat {
     private static void warnOnce(Exception e) {
         if (warned) return;
         warned = true;
-        Log.warn("BLOOD capes: this Minecraft version's skins can't take a custom cape; capes stay hidden", e);
+        Log.warn("MOTION capes: this Minecraft version's skins can't take a custom cape; capes stay hidden", e);
     }
 }

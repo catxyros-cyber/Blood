@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The HUD widgets BLOOD offers (mirrored in the launcher: apps/launcher/src/core/bloomclient/modules.ts). Each one is rendered by its own class in the game layer;
+ * The HUD widgets MOTION offers (mirrored in the launcher: apps/launcher/src/core/bloomclient/modules.ts). Each one is rendered by its own class in the game layer;
  * this describes defaults and the per-widget options shown in the HUD editor.
  */
 public enum HudWidgetType {

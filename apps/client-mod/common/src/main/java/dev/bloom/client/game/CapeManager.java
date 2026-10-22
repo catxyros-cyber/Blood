@@ -23,13 +23,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * BLOOD capes in game. Every couple of seconds it asks the BLOOD server which cape the players
+ * MOTION capes in game. Every couple of seconds it asks the MOTION server which cape the players
  * around you wear (batched, cached for 5 minutes), downloads each cape image once, and hands it to
  * Minecraft through the player's skin (see AbstractClientPlayerMixin), so Minecraft's own cape and
  * elytra renderers draw it. Network work never runs on the game thread.
  *
  * <p>The server address comes from the launcher ({@code -Dbloodclient.api=https://…}). Without it,
- * or with "BLOOD capes" off, nothing is requested.
+ * or with "MOTION capes" off, nothing is requested.
  */
 public final class CapeManager {
     private static final long MAX_PNG = 4L * 1024 * 1024;
@@ -60,7 +60,7 @@ public final class CapeManager {
     }
 
     static {
-        Log.info(API == null ? "BLOOD capes: no server address from the launcher (-Dbloodclient.api), capes and tags are off" : "BLOOD capes: using " + API);
+        Log.info(API == null ? "MOTION capes: no server address from the launcher (-Dbloodclient.api), capes and tags are off" : "MOTION capes: using " + API);
     }
 
     public static boolean available() {
@@ -82,7 +82,7 @@ public final class CapeManager {
         return anim == null ? null : anim.now();
     }
 
-    /** The player's BLOOD tag (e.g. [OWNER]), or null. */
+    /** The player's MOTION tag (e.g. [OWNER]), or null. */
     public static CapeDirectory.Tag tagFor(UUID uuid) {
         if (API == null || !BloomSettings.TAGS.on()) return null;
         return DIRECTORY.tagOf(uuid.toString());
@@ -119,13 +119,13 @@ public final class CapeManager {
         http().sendAsync(req, HttpResponse.BodyHandlers.ofString()).whenComplete((res, err) -> {
             long t = System.currentTimeMillis();
             if (err != null || res.statusCode() != 200) {
-                Log.warn("BLOOD capes: lookup failed (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
+                Log.warn("MOTION capes: lookup failed (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
                 DIRECTORY.failed(due, t);
                 return;
             }
             try {
                 DIRECTORY.answer(due, res.body(), t);
-                Log.info("BLOOD capes: looked up " + due.size() + " player(s): " + res.body());
+                Log.info("MOTION capes: looked up " + due.size() + " player(s): " + res.body());
             } catch (RuntimeException e) {
                 DIRECTORY.failed(due, t);
             }
@@ -136,7 +136,7 @@ public final class CapeManager {
         HttpRequest req = HttpRequest.newBuilder(URI.create(API + "/v1/capes/" + capeId + ".png")).timeout(Duration.ofSeconds(15)).GET().build();
         http().sendAsync(req, HttpResponse.BodyHandlers.ofByteArray()).whenComplete((res, err) -> {
             if (err != null || res.statusCode() != 200 || res.body().length > MAX_PNG) {
-                Log.warn("BLOOD capes: couldn't download cape " + capeId + " (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
+                Log.warn("MOTION capes: couldn't download cape " + capeId + " (" + (err != null ? err : "HTTP " + res.statusCode()) + ")");
                 LOADING.remove(capeId);
                 if (res != null && res.statusCode() == 404) FAILED.add(capeId);
                 return;
@@ -154,7 +154,7 @@ public final class CapeManager {
                 int fh = w / 2;
                 int count = fh > 0 && h % fh == 0 ? h / fh : 0;
                 if (w < 64 || w > 1024 || w % 2 != 0 || count < 1 || count > MAX_FRAMES) {
-                    Log.warn("BLOOD capes: cape " + capeId + " is " + w + "x" + h + ", not a cape layout");
+                    Log.warn("MOTION capes: cape " + capeId + " is " + w + "x" + h + ", not a cape layout");
                     FAILED.add(capeId);
                     LOADING.remove(capeId);
                     return;
@@ -167,7 +167,7 @@ public final class CapeManager {
                     frames[i] = frame;
                 }
             } catch (Exception e) {
-                Log.warn("BLOOD cape " + capeId + " isn't a valid image", e);
+                Log.warn("MOTION cape " + capeId + " isn't a valid image", e);
                 FAILED.add(capeId);
                 LOADING.remove(capeId);
                 return;
@@ -182,7 +182,7 @@ public final class CapeManager {
                     Minecraft.getInstance().getTextureManager().register(ids[i], new DynamicTexture(frame));
                 }
                 TEXTURES.put(capeId, new Anim(ids, ms));
-                Log.info("BLOOD capes: loaded cape " + capeId + (cut.length > 1 ? " (" + cut.length + " frames)" : ""));
+                Log.info("MOTION capes: loaded cape " + capeId + (cut.length > 1 ? " (" + cut.length + " frames)" : ""));
                 LOADING.remove(capeId);
             });
         });

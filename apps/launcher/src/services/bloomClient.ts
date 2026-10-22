@@ -1,9 +1,9 @@
 /**
- * BLOOD Client management: install/update/remove the bundled mod in an installation,
+ * MOTION Client management: install/update/remove the bundled mod in an installation,
  * make sure Fabric API is present, and edit the mod's settings from the launcher.
  *
- * Files the launcher manages here are the BLOOD Client jar itself (tracked in the
- * installation's metadata) and BLOOD Client's own config. Removed or replaced jars go to
+ * Files the launcher manages here are the MOTION Client jar itself (tracked in the
+ * installation's metadata) and MOTION Client's own config. Removed or replaced jars go to
  * the Recycle Bin; other mods are never touched.
  */
 
@@ -16,14 +16,13 @@ import type { Instance } from "../core/instances/model";
 import { BloomError } from "../core/platform";
 import { slugify } from "../core/util/path";
 import { app, P, path, startTask, endTask, toast, updateTask } from "./app";
-import { capeState, loadCapes } from "./capes";
 import { applyInstallPlan, contentDir, listContent, modrinth, planProjectInstall, type ContentItem } from "./content";
 import { getInstance, instanceGameDir, updateInstance } from "./instances";
 import { native } from "./native";
 
 let bundleCache: Promise<Bundle | null> | null = null;
 
-/** The BLOOD Client build bundled with this launcher (null in builds without it). */
+/** The MOTION Client build bundled with this launcher (null in builds without it). */
 export function bundle(): Promise<Bundle | null> {
   if (!bundleCache) bundleCache = native.bloomClientBundle().catch(() => null);
   return bundleCache;
@@ -32,7 +31,7 @@ export function bundle(): Promise<Bundle | null> {
 export interface ClientStatus {
   support: SupportStatus;
   bundle: Bundle | null;
-  /** BLOOD Client jars currently in the mods folder. */
+  /** MOTION Client jars currently in the mods folder. */
   installed: ContentItem[];
   installedVersion: string | null;
   enabled: boolean;
@@ -66,17 +65,17 @@ export async function status(inst: Instance): Promise<ClientStatus> {
   };
 }
 
-/** Install (or update to) the bundled BLOOD Client, plus Fabric API when the loader needs it. */
+/** Install (or update to) the bundled MOTION Client, plus Fabric API when the loader needs it. */
 export async function enable(inst: Instance): Promise<void> {
   const b = await bundle();
   const sup = support(inst, b);
-  if (!sup.ok || !b) throw new BloomError("unsupported", sup.ok ? "BLOOD Client isn't bundled." : sup.message);
+  if (!sup.ok || !b) throw new BloomError("unsupported", sup.ok ? "MOTION Client isn't bundled." : sup.message);
   const taskId = `bloomclient-${inst.id}`;
-  startTask({ id: taskId, title: "Installing BLOOD Client", instanceId: inst.id, cancellable: false, stage: "Copying files" });
+  startTask({ id: taskId, title: "Installing MOTION Client", instanceId: inst.id, cancellable: false, stage: "Copying files" });
   try {
     const mods = await listContent(inst, "mods");
     const file = b.files.find((f) => f.file === sup.file)!;
-    // Replace older BLOOD Client jars (ours) by moving them to the Recycle Bin.
+    // Replace older MOTION Client jars (ours) by moving them to the Recycle Bin.
     for (const old of mods.filter(isBloomJar)) {
       if (old.baseName === file.file && old.enabled) continue;
       await P().trash(old.path);
@@ -94,14 +93,14 @@ export async function enable(inst: Instance): Promise<void> {
     }
     await updateInstance(inst.id, { bloomClient: { enabled: true, version: b.version, file: file.file } });
     endTask(taskId);
-    toast({ kind: "success", title: "BLOOD Client is ready", message: "Press Right Shift in game to open the BLOOD menu." });
+    toast({ kind: "success", title: "MOTION Client is ready", message: "Press Right Shift in game to open the MOTION menu." });
   } catch (e) {
     endTask(taskId);
     throw e;
   }
 }
 
-/** Remove BLOOD Client from the installation (the jar goes to the Recycle Bin). Its settings stay. */
+/** Remove MOTION Client from the installation (the jar goes to the Recycle Bin). Its settings stay. */
 export async function disable(inst: Instance): Promise<void> {
   const mods = await listContent(inst, "mods");
   for (const m of mods.filter(isBloomJar)) await P().trash(m.path);
@@ -111,7 +110,7 @@ export async function disable(inst: Instance): Promise<void> {
 /** Called before launching: keeps the managed jar on the bundled version. Never blocks a launch. */
 export async function beforeLaunch(inst: Instance): Promise<void> {
   if (!inst.bloomClient?.enabled) {
-    await addForCape(inst);
+    await addByDefault(inst);
     return;
   }
   const s = await status(inst);
@@ -122,19 +121,18 @@ export async function beforeLaunch(inst: Instance): Promise<void> {
 }
 
 /**
- * BLOOD capes are drawn by BLOOD Client, so a cape does nothing in an installation without it.
- * If you've picked a cape and this installation can run BLOOD Client (and you never switched it
- * off here), add it before launching so your cape shows up in game.
+ * MOTION capes, wings, auras and menu backgrounds are drawn by MOTION Client, so an installation
+ * without it shows none of them. If this installation can run MOTION Client and you never
+ * switched it on or off here, add it before launching. Turning it off (MOTION Mods / Visuals)
+ * is remembered and respected.
  */
-async function addForCape(inst: Instance): Promise<void> {
+async function addByDefault(inst: Instance): Promise<void> {
   if (inst.bloomClient?.enabled === false) return; // turned off on purpose
-  if (inst.loader === "vanilla" || inst.loader === "forge") return;
-  if (capeState.get().status === "idle") await loadCapes().catch(() => undefined);
-  if (!capeState.get().capeId) return;
+  if (inst.loader !== "fabric" && inst.loader !== "quilt") return;
   const s = await status(inst);
   if (!s.support.ok || s.enabled) return;
   await enable(getInstance(inst.id) ?? inst);
-  toast({ kind: "success", title: "Added BLOOD Client for your cape", message: "Your BLOOD cape is shown in game by BLOOD Client. Turn it off on the BLOOD Mods page if you don't want it." });
+  toast({ kind: "success", title: "Added MOTION Client", message: "Your cape, wings, aura and menu background show in game through MOTION Client. Turn it off in MOTION Mods if you don't want it." });
 }
 
 // ---------------------------------------------------------------- settings.json
@@ -188,7 +186,7 @@ export async function menuKey(inst: Instance): Promise<{ key: string | null; con
 
 export async function setMenuKey(inst: Instance, key: string): Promise<string[]> {
   if (app.get().running[inst.id]) {
-    throw new BloomError("running", "Close Minecraft first: the game rewrites its key bindings when it exits. You can also change the key in game (BLOOD menu → Keybinds).");
+    throw new BloomError("running", "Close Minecraft first: the game rewrites its key bindings when it exits. You can also change the key in game (MOTION menu → Keybinds).");
   }
   const file = optionsPath(inst);
   const text = await P().readText(file).catch(() => null);
@@ -225,7 +223,7 @@ export async function listCustomSkyboxes(inst: Instance): Promise<CustomSkybox[]
 }
 
 /**
- * Copy a picked PNG into BLOOD Client's skybox folder under a new, safe name. The image is
+ * Copy a picked PNG into MOTION Client's skybox folder under a new, safe name. The image is
  * checked first (3×2 cube layout or 2:1 panorama); the game converts panoramas on first use.
  */
 export async function importSkybox(inst: Instance, source: string): Promise<CustomSkybox> {
@@ -253,20 +251,56 @@ export async function importSkybox(inst: Instance, source: string): Promise<Cust
   return { id: "custom:" + stem, name: baseName.slice(0, 32), path: target };
 }
 
+// ---------------------------------------------------------------- in-game menu background
+
+const MENU_BG_EXTS = ["png", "jpg", "jpeg"];
+
+/** The custom menu background image currently in MOTION Client's folder, or null. */
+export async function menuBackgroundImage(inst: Instance): Promise<string | null> {
+  for (const ext of MENU_BG_EXTS) {
+    const p = path(configDir(inst), `menu-background.${ext}`);
+    if (await P().exists(p)) return p;
+  }
+  return null;
+}
+
 /**
- * For installations BLOOD Client can't run on (vanilla, Forge, other versions): create a new
- * Fabric installation on a supported Minecraft version and add BLOOD Client to it. The
+ * Use a picked PNG/JPG as the background of Minecraft's own screens (title, pause, options,
+ * loading). The file is copied into MOTION Client's folder; a running game picks it up within
+ * seconds. The previous image goes to the Recycle Bin.
+ */
+export async function setMenuBackgroundImage(inst: Instance, source: string): Promise<string> {
+  const ext = (source.split(".").pop() ?? "").toLowerCase();
+  if (!MENU_BG_EXTS.includes(ext)) throw new BloomError("invalid", "Pick a PNG or JPG image.");
+  const dir = configDir(inst);
+  await P().mkdir(dir);
+  for (const e of MENU_BG_EXTS) {
+    const old = path(dir, `menu-background.${e}`);
+    if (await P().exists(old)) await P().trash(old);
+  }
+  const res = await native.importFiles([source], dir);
+  const copied = res.copied[0];
+  if (!copied) throw new BloomError("exists", "A file with that name is already in MOTION Client's folder. Rename the image and try again.");
+  const target = path(dir, `menu-background.${ext === "jpeg" ? "jpg" : ext}`);
+  if (copied !== target) await P().rename(copied, target);
+  await writeSettings(inst, { settings: { "ui.menuBackground": "custom" } });
+  return target;
+}
+
+/**
+ * For installations MOTION Client can't run on (vanilla, Forge, other versions): create a new
+ * Fabric installation on a supported Minecraft version and add MOTION Client to it. The
  * original installation is not changed.
  */
 export async function createBloomInstallation(basedOn?: Instance): Promise<Instance> {
   const b = await bundle();
-  if (!b) throw new BloomError("not_bundled", "This build of the launcher doesn't include BLOOD Client.");
+  if (!b) throw new BloomError("not_bundled", "This build of the launcher doesn't include MOTION Client.");
   const gameVersion = preferredVersion(b);
   const { loaderVersions, pickLoaderVersion } = await import("../core/loaders/loaders");
   const { createInstance } = await import("./instances");
   const lv = pickLoaderVersion(await loaderVersions(P(), "fabric", gameVersion));
   const inst = await createInstance({
-    name: `${basedOn ? basedOn.name : "BLOOD"} — BLOOD Client`.slice(0, 64),
+    name: `${basedOn ? basedOn.name : "MOTION"} — MOTION Client`.slice(0, 64),
     gameVersion,
     loader: "fabric",
     loaderVersion: lv.version,

@@ -49,8 +49,8 @@ public class ProfilesPage extends GenericPage {
                 })).tooltip("Create a profile from your current settings"),
                 new Button("Import code", "import", Button.Style.NORMAL, this::importClipboard)
                         .tooltip("Paste a BLOOM1: share code (or profile JSON) from your clipboard"),
-                new Button("Import file…", "folder", Button.Style.NORMAL, () -> FilePicker.open("Choose a BLOOD profile",
-                        BloomClient.get().configDir(), "BLOOD profiles (.json)", new String[]{"*.json"}, r -> r.ifPresent(this::importFile))))));
+                new Button("Import file…", "folder", Button.Style.NORMAL, () -> FilePicker.open("Choose a MOTION profile",
+                        BloomClient.get().configDir(), "MOTION profiles (.json)", new String[]{"*.json"}, r -> r.ifPresent(this::importFile))))));
         rows.add(new Rows.Info("info", "Profiles remember your sky, weather, particles, colours, HUD style and quality. Changes you make are saved into the active profile automatically. Imported profiles contain settings only — nothing in them can run code.", Theme.palette().textDim()));
         rows.add(new Rows.Header("Your profiles"));
         for (Profile p : pm().all()) rows.add(new ProfileCard(p));
@@ -136,7 +136,7 @@ public class ProfilesPage extends GenericPage {
             }).tooltip("Copy share code"));
             b.add(new Button("", "export", Button.Style.GHOST, () -> FilePicker.save("Export profile",
                     BloomClient.get().configDir().resolve("exports").resolve(SafeFiles.slug(profile.name(), "profile") + ".bloomprofile.json"),
-                    "BLOOD profile", new String[]{"*.json"}, r -> r.ifPresent(path -> {
+                    "MOTION profile", new String[]{"*.json"}, r -> r.ifPresent(path -> {
                         try {
                             Path target = path.toString().toLowerCase(Locale.ROOT).endsWith(".json") ? path : Path.of(path + ".json");
                             SafeFiles.writeAtomic(target, ProfileCodec.toPrettyJson(profile));

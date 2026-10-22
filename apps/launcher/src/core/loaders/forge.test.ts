@@ -160,7 +160,7 @@ test("NeoForge: downloads the installer, runs client processors and launches thr
   const installerDl = p.downloads.flatMap((d) => d.items).find((i) => i.url === installerUrl)!;
   assert.equal(installerDl.sha1, "77777777777777777777777777777777777777aa");
 
-  // Only the client binpatch processor ran (server-only skipped; mappings downloaded by BLOOD).
+  // Only the client binpatch processor ran (server-only skipped; mappings downloaded by MOTION).
   assert.equal(p.javaRuns.length, 1);
   const run = p.javaRuns[0]!;
   assert.deepEqual(run.classpath, [binpatcher, lib("net.neoforged.installertools:installertools:2.1.2"), lib("net.sf.jopt-simple:jopt-simple:5.0.4")]);

@@ -8,7 +8,7 @@ import java.util.Random;
 
 /**
  * The Halloween themes' backdrop decorations (embers, bats, mist, wisps, webs, moons, pumpkins),
- * drawn behind BLOOD's menus with plain rectangles and the circle sprite: no extra textures and
+ * drawn behind MOTION's menus with plain rectangles and the circle sprite: no extra textures and
  * only a few hundred fills per frame. Respects "Theme decorations", "Reduce motion" and the
  * interface effects level, and fades with the menu.
  */

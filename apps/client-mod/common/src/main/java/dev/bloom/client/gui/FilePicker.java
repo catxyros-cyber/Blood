@@ -18,7 +18,7 @@ import java.util.function.Consumer;
  */
 public final class FilePicker {
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "BLOOD file dialog");
+        Thread t = new Thread(r, "MOTION file dialog");
         t.setDaemon(true);
         return t;
     });

@@ -1,12 +1,12 @@
 /**
  * Automatic self-update via the Tauri updater plugin.
  *
- * With "Update BLOOD automatically" on (the default), BLOOD checks shortly after start and then
+ * With "Update MOTION automatically" on (the default), MOTION checks shortly after start and then
  * every few hours, downloads a new version quietly in the background, and installs it as soon
  * as nobody is playing: never while Minecraft is running or a download/launch is in progress.
  * Before installing it shows a short countdown with a "Later" button.
  *
- * Update bundles are signed with BLOOD's private updater key at release time; the app verifies
+ * Update bundles are signed with MOTION's private updater key at release time; the app verifies
  * them against the public key baked into the build before installing anything.
  */
 
@@ -75,14 +75,14 @@ export async function checkForUpdate(manual = false): Promise<Update | null> {
     downloaded = false;
     if (!update) {
       updateState.set({ status: "current", version: undefined, checkedAt: Date.now() });
-      if (manual) toast({ kind: "success", title: "You're up to date", message: `BLOOD ${app.get().paths?.version ?? ""} is the latest version.` });
+      if (manual) toast({ kind: "success", title: "You're up to date", message: `MOTION ${app.get().paths?.version ?? ""} is the latest version.` });
       return null;
     }
     updateState.set({ status: "available", version: update.version, checkedAt: Date.now() });
     if (auto() || manual) void download(update, manual);
     else
       toast(
-        { kind: "info", title: `BLOOD ${update.version} is available`, message: "Automatic updates are off.", action: { label: "Update now", run: () => void installUpdate() } },
+        { kind: "info", title: `MOTION ${update.version} is available`, message: "Automatic updates are off.", action: { label: "Update now", run: () => void installUpdate() } },
         0,
       );
     return update;
@@ -126,7 +126,7 @@ function maybeInstall(now = false) {
   if (!idle()) return;
   const version = pending.version;
   let left = COUNTDOWN_S;
-  const title = () => `Updating BLOOD to ${version} in ${left} s`;
+  const title = () => `Updating MOTION to ${version} in ${left} s`;
   // Claim the countdown before showing the toast: toast() notifies store subscribers
   // (including this function) synchronously.
   const cd: { timer: ReturnType<typeof setInterval> | null; toastId: number } = { timer: null, toastId: -1 };
@@ -135,14 +135,14 @@ function maybeInstall(now = false) {
     {
       kind: "info",
       title: title(),
-      message: "BLOOD restarts by itself. Your installations, mods and settings are kept.",
+      message: "MOTION restarts by itself. Your installations, mods and settings are kept.",
       action: {
         label: "Later",
         run: () => {
           // Postpone first: cancelling notifies subscribers, which would otherwise restart the countdown.
           postponedUntil = Date.now() + POSTPONE_MS;
           cancelCountdown();
-          toast({ kind: "info", title: "Update postponed", message: `BLOOD ${version} installs in an hour, or the next time you start BLOOD.` });
+          toast({ kind: "info", title: "Update postponed", message: `MOTION ${version} installs in an hour, or the next time you start MOTION.` });
         },
       },
     },
@@ -179,17 +179,17 @@ function cancelCountdown() {
   if (cd.toastId >= 0) dismissToast(cd.toastId);
 }
 
-/** Install now (downloading first if needed) and restart BLOOD. Refuses while Minecraft is running. */
+/** Install now (downloading first if needed) and restart MOTION. Refuses while Minecraft is running. */
 export async function installUpdate() {
   const update = pending ?? (await check().catch(() => null));
   if (!update) return;
   if (Object.keys(app.get().running).length > 0) {
-    toast({ kind: "warning", title: "Close Minecraft first", message: "BLOOD will update once your game is closed." });
+    toast({ kind: "warning", title: "Close Minecraft first", message: "MOTION will update once your game is closed." });
     return;
   }
   cancelCountdown();
   const id = "blood-update";
-  startTask({ id, title: `Updating BLOOD to ${update.version}`, cancellable: false, stage: downloaded ? "Installing" : "Downloading" });
+  startTask({ id, title: `Updating MOTION to ${update.version}`, cancellable: false, stage: downloaded ? "Installing" : "Downloading" });
   updateState.set({ status: "installing", version: update.version });
   try {
     if (!downloaded) {
@@ -205,7 +205,7 @@ export async function installUpdate() {
       downloaded = true;
     }
     updateTask(id, { stage: "Installing", progress: null });
-    // On Windows the installer closes BLOOD, updates it and starts it again.
+    // On Windows the installer closes MOTION, updates it and starts it again.
     await update.install();
     await relaunch();
   } catch (e) {

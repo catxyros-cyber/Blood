@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * BLOOD's menus. A sidebar of sections, a searchable, scrolling page of settings and popups for
+ * MOTION's menus. A sidebar of sections, a searchable, scrolling page of settings and popups for
  * dropdowns, colours and dialogs. Every change applies immediately and is saved automatically;
  * the game keeps running behind the menu (unless "Pause singleplayer" is on).
  *
@@ -94,7 +94,7 @@ public class BloomMenuScreen extends Screen implements Host {
     }
 
     private BloomMenuScreen(Screen parent, boolean visualsMenu, List<Nav> nav, int start) {
-        super(Component.literal(visualsMenu ? "BLOOD Visuals" : "BLOOD"));
+        super(Component.literal(visualsMenu ? "MOTION Visuals" : "MOTION"));
         this.parent = parent;
         this.visualsMenu = visualsMenu;
         this.nav = nav;
@@ -336,9 +336,9 @@ public class BloomMenuScreen extends Screen implements Host {
         int y = wy + 8;
         Ui.spriteTinted(g, "logo", wx + (compact ? 7 : 9), y, 16, 16, 0xFFFFFFFF);
         if (!compact) {
-            Ui.text(g, "BLOOD", wx + 29, y + 4, Theme.alpha(p.text(), t));
+            Ui.text(g, "MOTION", wx + 29, y + 4, Theme.alpha(p.text(), t));
             String sub = visualsMenu ? "Visuals" : "Client";
-            Ui.text(g, sub, wx + 29 + Ui.font().width("BLOOD "), y + 4, Theme.alpha(Theme.accentArgb(), t));
+            Ui.text(g, sub, wx + 29 + Ui.font().width("MOTION "), y + 4, Theme.alpha(Theme.accentArgb(), t));
         }
         y += 26;
         int itemH = itemHeight();
@@ -394,7 +394,7 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private void renderTooltip(GuiGraphics g, int mx, int my) {
         List<String> lines = list.tooltip(mx, my);
-        if (lines == null && search.isOver(mx, my)) lines = List.of("Search every BLOOD setting", "Tip: try \"petal\", \"fog\" or \"fps\"");
+        if (lines == null && search.isOver(mx, my)) lines = List.of("Search every MOTION setting", "Tip: try \"petal\", \"fog\" or \"fps\"");
         if (lines == null || lines.isEmpty()) return;
         Theme.Palette p = Theme.palette();
         int w = 0;

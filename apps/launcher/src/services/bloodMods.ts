@@ -1,10 +1,10 @@
 /**
- * BLOOD Mods: reads and changes the real switches behind each module (see
+ * MOTION Mods: reads and changes the real switches behind each module (see
  * core/bloomclient/modules.ts). Changes are written straight away with read-modify-write,
  * so values the game saved in the meantime are never overwritten; a running game picks
- * them up within a few seconds (BLOOD Client watches its settings file).
+ * them up within a few seconds (MOTION Client watches its settings file).
  *
- * Presets and restores are "major changes": BLOOD Client's settings file is backed up first.
+ * Presets and restores are "major changes": MOTION Client's settings file is backed up first.
  */
 
 import { CROSSHAIR, MOD_PRESETS, type ModPreset, type SettingToggle, type WidgetJson } from "../core/bloomclient/modules";
@@ -20,7 +20,7 @@ import { readSettings, writeSettings } from "./bloomClient";
 import { applyInstallPlan, listContent, modrinth, planProjectInstall, toggleContent, type ContentItem } from "./content";
 import { instanceGameDir } from "./instances";
 
-// ---------------------------------------------------------------- BLOOD Client settings
+// ---------------------------------------------------------------- MOTION Client settings
 
 function clientConfigDir(inst: Instance) {
   return path(instanceGameDir(inst), "config", "bloomclient");
@@ -63,7 +63,7 @@ export function crosshairValues(view: Record<string, unknown>) {
   };
 }
 
-// ---------------------------------------------------------------- backups of BLOOD Client's settings
+// ---------------------------------------------------------------- backups of MOTION Client's settings
 
 export interface ClientBackup {
   id: string;
@@ -215,7 +215,7 @@ export interface PresetResult {
 }
 
 /**
- * Apply a BLOOD Mods preset: back up BLOOD Client's settings, change the HUD layout and
+ * Apply a MOTION Mods preset: back up MOTION Client's settings, change the HUD layout and
  * settings in one write, and (for Performance) install or re-enable the core performance mods.
  */
 export async function applyModPreset(inst: Instance, presetId: ModPreset["id"]): Promise<PresetResult> {

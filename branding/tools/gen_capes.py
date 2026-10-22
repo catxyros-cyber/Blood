@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original HD capes for BLOOD (1024x512, Minecraft's 64x32 cape layout at 16x detail).
+"""Original HD capes for MOTION (1024x512, Minecraft's 64x32 cape layout at 16x detail).
 
 Run: python3 branding/tools/gen_capes.py
 Writes branding/capes/<name>.png (still capes) and <name>-animated.png (vertical frame strips).

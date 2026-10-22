@@ -12,7 +12,7 @@ import { Icon } from "../icons";
 import { PremiumBadge, usePremium } from "../premiumParts";
 import { MemoryControl } from "./Instance";
 
-export const FREE_ACCENTS = ["#e3192f", "#ff1f3d", "#b3122a", "#ff4a1f", "#ff2e63", "#c81d4e", "#f2f2f2"];
+export const FREE_ACCENTS = ["#39ff88", "#c6ff3d", "#00e5a0", "#e3192f", "#ff1f3d", "#b3122a", "#ff4a1f", "#ff2e63", "#c81d4e", "#f2f2f2"];
 
 const SECTIONS = [
   ["appearance", "Appearance", <Icon.Paint size={16} key="a" />],
@@ -143,11 +143,11 @@ export function SettingsPage({ section }: { section?: string }) {
                 <div className="font-medium">Accent intensity</div>
                 <span className="text-[12.5px] text-muted">{s.accentIntensity <= 25 ? "Subtle" : s.accentIntensity <= 75 ? "Balanced" : "Vivid"}</span>
               </div>
-              <div className="text-[13px] text-muted mb-2">How saturated the crimson is and how much buttons and highlights glow. 0% is completely flat.</div>
+              <div className="text-[13px] text-muted mb-2">How saturated the accent is and how much buttons and highlights glow. 0% is completely flat.</div>
               <Slider value={s.accentIntensity} min={0} max={100} step={5} format={(v) => `${v}%`} onChange={(v) => set({ accentIntensity: v })} />
             </div>
             <BackgroundRows />
-            <Row label="Ember particles" description="Small sparks rising on the Home screen (paused while BLOOD is in the background, off with Reduce motion).">
+            <Row label="Ember particles" description="Small sparks rising on the Home screen (paused while MOTION is in the background, off with Reduce motion).">
               <Toggle checked={s.petals} onChange={(v) => set({ petals: v })} />
             </Row>
             <Row label="Reduce motion" description="Turn off animations, transitions and particles in the launcher.">
@@ -156,7 +156,7 @@ export function SettingsPage({ section }: { section?: string }) {
           </Section>
 
           <Section id="launcher" title="Launcher">
-            <Row label="Start BLOOD with Windows" description="Opens minimized in the taskbar when you sign in to Windows.">
+            <Row label="Start MOTION with Windows" description="Opens minimized in the taskbar when you sign in to Windows.">
               <Toggle
                 checked={Boolean(autostart)}
                 disabled={autostart === null}
@@ -172,7 +172,7 @@ export function SettingsPage({ section }: { section?: string }) {
               <Select value={s.startPage} onChange={(v) => set({ startPage: v })} options={[{ value: "home", label: "Home" }, { value: "library", label: "Library" }]} className="w-40" />
             </Row>
             <Row label="When a game starts">
-              <Select value={s.onLaunch} onChange={(v) => set({ onLaunch: v })} options={[{ value: "minimize", label: "Minimize BLOOD" }, { value: "keep", label: "Keep BLOOD open" }]} className="w-48" />
+              <Select value={s.onLaunch} onChange={(v) => set({ onLaunch: v })} options={[{ value: "minimize", label: "Minimize MOTION" }, { value: "keep", label: "Keep MOTION open" }]} className="w-48" />
             </Row>
             <Row label="Show snapshots" description="Include snapshots and old versions in version lists.">
               <Toggle checked={s.showSnapshots} onChange={(v) => set({ showSnapshots: v })} />
@@ -180,7 +180,7 @@ export function SettingsPage({ section }: { section?: string }) {
             <Row label="Mod update notifications" description="Check Modrinth for mod updates when you open an installation.">
               <Toggle checked={s.modUpdateNotifications} onChange={(v) => set({ modUpdateNotifications: v })} />
             </Row>
-            <Row label="Update BLOOD automatically" description="New versions download in the background and install by themselves when you're not playing (with a 15-second countdown you can postpone). Updates are signed and verified before installing.">
+            <Row label="Update MOTION automatically" description="New versions download in the background and install by themselves when you're not playing (with a 15-second countdown you can postpone). Updates are signed and verified before installing.">
               <div className="flex items-center gap-3">
                 <Button size="sm" variant="ghost" onClick={() => void checkForUpdate(true)}>
                   Check now
@@ -195,7 +195,7 @@ export function SettingsPage({ section }: { section?: string }) {
 
           <Section id="game" title="Game defaults" description="Used by installations that don't override them. Changes apply the next time you start the game (a running game keeps its current settings).">
             <MemoryControl value={s.memory ?? undefined} onChange={(memory) => set({ memory: memory ?? null })} modded modCount={40} />
-            <Field label="Java runtime" hint="Leave on automatic: BLOOD installs the Java version each Minecraft release needs.">
+            <Field label="Java runtime" hint="Leave on automatic: MOTION installs the Java version each Minecraft release needs.">
               <div className="flex gap-2">
                 <TextInput value={s.javaPath ?? ""} onChange={(v) => set({ javaPath: v.trim() || null })} placeholder="Automatic" className="flex-1" mono />
                 <Button
@@ -253,7 +253,7 @@ export function SettingsPage({ section }: { section?: string }) {
           </Section>
 
           <Section id="storage" title="Storage">
-            <Row label="BLOOD data folder" description={<span className="font-mono text-[12px] selectable">{paths?.dataDir}</span>}>
+            <Row label="MOTION data folder" description={<span className="font-mono text-[12px] selectable">{paths?.dataDir}</span>}>
               <Button size="sm" icon={<Icon.Folder size={14} />} onClick={() => void native.openPath(P().dataDir)}>
                 Open
               </Button>
@@ -261,7 +261,7 @@ export function SettingsPage({ section }: { section?: string }) {
             <Row
               label="New installations folder"
               description={
-                s.defaultGameRoot ? <span className="font-mono text-[12px] selectable">{s.defaultGameRoot}</span> : "Inside the BLOOD data folder. Choose another drive to keep worlds and mods elsewhere."
+                s.defaultGameRoot ? <span className="font-mono text-[12px] selectable">{s.defaultGameRoot}</span> : "Inside the MOTION data folder. Choose another drive to keep worlds and mods elsewhere."
               }
             >
               <div className="flex gap-2">
@@ -287,12 +287,12 @@ export function SettingsPage({ section }: { section?: string }) {
 
           <Section id="privacy" title="Privacy and diagnostics">
             <p className="text-[13px] text-muted leading-relaxed">
-              BLOOD has no telemetry, analytics or ads. It talks to Microsoft and Mojang to sign in and download the game, Modrinth and mod-loader sites for mods, and — only if you use Premium or announcements — BLOOD's own server. Tokens stay in the Windows Credential Manager and are removed from every log.
+              MOTION has no telemetry, analytics or ads. It talks to Microsoft and Mojang to sign in and download the game, Modrinth and mod-loader sites for mods, and — only if you use Premium or announcements — MOTION's own server. Tokens stay in the Windows Credential Manager and are removed from every log.
             </p>
             <Row label="Minecraft news on Home" description="Loads Mojang's patch notes from launchercontent.mojang.com.">
               <Toggle checked={s.news} onChange={(v) => set({ news: v })} />
             </Row>
-            <Row label="BLOOD announcements" description={API_URL ? `Loads release notes and announcements from ${new URL(API_URL).host}.` : "Not configured in this build."}>
+            <Row label="MOTION announcements" description={API_URL ? `Loads release notes and announcements from ${new URL(API_URL).host}.` : "Not configured in this build."}>
               <Toggle checked={s.announcements} onChange={(v) => set({ announcements: v })} disabled={!API_URL} />
             </Row>
             <Row label="Launcher logs" description="Useful for support. Logs never contain passwords or tokens.">
@@ -304,7 +304,7 @@ export function SettingsPage({ section }: { section?: string }) {
                   onClick={() =>
                     void navigator.clipboard
                       .writeText(
-                        [`BLOOD ${paths?.version}`, system?.os, system?.cpuBrand, system ? `${gb(Math.round(system.totalMemory / 1_048_576))} RAM` : "", ...(system?.gpus ?? [])].filter(Boolean).join("\n"),
+                        [`MOTION ${paths?.version}`, system?.os, system?.cpuBrand, system ? `${gb(Math.round(system.totalMemory / 1_048_576))} RAM` : "", ...(system?.gpus ?? [])].filter(Boolean).join("\n"),
                       )
                       .then(() => toast({ kind: "success", title: "System info copied" }))
                   }
@@ -322,7 +322,7 @@ export function SettingsPage({ section }: { section?: string }) {
 {!MS_CLIENT_ID_BUILD && (
             <Field
               label="Microsoft application (client) id"
-              hint={MS_CLIENT_ID_BUILD ? "This build includes an approved id. Only change this if you're developing BLOOD." : "This build has no id. Enter the Azure app id you registered (docs/MICROSOFT_AUTH.md)."}
+              hint={MS_CLIENT_ID_BUILD ? "This build includes an approved id. Only change this if you're developing MOTION." : "This build has no id. Enter the Azure app id you registered (docs/MICROSOFT_AUTH.md)."}
             >
               <TextInput value={s.msClientId} onChange={(v) => set({ msClientId: v.trim() })} placeholder={MS_CLIENT_ID_BUILD || "00000000-0000-0000-0000-000000000000"} mono />
             </Field>
@@ -348,9 +348,9 @@ export function SettingsPage({ section }: { section?: string }) {
 
           <Section id="about" title="About">
             <div className="flex items-center gap-4">
-              <img src="/blood-mark.svg" alt="" width={48} height={48} />
+              <img src="/motion-mark.svg" alt="" width={48} height={48} />
               <div>
-                <div className="font-display font-semibold text-[17px]">BLOOD {paths?.version}</div>
+                <div className="font-display font-semibold text-[17px]">MOTION {paths?.version}</div>
                 <div className="text-[13px] text-muted">Built for frames.</div>
               </div>
             </div>
@@ -401,7 +401,7 @@ function BackgroundRows() {
   };
   return (
     <>
-      <Row label="Background" description={bg.mode === "custom" && bg.custom ? `Your image: ${bg.custom.split(/[\\/]/).pop()}` : "The art behind the launcher. Your own image is copied into BLOOD's data folder."}>
+      <Row label="Background" description={bg.mode === "custom" && bg.custom ? `Your image: ${bg.custom.split(/[\\/]/).pop()}` : "The art behind the launcher. Your own image is copied into MOTION's data folder."}>
         <div className="flex items-center gap-2">
           <Segmented
             value={bg.mode}

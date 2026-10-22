@@ -16,7 +16,7 @@ import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
 
 /**
- * Draws BLOOD's particles. Called once per frame after the world's weather is drawn
+ * Draws MOTION's particles. Called once per frame after the world's weather is drawn
  * (Fabric: WorldRenderEvents.LAST, NeoForge: RenderLevelStageEvent AFTER_WEATHER).
  * Vertices are transformed on the CPU with the camera's model-view matrix, so the result
  * doesn't depend on whatever matrix state other mods leave behind.
@@ -40,7 +40,7 @@ public final class EffectsRenderer {
             draw(ps, level, modelView, projection, camera, partialTick);
         } catch (RuntimeException e) {
             failures++;
-            Log.warn("BLOOD particle rendering failed" + (failures > 5 ? "; particles disabled for this session" : ""), e);
+            Log.warn("MOTION particle rendering failed" + (failures > 5 ? "; particles disabled for this session" : ""), e);
         }
     }
 

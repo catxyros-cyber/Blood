@@ -66,7 +66,7 @@ public class HudEditorScreen extends Screen implements Host {
     private boolean dirtyPanel;
 
     public HudEditorScreen(Screen parent) {
-        super(Component.literal("BLOOD HUD editor"));
+        super(Component.literal("MOTION HUD editor"));
         this.parent = parent;
         this.layouts = BloomClient.get().hudLayouts();
         this.hud = BloomClient.get().hudRenderer();

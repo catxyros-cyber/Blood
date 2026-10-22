@@ -343,15 +343,15 @@ test("license keys: admin creates keys, one PC redeems, moving is limited to onc
     assert.equal(made.status, 200);
     assert.equal(made.body.keys.length, 2);
     const key: string = made.body.keys[0];
-    assert.match(key, /^BLOOD(-[0-9A-HJKMNP-TV-Z]{5}){4}$/);
+    assert.match(key, /^MOTION(-[0-9A-HJKMNP-TV-Z]{5}){4}$/);
     // Only hashes are stored, and the keys never reach the logs.
     const stored = [...h.store.licenses.values()];
-    assert.ok(stored.every((k) => !k.keyHash.toString("latin1").includes(key.slice(6, 11))));
+    assert.ok(stored.every((k) => !k.keyHash.toString("latin1").includes(key.slice(7, 12))));
     assert.ok(!JSON.stringify(h.logs).includes(key));
 
     // Bad and unknown keys.
-    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "BLOOD-NOPE", hwid: pcA } })).status, 400);
-    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "BLOOD-00000-00000-00000-00000", hwid: pcA } })).body.error.code, "invalid_key");
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "MOTION-NOPE", hwid: pcA } })).status, 400);
+    assert.equal((await h.call("POST", "/v1/license/activate", { json: { key: "MOTION-00000-00000-00000-00000", hwid: pcA } })).body.error.code, "invalid_key");
     assert.equal((await h.call("POST", "/v1/license/activate", { json: { key, hwid: "not-a-hash" } })).status, 400);
 
     // PC A redeems (lower case, no dashes, O for 0 all accepted).
@@ -516,6 +516,82 @@ test("tags: admin tags a player by name, clients see it, team shows who's online
 
     await h.call("POST", "/v1/admin/tags", { token: ADMIN, json: { username: "bgti", text: "", color: "#E3192F" } });
     assert.deepEqual((await h.call("GET", "/v1/team")).body.team, []);
+  } finally {
+    await h.close();
+  }
+});
+
+test("accessories: admin publishes wings and auras, players wear one of each, clients see them", async () => {
+  const ADMIN = "a-very-long-admin-password-123";
+  const h = await harness({ adminToken: ADMIN });
+  const png = (w: number, hgt: number) => {
+    const b = Buffer.alloc(64);
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b, 0);
+    b.writeUInt32BE(13, 8);
+    b.write("IHDR", 12, "latin1");
+    b.writeUInt32BE(w, 16);
+    b.writeUInt32BE(hgt, 20);
+    return b.toString("base64");
+  };
+  try {
+    assert.equal((await h.call("POST", "/v1/admin/accessories", { json: { name: "W", kind: "wings", access: "everyone", color: "#39ff88", png: png(256, 256) } })).status, 401);
+    const noImage = await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "W", kind: "wings", access: "everyone", color: "#39ff88" } });
+    assert.equal(noImage.body.error.code, "missing_image");
+    const wings = (await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "Angel", kind: "wings", access: "everyone", color: "#FFFFFF", png: png(512, 512) } })).body;
+    assert.match(wings.image, /^\/v1\/accessories\/[0-9a-f-]{36}\.png$/);
+    assert.equal(wings.color, "#ffffff");
+    const aura = (await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "Toxic", kind: "aura", access: "everyone", color: "#39ff88", style: "embers" } })).body;
+    assert.equal(aura.style, "embers");
+    const vip = (await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "VIP", kind: "aura", access: "premium", color: "#ffd700" } })).body;
+    assert.equal(vip.style, "glow");
+    assert.equal((await h.call("GET", wings.image)).headers.get("content-type"), "image/png");
+
+    const token = await h.signIn("Steve", "8667ba71b85a4004af54457a9734eed7");
+    const mine = await h.call("GET", "/v1/me/accessories", { token });
+    assert.equal(mine.body.wings, null);
+    assert.equal(mine.body.accessories.find((a: { name: string }) => a.name === "VIP").allowed, false);
+    assert.equal((await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: vip.id } })).status, 402);
+    assert.equal((await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: wings.id } })).status, 404, "kind must match");
+    await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "wings", id: wings.id } });
+    const both = (await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: aura.id } })).body;
+    assert.deepEqual(both, { wings: wings.id, aura: aura.id });
+
+    const owners = (await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7")).body;
+    assert.deepEqual(owners.wings, { "8667ba71b85a4004af54457a9734eed7": wings.id });
+    assert.deepEqual(owners.auras, { "8667ba71b85a4004af54457a9734eed7": { color: "#39ff88", style: "embers" } });
+
+    await h.call("POST", "/v1/admin/accessories/update", { token: ADMIN, json: { id: wings.id, action: "disable" } });
+    assert.deepEqual((await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7")).body.wings, {});
+    await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: "" } });
+    assert.equal((await h.call("GET", "/v1/me/accessories", { token })).body.aura, null);
+  } finally {
+    await h.close();
+  }
+});
+
+test("skin hand-off: signed-in players get a short-lived public URL for Mojang", async () => {
+  const h = await harness({});
+  const png = (w: number, hgt: number) => {
+    const b = Buffer.alloc(64);
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b, 0);
+    b.writeUInt32BE(13, 8);
+    b.write("IHDR", 12, "latin1");
+    b.writeUInt32BE(w, 16);
+    b.writeUInt32BE(hgt, 20);
+    return b.toString("base64");
+  };
+  try {
+    assert.equal((await h.call("POST", "/v1/me/skin-upload", { json: { png: png(64, 64) } })).status, 401);
+    const token = await h.signIn("Steve", "8667ba71b85a4004af54457a9734eed7");
+    assert.equal((await h.call("POST", "/v1/me/skin-upload", { token, json: { png: png(128, 128) } })).body.error.code, "bad_size");
+    const ok = await h.call("POST", "/v1/me/skin-upload", { token, json: { png: "data:image/png;base64," + png(64, 64) } });
+    assert.equal(ok.status, 200);
+    const path = new URL(ok.body.url).pathname;
+    assert.match(path, /^\/v1\/skin-files\/[0-9a-f]{64}\.png$/);
+    const got = await h.call("GET", path);
+    assert.equal(got.status, 200);
+    assert.equal(got.headers.get("content-type"), "image/png");
+    assert.equal((await h.call("GET", "/v1/skin-files/" + "0".repeat(64) + ".png")).status, 404);
   } finally {
     await h.close();
   }

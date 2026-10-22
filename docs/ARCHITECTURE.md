@@ -1,8 +1,8 @@
 # Architecture
 
 ```
-┌──────────────────────── Windows PC ────────────────────────┐        ┌──────── BLOOD server ────────┐
-│ BLOOD launcher (Tauri)                                      │        │ apps/api (Node)               │
+┌──────────────────────── Windows PC ────────────────────────┐        ┌──────── MOTION server ────────┐
+│ MOTION launcher (Tauri)                                      │        │ apps/api (Node)               │
 │  React UI ── invoke() ──► Rust backend                      │ HTTPS  │  /v1/auth   Minecraft-verified│
 │  (src/ui, src/services,     • paths.rs  path confinement    │◄──────►│  /v1/billing Stripe Checkout  │
 │   src/core = pure TS)       • net.rs    allowlisted HTTP    │        │  /v1/stripe/webhook (signed)  │
@@ -12,21 +12,21 @@
 │                             • bloomclient.rs bundled mod    │        └───────────────────────────────┘
 │        │ installs jar, edits config/bloomclient/*.json      │
 │        ▼                                                    │   Microsoft / Xbox / Minecraft services
-│ Minecraft + BLOOD Client mod (Fabric/Quilt/NeoForge)        │   Modrinth API, Mojang piston-meta,
+│ Minecraft + MOTION Client mod (Fabric/Quilt/NeoForge)        │   Modrinth API, Mojang piston-meta,
 └─────────────────────────────────────────────────────────────┘   Fabric/Quilt/Forge/NeoForge metadata
 ```
 
 ## Launcher
 
-- **`src/core`** is plain TypeScript with no UI or Tauri imports. It holds the Mojang version and library resolution, loader installers, the Modrinth client, `.mrpack` import, mod metadata parsing, perf presets, sync merging, and BLOOD Client settings-file handling. It runs under unit tests with a fake platform (`core/test/fakePlatform.ts`).
+- **`src/core`** is plain TypeScript with no UI or Tauri imports. It holds the Mojang version and library resolution, loader installers, the Modrinth client, `.mrpack` import, mod metadata parsing, perf presets, sync merging, and MOTION Client settings-file handling. It runs under unit tests with a fake platform (`core/test/fakePlatform.ts`).
 - **`src/services`** connects core to the real platform (`native.ts` → Rust commands) and to app state.
 - **`src/ui`** is React with Tailwind. Themes are CSS variables in `styles.css`; the backdrop and petals live in `ui/backdrop.tsx`.
 - **The Rust backend** is deliberately small and defensive:
-  - **Path confinement (`paths.rs`).** The UI can only touch BLOOD's data directory and folders the user picked in a native dialog. Files outside those can only be *read* as import sources the user chose or dropped.
-  - **Deletes (`fsops.rs`).** User content goes to the Recycle Bin. Only BLOOD's own caches are hard-deleted, and existing files are never overwritten unless the UI explicitly asks.
-  - **Network (`net.rs`).** Requests go only to an allowlist of hosts (Microsoft/Xbox/Minecraft, Mojang, Modrinth, loader metadata, the configured BLOOD API). Downloads are checked against their sha1/sha512.
-  - **Secrets (`secrets.rs`).** Microsoft refresh tokens and the BLOOD session token live in Windows Credential Manager, never in settings files or logs.
-  - **BLOOD Client (`bloomclient.rs`).** Reads the bundled manifest, checks the jar's sha1, and copies it into an instance's `mods` folder without overwriting anything.
+  - **Path confinement (`paths.rs`).** The UI can only touch MOTION's data directory and folders the user picked in a native dialog. Files outside those can only be *read* as import sources the user chose or dropped.
+  - **Deletes (`fsops.rs`).** User content goes to the Recycle Bin. Only MOTION's own caches are hard-deleted, and existing files are never overwritten unless the UI explicitly asks.
+  - **Network (`net.rs`).** Requests go only to an allowlist of hosts (Microsoft/Xbox/Minecraft, Mojang, Modrinth, loader metadata, the configured MOTION API). Downloads are checked against their sha1/sha512.
+  - **Secrets (`secrets.rs`).** Microsoft refresh tokens and the MOTION session token live in Windows Credential Manager, never in settings files or logs.
+  - **MOTION Client (`bloomclient.rs`).** Reads the bundled manifest, checks the jar's sha1, and copies it into an instance's `mods` folder without overwriting anything.
 
 ### Things the launcher never does
 
@@ -38,7 +38,7 @@
 
 - **Applying.** A preset edits `options.txt`, plus mod configs it recognizes. Before that it saves a timestamped backup under the instance's `.bloom/backups`, and you can restore any backup from the Performance page.
 - **Game running.** A preset applied while the game runs is queued and written before the next launch.
-- **Stats.** Memory, CPU and launch time are measured by the Rust backend. GC pauses are parsed from the JVM's GC log, which BLOOD enables with a launch argument. If a value can't be measured it is shown as "—", never estimated.
+- **Stats.** Memory, CPU and launch time are measured by the Rust backend. GC pauses are parsed from the JVM's GC log, which MOTION enables with a launch argument. If a value can't be measured it is shown as "—", never estimated.
 
 ## API and Premium
 
@@ -47,7 +47,7 @@
   2. The launcher calls Mojang's `session/minecraft/join` with that serverId.
   3. The API checks `hasJoined`.
 
-  So an account is proven to own Minecraft without its tokens ever reaching BLOOD's server.
+  So an account is proven to own Minecraft without its tokens ever reaching MOTION's server.
 - **Payments.**
   - The Stripe secret key exists only on the server.
   - Checkout sessions are created server-side.
@@ -55,7 +55,7 @@
   - Details: [STRIPE.md](STRIPE.md).
 - **Sync.** Sync is a size-limited JSON document per user, merged field by field with timestamps on the client. It holds no secrets.
 
-## BLOOD Client (the mod)
+## MOTION Client (the mod)
 
 - **`common/.../core`** is plain Java with no Minecraft imports: settings, the store and file format, profiles, the HUD model, particle simulation, sky image processing, the OptiFine importer and the advisors. It is unit-tested with JUnit.
 - **`common/.../{render,gui,hud,game,mixin}`** is the Minecraft layer, written against Mojang mappings and Parchment for 1.21.1.

@@ -18,12 +18,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 
-/** BLOOD's block outline: custom colour, opacity, thickness and an optional face tint. */
+/** MOTION's block outline: custom colour, opacity, thickness and an optional face tint. */
 public final class OutlineRenderer {
     private OutlineRenderer() {
     }
 
-    /** Returns true when BLOOD drew the outline (vanilla's should then be skipped). */
+    /** Returns true when MOTION drew the outline (vanilla's should then be skipped). */
     public static boolean render(PoseStack poseStack, Entity entity, double camX, double camY, double camZ, BlockPos pos, BlockState state) {
         if (!BloomSettings.ENABLED.on() || !BloomSettings.OUTLINE.on()) return false;
         Minecraft mc = Minecraft.getInstance();

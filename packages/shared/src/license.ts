@@ -1,8 +1,8 @@
 /**
  * Premium license keys: format, normalisation and the request/response shapes shared by
- * the BLOOD server and the launcher.
+ * the MOTION server and the launcher.
  *
- * A key looks like BLOOD-7K2QF-M9XRT-4HZ8W-PN3D6: 20 random characters from Crockford's
+ * A key looks like MOTION-7K2QF-M9XRT-4HZ8W-PN3D6: 20 random characters from Crockford's
  * base32 alphabet (100 bits), so keys can't be guessed. People often mistype O/0 and I/1/L,
  * so those are folded together before checking.
  */
@@ -11,21 +11,28 @@ import { v, type Infer } from "./validate";
 
 export const KEY_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 export const KEY_LENGTH = 20;
-export const KEY_PREFIX = "BLOOD";
+export const KEY_PREFIX = "MOTION";
+/** Keys handed out before the rename start with BLOOD-; they stay valid. */
+const OLD_KEY_PREFIXES = ["BLOOD"];
 /** How long a player must wait between moving their key to another PC. */
 export const LICENSE_MOVE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
-/** The 20 key characters (no prefix or dashes), or null if this can't be a BLOOD key. */
+/** The 20 key characters (no prefix or dashes), or null if this can't be a MOTION key. */
 export function normalizeKey(input: string): string | null {
   let s = input.toUpperCase().replace(/[\s\-_]/g, "");
-  if (s.startsWith(KEY_PREFIX)) s = s.slice(KEY_PREFIX.length);
+  for (const p of [KEY_PREFIX, ...OLD_KEY_PREFIXES]) {
+    if (s.startsWith(p) && s.length === p.length + KEY_LENGTH) {
+      s = s.slice(p.length);
+      break;
+    }
+  }
   s = s.replace(/O/g, "0").replace(/[IL]/g, "1");
   if (s.length !== KEY_LENGTH) return null;
   for (const ch of s) if (!KEY_ALPHABET.includes(ch)) return null;
   return s;
 }
 
-/** BLOOD-XXXXX-XXXXX-XXXXX-XXXXX */
+/** MOTION-XXXXX-XXXXX-XXXXX-XXXXX */
 export function formatKey(normalized: string): string {
   return [KEY_PREFIX, ...(normalized.match(/.{1,5}/g) ?? [])].join("-");
 }
@@ -95,7 +102,7 @@ export interface CapeInfo {
   frames: number;
   /** Milliseconds per frame. */
   frameMs: number;
-  /** Image path on the BLOOD server, e.g. /v1/capes/<id>.png */
+  /** Image path on the MOTION server, e.g. /v1/capes/<id>.png */
   image: string;
   /** Image width in pixels (64 = classic pixel-art cape, 128–1024 = HD). Missing on older servers. */
   width?: number;
@@ -146,15 +153,54 @@ export const SetCapeRequest = v.object({
 });
 export type SetCapeRequest = Infer<typeof SetCapeRequest>;
 
+// --- accessories (wings & auras) ----------------------------------------------
+
+export type AccessoryKind = "wings" | "aura";
+export const AURA_STYLES = ["glow", "embers", "sparkles", "orbit"] as const;
+export type AuraStyle = (typeof AURA_STYLES)[number];
+export const ACCESSORY_MAX_BYTES = 4 * 1024 * 1024;
+
+/** An accessory the owner published. Wings have an image; auras have a colour and style. */
+export interface AccessoryInfo {
+  id: string;
+  name: string;
+  kind: AccessoryKind;
+  access: CapeAccess;
+  /** Wings only: image path on the server, e.g. /v1/accessories/<id>.png */
+  image?: string;
+  /** Auras: particle colour (#rrggbb). Wings: an accent colour for previews. */
+  color: string;
+  /** Auras only. */
+  style?: AuraStyle;
+}
+
+export const AdminCreateAccessory = v.object({
+  name: v.string({ min: 1, max: 40, trim: true }),
+  kind: v.literal("wings", "aura"),
+  access: v.literal("everyone", "premium"),
+  /** Wings: base64 PNG of one wing (root on the left edge, tip on the right). */
+  png: v.optional(v.string({ min: 16, max: 5_600_000 })),
+  color: v.string({ min: 7, max: 7, pattern: /^#[0-9a-fA-F]{6}$/ }),
+  style: v.optional(v.literal("glow", "embers", "sparkles", "orbit")),
+});
+export type AdminCreateAccessory = Infer<typeof AdminCreateAccessory>;
+
+/** id "" removes the accessory of that kind. */
+export const SetAccessoryRequest = v.object({
+  kind: v.literal("wings", "aura"),
+  id: v.string({ min: 0, max: 36, pattern: /^([0-9a-f-]{36})?$/ }),
+});
+export type SetAccessoryRequest = Infer<typeof SetAccessoryRequest>;
+
 // --- tags ---------------------------------------------------------------------
 
-/** A player's BLOOD tag, shown before their name to BLOOD users. */
+/** A player's MOTION tag, shown before their name to MOTION users. */
 export interface TagInfo {
   text: string;
   color: string;
 }
 
-/** Someone with a tag, for the launcher's "BLOOD team" list. */
+/** Someone with a tag, for the launcher's "MOTION team" list. */
 export interface TeamMember extends TagInfo {
   username: string;
   online: boolean;

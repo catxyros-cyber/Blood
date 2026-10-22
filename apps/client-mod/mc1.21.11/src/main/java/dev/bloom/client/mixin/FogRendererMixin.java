@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** BLOOD fog: distance, haze and tint, applied just before Minecraft uploads this frame's fog. */
+/** MOTION fog: distance, haze and tint, applied just before Minecraft uploads this frame's fog. */
 @Mixin(FogRenderer.class)
 public abstract class FogRendererMixin {
     @Inject(method = "setupFog", at = @At(value = "INVOKE",

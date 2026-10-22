@@ -164,7 +164,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             {inst.modpack && <span className="chip rounded-full h-7 px-3 inline-flex items-center text-[12.5px] font-medium">{inst.modpack.name}</span>}
             {client?.enabled && (
               <span className="rounded-full h-7 px-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-accent text-accent-ink shadow-[0_4px_18px_-4px] shadow-accent/60">
-                <Icon.Drop size={13} /> BLOOD Client {client.installedVersion}
+                <Icon.Motion size={13} /> MOTION Client {client.installedVersion}
               </span>
             )}
           </div>
@@ -191,7 +191,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
           <div className="text-[14px] text-fg/75 mt-2">{played}</div>
           <div className="flex flex-wrap items-center gap-2.5 mt-6">
             <PlayButton inst={inst} />
-            <HeroAction icon={<Icon.Hud size={17} />} label="BLOOD Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} accent />
+            <HeroAction icon={<Icon.Hud size={17} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} accent />
             <HeroAction icon={<Icon.Puzzle size={17} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
             <HeroAction icon={<Icon.Gauge size={17} />} label="Optimize" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
           </div>
@@ -273,7 +273,7 @@ function HomeTopBar() {
             {greeting()}, <span className="font-semibold text-fg">{account.username}</span>
           </>
         ) : (
-          "Welcome to BLOOD"
+          "Welcome to MOTION"
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -294,7 +294,7 @@ function HomeTopBar() {
   );
 }
 
-/** BLOOD Client status, active HUD and quick links for the selected installation. */
+/** MOTION Client status, active HUD and quick links for the selected installation. */
 function BloomClientCard({ inst }: { inst: Instance }) {
   const [st, setSt] = useState<ClientStatus | null>(null);
   const [view, setView] = useState<SettingsView | null>(null);
@@ -309,10 +309,10 @@ function BloomClientCard({ inst }: { inst: Instance }) {
   return (
     <Card className="overflow-hidden">
       <div className="relative h-24 overflow-hidden" style={{ background: "radial-gradient(120% 140% at 85% 0%, color-mix(in srgb, var(--bloom-accent) 55%, transparent), transparent 60%), linear-gradient(160deg, var(--raised), var(--panel))" }}>
-        <img src="/blood-mark.svg" alt="" className="absolute -right-4 -top-5 h-32 w-32 opacity-25 rotate-12" draggable={false} />
+        <img src="/motion-mark.svg" alt="" className="absolute -right-4 -top-5 h-32 w-32 opacity-25 rotate-12" draggable={false} />
         <div className="absolute left-4 bottom-3 flex items-center gap-2">
           <BloodMark size={22} />
-          <div className="font-display font-bold text-[16px] tracking-tight">BLOOD Client</div>
+          <div className="font-display font-bold text-[16px] tracking-tight">MOTION Client</div>
           {st?.enabled && <Badge tone="accent">v{st.installedVersion}</Badge>}
         </div>
       </div>
@@ -322,7 +322,7 @@ function BloomClientCard({ inst }: { inst: Instance }) {
         ) : st.enabled ? (
           <>
             <div className="text-[13px] text-muted leading-relaxed">
-              Press <Kbd>Right Shift</Kbd> in game for the BLOOD menu and HUD editor.
+              Press <Kbd>Right Shift</Kbd> in game for the MOTION menu and HUD editor.
               {profile && (
                 <>
                   {" "}Look: <span className="text-fg">{profile.name}</span>.
@@ -348,7 +348,7 @@ function BloomClientCard({ inst }: { inst: Instance }) {
             )}
             <div className="grid grid-cols-2 gap-2 mt-3">
               <Button variant="primary" icon={<Icon.Hud size={15} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
-                BLOOD Mods
+                MOTION Mods
               </Button>
               <Button icon={<Icon.Paint size={15} />} onClick={() => navigate({ page: "customize", instanceId: inst.id })}>
                 Visuals
@@ -388,7 +388,7 @@ function ModsOverview({ inst }: { inst: Instance }) {
   if (inst.loader === "vanilla") {
     return (
       <Card className="p-4">
-        <div className="text-[13px] text-muted leading-relaxed">This is a vanilla installation, so it has no mods. Create a Fabric installation to use performance mods and BLOOD Client.</div>
+        <div className="text-[13px] text-muted leading-relaxed">This is a vanilla installation, so it has no mods. Create a Fabric installation to use performance mods and MOTION Client.</div>
         <Button size="sm" className="mt-3" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>
           See options
         </Button>
@@ -468,7 +468,7 @@ function LauncherStatus() {
         {u.status === "checking" || u.status === "downloading" || u.status === "installing" ? <Spinner size={15} /> : <Icon.Sync size={17} />}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-semibold">BLOOD {version ?? ""}</div>
+        <div className="text-[13px] font-semibold">MOTION {version ?? ""}</div>
         <div className={cx("text-[12px] truncate", u.status === "ready" || u.status === "available" ? "text-accent" : "text-faint")} title={label}>
           {label}
         </div>
@@ -488,7 +488,7 @@ function LauncherStatus() {
 
 function QuickAccess({ inst }: { inst?: Instance }) {
   const tiles: { icon: ReactNode; label: string; hint: string; go: () => void }[] = [
-    { icon: <Icon.Hud size={18} />, label: "BLOOD Mods", hint: "HUD & modules", go: () => navigate({ page: "mods", instanceId: inst?.id }) },
+    { icon: <Icon.Hud size={18} />, label: "MOTION Mods", hint: "HUD & modules", go: () => navigate({ page: "mods", instanceId: inst?.id }) },
     { icon: <Icon.Gauge size={18} />, label: "Optimize", hint: "FPS & memory", go: () => navigate({ page: "performance", instanceId: inst?.id }) },
     { icon: <Icon.User size={18} />, label: "Accounts", hint: "Microsoft sign-in", go: () => navigate({ page: "accounts" }) },
     { icon: <Icon.Settings size={18} />, label: "Settings", hint: "Launcher & Java", go: () => navigate({ page: "settings" }) },
@@ -546,7 +546,7 @@ function Recommendations({ inst }: { inst: Instance }) {
   } else if (mods && !mods.includes("sodium") && !mods.includes("embeddium")) {
     tips.push({
       title: "Sodium isn't installed",
-      body: "A modern rendering engine is usually the single biggest frame-rate improvement. BLOOD checks Modrinth for a compatible version.",
+      body: "A modern rendering engine is usually the single biggest frame-rate improvement. MOTION checks Modrinth for a compatible version.",
       action: { label: "See performance mods", run: () => navigate({ page: "performance", instanceId: inst.id }) },
     });
   }
@@ -597,7 +597,7 @@ function Announcements() {
   if (!enabled || items.length === 0) return null;
   return (
     <section>
-      <SectionTitle>From BLOOD</SectionTitle>
+      <SectionTitle>From MOTION</SectionTitle>
       <div className="space-y-2.5">
         {items.slice(0, 3).map((a) => (
           <Card key={a.id} className="p-4">
@@ -688,9 +688,9 @@ export function HomePage() {
           <HomeTopBar />
           <div className="flex-1" />
           <h1 className="font-display text-[46px] font-bold tracking-tight leading-tight">
-            Welcome to <span className="text-gradient">BLOOD</span>
+            Welcome to <span className="text-gradient">MOTION</span>
           </h1>
-          <p className="text-fg/80 mt-2 max-w-xl">Create an installation to get started. Pick a Minecraft version and a loader — Fabric is recommended for BLOOD Client and performance mods. BLOOD downloads the game and the right Java for you.</p>
+          <p className="text-fg/80 mt-2 max-w-xl">Create an installation to get started. Pick a Minecraft version and a loader — Fabric is recommended for MOTION Client and performance mods. MOTION downloads the game and the right Java for you.</p>
           <div className="mt-6">
             <Button variant="primary" size="lg" icon={<Icon.Plus size={18} />} onClick={() => setCreating(true)}>
               New installation
@@ -752,7 +752,7 @@ export function HomePage() {
             </SectionTitle>
             {inst ? <Recommendations inst={inst} /> : <div className="text-muted text-[13px]">Create an installation to see tips.</div>}
             <p className="text-[12px] text-faint mt-4 leading-relaxed">
-              BLOOD never promises a specific frame rate. Real-world FPS depends on your hardware, settings, world and installed mods.
+              MOTION never promises a specific frame rate. Real-world FPS depends on your hardware, settings, world and installed mods.
             </p>
           </section>
           <UpgradeCard />

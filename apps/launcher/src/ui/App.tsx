@@ -22,6 +22,7 @@ import { PerformancePage } from "./pages/Performance";
 import { PremiumPage, PremiumWelcome } from "./pages/Premium";
 import { ProjectPage } from "./pages/Project";
 import { SettingsPage } from "./pages/Settings";
+import { SkinsPage } from "./pages/Skins";
 import { CustomizePage } from "./pages/Customize";
 import { ModsPage } from "./pages/Mods";
 import { Backdrop, useCustomBackground } from "./backdrop";
@@ -62,6 +63,18 @@ function startServices() {
 /** Files dropped on the window: modpacks become installations, everything else goes into the current installation. */
 async function handleDrop(paths: string[]) {
   try {
+    // On My Skin, dropped PNGs are skins.
+    if (app.get().route.page === "skins") {
+      const pngs = paths.filter((p) => p.toLowerCase().endsWith(".png"));
+      if (!pngs.length) {
+        toast({ kind: "info", title: "Drop PNG skins", message: "Minecraft skins are 64×64 PNG files." });
+        return;
+      }
+      const { addSkinFiles } = await import("../services/skins");
+      const added = await addSkinFiles(pngs);
+      toast({ kind: "success", title: added.length === 1 ? "Skin added" : `${added.length} skins added`, message: "They're in your skin library." });
+      return;
+    }
     const packs = paths.filter((p) => p.toLowerCase().endsWith(".mrpack"));
     for (const pack of packs) await importModpackFile(pack);
     const rest = paths.filter((p) => !packs.includes(p));
@@ -70,7 +83,7 @@ async function handleDrop(paths: string[]) {
     const route = app.get().route;
     const inst = (route.page === "instance" ? getInstance(route.id) : undefined) ?? selectedInstance();
     if (!inst) {
-      toast({ kind: "info", title: "Create an installation first", message: "Then drop mods or packs onto BLOOD to add them." });
+      toast({ kind: "info", title: "Create an installation first", message: "Then drop mods or packs onto MOTION to add them." });
       return;
     }
     const jars = rest.filter((p) => p.toLowerCase().endsWith(".jar"));
@@ -87,7 +100,7 @@ async function handleDrop(paths: string[]) {
     }
     if (resourcepacks.length) await importContent(inst, "resourcepacks", resourcepacks);
     if (shaderpacks.length) await importContent(inst, "shaderpacks", shaderpacks);
-    if (other) toast({ kind: "warning", title: `${other} file${other === 1 ? "" : "s"} skipped`, message: `BLOOD accepts .jar mods, .zip packs and .mrpack modpacks (${rest.filter((p) => !/\.(jar|zip)$/i.test(p)).map(basename).slice(0, 3).join(", ")}).` });
+    if (other) toast({ kind: "warning", title: `${other} file${other === 1 ? "" : "s"} skipped`, message: `MOTION accepts .jar mods, .zip packs and .mrpack modpacks (${rest.filter((p) => !/\.(jar|zip)$/i.test(p)).map(basename).slice(0, 3).join(", ")}).` });
     navigate({ page: "instance", id: inst.id, tab: jars.length ? "content" : shaderpacks.length ? "shaderpacks" : "resourcepacks" });
     bumpContent();
   } catch (e) {
@@ -120,10 +133,12 @@ function Router() {
       return <CustomizePage instanceId={route.instanceId} />;
     case "mods":
       return <ModsPage instanceId={route.instanceId} category={route.category} />;
+    case "skins":
+      return <SkinsPage />;
   }
 }
 
-/** Loading screen: the theme's art behind the mark, wordmark and a thin crimson loading bar. */
+/** Loading screen: the theme's art behind the mark, wordmark and a thin accent-coloured loading bar. */
 function splashBackgroundPath(): string | null {
   try {
     return localStorage.getItem("blood.splashBg");
@@ -133,7 +148,7 @@ function splashBackgroundPath(): string | null {
 }
 
 function Splash({ error, onRetry }: { error?: string | null; onRetry?: () => void }) {
-  const theme = document.documentElement.dataset.theme || "crimson";
+  const theme = document.documentElement.dataset.theme || "motion";
   const custom = useCustomBackground(splashBackgroundPath());
   return (
     <div className="relative h-full overflow-hidden">
@@ -161,7 +176,7 @@ function Splash({ error, onRetry }: { error?: string | null; onRetry?: () => voi
                 <div className="h-full w-2/5 rounded-full bg-accent" style={{ animation: "bloom-indeterminate 1.1s ease-in-out infinite" }} />
               </div>
               <div className="flex items-center gap-2 text-muted mt-3 text-[12.5px] tracking-wide">
-                <Spinner size={12} /> Starting BLOOD…
+                <Spinner size={12} /> Starting MOTION…
               </div>
             </>
           )}

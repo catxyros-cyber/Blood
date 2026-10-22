@@ -31,7 +31,7 @@ pub struct LaunchRequest {
     cwd: String,
     #[serde(default)]
     env: HashMap<String, String>,
-    /// Where to write the raw game output (inside BLOOD's data dir).
+    /// Where to write the raw game output (inside MOTION's data dir).
     log_file: String,
 }
 
@@ -258,7 +258,7 @@ pub struct JavaToolResult {
 }
 
 /// Run a short-lived Java program to completion — used for Forge/NeoForge
-/// installer processors. The jars must live in BLOOD's own library cache, the
+/// installer processors. The jars must live in MOTION's own library cache, the
 /// process gets no console window, and it is killed on cancel or after 20 minutes.
 #[tauri::command]
 pub async fn run_java_tool(state: State<'_, AppState>, req: JavaToolRequest) -> Result<JavaToolResult> {

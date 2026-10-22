@@ -21,9 +21,10 @@ import { createStore } from "./store";
 
 export type OverlayCorner = "TOP_LEFT" | "TOP_RIGHT" | "BOTTOM_LEFT" | "BOTTOM_RIGHT";
 
-export type ThemeId = "crimson" | "obsidian" | "ash" | "ember" | "mono";
+export type ThemeId = "motion" | "crimson" | "obsidian" | "ash" | "ember" | "mono";
 export const THEMES: { id: ThemeId; name: string; accent: string; description: string }[] = [
-  { id: "crimson", name: "Crimson", accent: "#e3192f", description: "BLOOD's signature: deep crimson on warm black." },
+  { id: "motion", name: "Motion", accent: "#39ff88", description: "MOTION's signature: electric green on deep black." },
+  { id: "crimson", name: "Crimson", accent: "#e3192f", description: "The original BLOOD look: deep crimson on warm black." },
   { id: "obsidian", name: "Obsidian", accent: "#ff1f3d", description: "Pure black surfaces for OLED screens, with a hotter red." },
   { id: "ash", name: "Ash", accent: "#dc2f3c", description: "Neutral charcoal and grey with crimson highlights." },
   { id: "ember", name: "Ember", accent: "#ff4a1f", description: "Warmer, red-orange accents on smoky black." },
@@ -33,7 +34,7 @@ export const THEMES: { id: ThemeId; name: string; accent: string; description: s
 export interface BackgroundSettings {
   /** "theme": the theme's built-in art; "custom": the user's image; "none": plain colour. */
   mode: "theme" | "custom" | "none";
-  /** Path of the user's image, copied into BLOOD's data folder. */
+  /** Path of the user's image, copied into MOTION's data folder. */
   custom: string | null;
   /** 0..0.9 — how much the art is darkened behind pages other than Home. */
   dim: number;
@@ -42,6 +43,8 @@ export interface BackgroundSettings {
 }
 
 export interface Settings {
+  /** Set once the one-time MOTION MOTION rebrand migration ran. */
+  brand?: "motion";
   theme: ThemeId;
   /** Used only when accentFromTheme is false. */
   accent: string;
@@ -73,19 +76,19 @@ export interface Settings {
   msClientId: string;
   /** Show Mojang's patch notes on Home (contacts launchercontent.mojang.com). */
   news: boolean;
-  /** Show BLOOD announcements (contacts the BLOOD API). */
+  /** Show MOTION announcements (contacts the MOTION API). */
   announcements: boolean;
   /** Premium: keep settings and installation profiles in sync across PCs. */
   cloudSync: boolean;
-  /** Where new installations' game folders go (null = inside BLOOD's data folder). */
+  /** Where new installations' game folders go (null = inside MOTION's data folder). */
   defaultGameRoot: string | null;
   selectedInstanceId: string | null;
   activeAccountId: string | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: "crimson",
-  accent: "#e3192f",
+  theme: "motion",
+  accent: "#39ff88",
   accentFromTheme: true,
   accentIntensity: 70,
   background: { mode: "theme", custom: null, dim: 0.78, blur: 12 },
@@ -187,7 +190,7 @@ export interface SessionSummary {
 }
 
 export interface PremiumState {
-  /** False when this build has no BLOOD API URL (online features unavailable). */
+  /** False when this build has no MOTION API URL (online features unavailable). */
   configured: boolean;
   status: "signed_out" | "connecting" | "ready" | "error";
   user?: PublicUser;
@@ -233,6 +236,7 @@ export type Route =
   | { page: "premium" }
   | { page: "settings"; section?: string }
   | { page: "customize"; instanceId?: string }
+  | { page: "skins" }
   | { page: "mods"; instanceId?: string; category?: ModCategory };
 
 export type ModCategory = "all" | "hud" | "performance" | "visuals" | "utility";
@@ -277,7 +281,7 @@ export const app = createStore<AppState>({
 
 let platform: Platform | null = null;
 export function P(): Platform {
-  if (!platform) throw new Error("BLOOD is still starting");
+  if (!platform) throw new Error("MOTION is still starting");
   return platform;
 }
 export function L(): Layout {
@@ -316,10 +320,10 @@ const FRIENDLY: Record<string, string> = {
   offline: "You appear to be offline. Check your internet connection.",
   timeout: "The server took too long to respond. Try again.",
   disk_full: "Your disk is full. Free up some space and try again.",
-  hash_mismatch: "A downloaded file was corrupted. Try again — BLOOD will re-download it.",
+  hash_mismatch: "A downloaded file was corrupted. Try again — MOTION will re-download it.",
   java_missing: "Java could not be found. Check the Java setting for this installation.",
   permission_denied: "Windows denied access to a file. Close Minecraft and any program using the folder, then try again.",
-  host_not_allowed: "BLOOD blocked a download from an unexpected website.",
+  host_not_allowed: "MOTION blocked a download from an unexpected website.",
 };
 
 export function reportError(title: string, e: unknown) {
@@ -414,14 +418,21 @@ export function applyTheme(s: Settings) {
 
 /** The accent currently in effect (theme accent unless a custom one is chosen). */
 export function effectiveAccent(s: Settings): string {
-  return s.accentFromTheme ? (THEMES.find((t) => t.id === s.theme)?.accent ?? "#e3192f") : s.accent;
+  return s.accentFromTheme ? (THEMES.find((t) => t.id === s.theme)?.accent ?? "#39ff88") : s.accent;
 }
 
 /** Settings from older builds (Bloom's cherry/forest/lavender/ocean themes, graphite/midnight/oled before that). */
-export function migrateSettings(stored: Partial<Settings> & { theme?: string }): Partial<Settings> {
+export function migrateSettings(stored: Partial<Settings> & { theme?: string }, opts: { rebrand?: boolean } = {}): Partial<Settings> {
   const out = { ...stored } as Partial<Settings>;
   const legacy: Record<string, ThemeId> = { oled: "obsidian", midnight: "obsidian", graphite: "ash", forest: "ash", ocean: "obsidian" };
-  if (stored.theme && !THEMES.some((t) => t.id === stored.theme)) out.theme = legacy[stored.theme] ?? "crimson";
+  if (stored.theme && !THEMES.some((t) => t.id === stored.theme)) out.theme = legacy[stored.theme] ?? "motion";
+  // The MOTION MOTION rebrand: move everyone onto the new black + green look once. Players can
+  // switch back to Crimson (or any theme) in Settings → Appearance afterwards.
+  if (opts.rebrand && !stored.brand) {
+    out.theme = "motion";
+    out.accentFromTheme = true;
+    out.brand = "motion";
+  }
   if (stored.accentFromTheme === undefined && stored.accent) {
     // Keep a deliberately chosen accent; the old default green follows the new theme instead.
     out.accentFromTheme = stored.accent.toLowerCase() === "#4ade80";
@@ -442,7 +453,7 @@ export async function boot(loadInstances: () => Promise<Instance[]>) {
   try {
     const paths = await native.appPaths();
     platform = createPlatform(paths);
-    const stored = migrateSettings(await readJson<Partial<Settings>>(settingsPath(), {}));
+    const stored = migrateSettings(await readJson<Partial<Settings>>(settingsPath(), {}), { rebrand: true });
     const settings: Settings = {
       ...DEFAULT_SETTINGS,
       ...stored,

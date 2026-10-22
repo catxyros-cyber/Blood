@@ -16,7 +16,7 @@ export async function confirmDelete(inst: Instance) {
   const ok = await confirm({
     title: `Delete ${inst.name}?`,
     message: inst.gameDir ? (
-      <>BLOOD forgets this installation. Its custom game folder ({inst.gameDir}) is left untouched.</>
+      <>MOTION forgets this installation. Its custom game folder ({inst.gameDir}) is left untouched.</>
     ) : (
       <>The installation folder — including its worlds, mods and screenshots — is moved to the Recycle Bin, so you can still restore it.</>
     ),

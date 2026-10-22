@@ -25,7 +25,7 @@ export interface LaunchContext {
   loggingConfigPath?: string;
   memory: { minMb: number; maxMb: number };
   extraJvmArgs: string[];
-  /** Java system properties set by BLOOD itself (e.g. the BLOOD server address for the client mod). */
+  /** Java system properties set by MOTION itself (e.g. the MOTION server address for the client mod). */
   systemProps?: Record<string, string>;
   extraGameArgs: string[];
   resolution?: { width: number; height: number };
@@ -55,7 +55,7 @@ function expand(values: ArgumentValue[] | undefined, env: RuleEnv): string[] {
   return out;
 }
 
-/** Strip the `-Xmx`/`-Xms` and classpath flags BLOOD manages itself out of user-provided args. */
+/** Strip the `-Xmx`/`-Xms` and classpath flags MOTION manages itself out of user-provided args. */
 function sanitizeUserJvmArgs(args: string[]): string[] {
   return args.filter((a) => !/^-Xm[sx]/i.test(a) && a !== "-cp" && a !== "-classpath");
 }

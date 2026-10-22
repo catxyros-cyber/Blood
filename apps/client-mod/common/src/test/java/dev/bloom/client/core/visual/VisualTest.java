@@ -150,7 +150,7 @@ public class VisualTest {
                 for (String sm : samplers) assertTrue(fsh.contains("uniform sampler2D " + sm));
             }
         }
-        // Everything BLOOD sets each frame exists in the grade program.
+        // Everything MOTION sets each frame exists in the grade program.
         JsonObject grade = json(programs.resolve("bloodclient_grade_glow.json"));
         Set<String> declared = new HashSet<>();
         for (JsonElement u : grade.getAsJsonArray("uniforms")) declared.add(u.getAsJsonObject().get("name").getAsString());
@@ -193,7 +193,7 @@ public class VisualTest {
         }
         assertEquals("Blood Red", byId.get("blood_moon").name());
         assertEquals("Clean PvP", byId.get("competitive").name());
-        // Vanilla really turns BLOOD's world visuals off.
+        // Vanilla really turns MOTION's world visuals off.
         JsonObject van = byId.get("vanilla").values();
         for (String k : List.of("post.enabled", "sky.enabled", "world.fogEnabled", "petals.enabled", "rain.enabled", "outline.enabled")) {
             assertFalse(k, van.get(k).getAsBoolean());

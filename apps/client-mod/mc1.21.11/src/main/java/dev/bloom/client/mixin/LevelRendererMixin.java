@@ -33,7 +33,7 @@ public abstract class LevelRendererMixin {
         if (BloomClient.ready()) BloomClient.get().onResourcesReloaded();
     }
 
-    /** End of the sky pass (Minecraft's sky is drawn): BLOOD's skyboxes, stars and glow on top. */
+    /** End of the sky pass (Minecraft's sky is drawn): MOTION's skyboxes, stars and glow on top. */
     @Inject(method = "method_62215(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/SkyRenderState;Lnet/minecraft/client/renderer/SkyRenderer;)V",
             at = @At("TAIL"))
     private static void bloom$sky(CallbackInfo ci) {

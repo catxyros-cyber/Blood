@@ -25,7 +25,7 @@ export interface HttpResponse {
 
 export interface DownloadItem {
   url: string;
-  /** Absolute path inside BLOOD's data dir (or an allowed game directory). */
+  /** Absolute path inside MOTION's data dir (or an allowed game directory). */
   path: string;
   sha1?: string;
   sha512?: string;

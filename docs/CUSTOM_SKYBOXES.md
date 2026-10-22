@@ -1,6 +1,6 @@
 # Custom skyboxes
 
-BLOOD Client draws skyboxes as a **cube**: six square faces packed into one PNG in a 3×2
+MOTION Client draws skyboxes as a **cube**: six square faces packed into one PNG in a 3×2
 grid. This is the same layout OptiFine/MCPatcher sky layers and FabricSkyBoxes'
 "square-textured" skies use:
 
@@ -22,12 +22,12 @@ grid. This is the same layout OptiFine/MCPatcher sky layers and FabricSkyBoxes'
 1. **In game.** Open **Right Shift → Skyboxes → Import…** and pick a PNG, or drop the file onto the menu.
 2. **In the launcher.** Use **Customize → Skybox → Import image**. It checks the size first and then copies the file into the installation's `config/bloomclient/skyboxes/`.
 3. **OptiFine sky pack.** In game, use **Skyboxes → Import OptiFine pack** and choose a resource-pack `.zip` or folder.
-   - **What's read:** BLOOD reads `assets/minecraft/optifine/sky/world0/sky*.properties` (and the older `mcpatcher/` path). Each layer becomes one skybox, with blend mode, rotation, speed and axis.
+   - **What's read:** MOTION reads `assets/minecraft/optifine/sky/world0/sky*.properties` (and the older `mcpatcher/` path). Each layer becomes one skybox, with blend mode, rotation, speed and axis.
    - **Day or night:** fade times decide whether a layer is suggested for day or night.
    - **Not supported:** `weathers`, `biomes`, `heights` and `transition`. The import tells you which options were ignored.
    - **Only text and PNG are read:** nothing in a pack is run.
 
-You can also drop PNGs straight into `config/bloomclient/skyboxes/`. BLOOD picks them up the next time the folder is scanned (at start-up and after an import). Files with the wrong size are skipped with a log message and left untouched.
+You can also drop PNGs straight into `config/bloomclient/skyboxes/`. MOTION picks them up the next time the folder is scanned (at start-up and after an import). Files with the wrong size are skipped with a log message and left untouched.
 
 ## Optional settings file
 
@@ -58,7 +58,7 @@ Next to `my_sky.png` you can put `my_sky.json`:
 ## Day, night and the crossfade
 
 - **Choosing skyboxes.** Pick a **Daytime skybox** and a **Night skybox**. If both are the same, one skybox is shown all day.
-- **Daylight.** BLOOD follows the vanilla daylight curve: `cos(time) * 2 + 0.5`, clamped to 0–1.
+- **Daylight.** MOTION follows the vanilla daylight curve: `cos(time) * 2 + 0.5`, clamped to 0–1.
 - **Transition intensity.** This slider narrows or widens the smoothstep window around sunrise and sunset. 0% gives long, gentle transitions; 100% switches quickly.
 - **How the blend works.**
   - The night skybox is drawn first and the day skybox on top.
@@ -68,5 +68,5 @@ Next to `my_sky.png` you can put `my_sky.json`:
 
 ## Shaders and other sky mods
 
-- **Shader packs.** While an Iris shader pack is active, the shader draws its own sky, so BLOOD pauses its skybox, sky tint and fog. You can override this under **Skyboxes → Compatibility → Use with shader packs**, but expect odd results with some packs.
-- **Other sky mods.** If FabricSkyBoxes or Nuit has a skybox active, it replaces BLOOD's. Disable one of them.
+- **Shader packs.** While an Iris shader pack is active, the shader draws its own sky, so MOTION pauses its skybox, sky tint and fog. You can override this under **Skyboxes → Compatibility → Use with shader packs**, but expect odd results with some packs.
+- **Other sky mods.** If FabricSkyBoxes or Nuit has a skybox active, it replaces MOTION's. Disable one of them.

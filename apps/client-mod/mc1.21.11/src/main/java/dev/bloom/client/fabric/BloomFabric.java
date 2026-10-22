@@ -9,6 +9,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
@@ -44,6 +45,14 @@ public final class BloomFabric implements ClientModInitializer {
         });
         for (KeyMapping key : BloomKeys.ALL) KeyBindingHelper.registerKeyBinding(key);
         ClientTickEvents.END_CLIENT_TICK.register(client -> BloomClient.get().tick(client));
+        // MOTION wings on every player model (players and mannequins).
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, context) -> {
+            if (renderer instanceof net.minecraft.client.renderer.entity.player.AvatarRenderer<?> avatar) {
+                @SuppressWarnings("unchecked")
+                var parent = (net.minecraft.client.renderer.entity.RenderLayerParent<net.minecraft.client.renderer.entity.state.AvatarRenderState, net.minecraft.client.model.player.PlayerModel>) (Object) avatar;
+                helper.register(new dev.bloom.client.render.WingsLayer(parent));
+            }
+        });
         HudRenderCallback.EVENT.register((graphics, delta) -> BloomClient.get().renderHud(graphics, delta));
         WorldRenderEvents.END_MAIN.register(context -> {
             Minecraft mc = Minecraft.getInstance();
@@ -53,7 +62,7 @@ public final class BloomFabric implements ClientModInitializer {
         WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {
             if (!BloomClient.ready()) return true;
             try {
-                // Returning false skips Minecraft's outline because BLOOD drew its own.
+                // Returning false skips Minecraft's outline because MOTION drew its own.
                 return !OutlineRenderer.render(Minecraft.getInstance().gameRenderer.getMainCamera(), WorldMatrices.MODEL_VIEW);
             } catch (RuntimeException e) {
                 BloomClient.reportRenderError("block outline", e);

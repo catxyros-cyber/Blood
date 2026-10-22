@@ -1,7 +1,7 @@
 /**
  * Premium license keys.
  *
- * A key (BLOOD-XXXXX-XXXXX-XXXXX-XXXXX) is redeemed on the dashboard. The server binds it to the
+ * A key (MOTION-XXXXX-XXXXX-XXXXX-XXXXX) is redeemed on the dashboard. The server binds it to the
  * first PC that redeems it, using a SHA-256 of this PC's machine id (the id itself never leaves
  * the PC). Only that PC gets Premium. The owner can move the key to another PC once every
  * 24 hours, so sharing a key doesn't work.
@@ -78,9 +78,9 @@ function keyProblem(code: string): LicenseState["status"] | null {
 
 /** Redeem a key on this PC. Throws with a readable message if it can't be used. */
 export async function redeemKey(input: string): Promise<LicenseState> {
-  if (!API_URL) throw new BloomError("api_unconfigured", "This build of BLOOD isn't connected to BLOOD's server, so keys can't be checked.");
+  if (!API_URL) throw new BloomError("api_unconfigured", "This build of MOTION isn't connected to MOTION's server, so keys can't be checked.");
   const norm = normalizeKey(input);
-  if (!norm) throw new BloomError("invalid_key", "That doesn't look like a BLOOD key. Keys look like BLOOD-XXXXX-XXXXX-XXXXX-XXXXX.");
+  if (!norm) throw new BloomError("invalid_key", "That doesn't look like a MOTION key. Keys look like MOTION-XXXXX-XXXXX-XXXXX-XXXXX.");
   const key = formatKey(norm);
   const st = await call("/v1/license/activate", key);
   // Keep the key even when it's active elsewhere, so the player can move it here later.
@@ -114,7 +114,7 @@ export async function checkLicense(): Promise<void> {
   const prev = app.get().premium.license;
   if (!prev || prev.status === "none") setLicense({ status: "checking", hint: normalizeKey(key)?.slice(-5) });
   if (!API_URL) {
-    setLicense({ status: "error", error: "This build isn't connected to BLOOD's server." });
+    setLicense({ status: "error", error: "This build isn't connected to MOTION's server." });
     return;
   }
   try {

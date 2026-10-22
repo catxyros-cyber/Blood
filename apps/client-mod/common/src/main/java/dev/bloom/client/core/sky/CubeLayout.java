@@ -2,7 +2,7 @@ package dev.bloom.client.core.sky;
 
 /**
  * The 3×2 skybox atlas used by OptiFine/MCPatcher sky layers (and FabricSkyBoxes'
- * "square-textured" skyboxes), which BLOOD uses too:
+ * "square-textured" skyboxes), which MOTION uses too:
  *
  * <pre>
  *   +--------+--------+--------+

@@ -1,4 +1,4 @@
-//! A stable, anonymous id for this PC, used to bind a BLOOD Premium key to one computer.
+//! A stable, anonymous id for this PC, used to bind a MOTION Premium key to one computer.
 //!
 //! Windows: the `MachineGuid` that Windows creates at install time. Only a SHA-256 of it ever
 //! leaves the PC, so the real id is never sent anywhere. Reinstalling Windows changes it (the

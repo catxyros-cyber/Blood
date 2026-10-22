@@ -1,10 +1,10 @@
 /**
- * BLOOD Mods: everything the BLOOD Mods page can switch on and off, with where each switch
+ * MOTION Mods: everything the MOTION Mods page can switch on and off, with where each switch
  * actually lives. Nothing here is decorative — every module maps to one of:
  *
- *  - "hud":     a BLOOD Client HUD widget (visibility + options in the active HUD layout,
+ *  - "hud":     a MOTION Client HUD widget (visibility + options in the active HUD layout,
  *               stored in the "hud" block of config/bloomclient/settings.json)
- *  - "setting": a BLOOD Client setting key in the same file (e.g. the custom crosshair)
+ *  - "setting": a MOTION Client setting key in the same file (e.g. the custom crosshair)
  *  - "perf":    a performance mod from Modrinth (installed / enabled / disabled as a file)
  *  - "vanilla": a Minecraft option in options.txt (e.g. Toggle Sprint)
  *
@@ -173,7 +173,7 @@ export const MODULES: ModuleInfo[] = [
   {
     id: "visual.sky",
     name: "Custom skybox",
-    description: "BLOOD Client's skyboxes (pick one on the Visuals page). Off shows the vanilla sky.",
+    description: "MOTION Client's skyboxes (pick one on the Visuals page). Off shows the vanilla sky.",
     category: "visuals",
     kind: "setting",
     setting: { keys: ["sky.enabled"], on: true, off: false, default: true },
@@ -211,7 +211,7 @@ export const MODULES: ModuleInfo[] = [
   {
     id: "util.hidef3",
     name: "Hide HUD with F3",
-    description: "Hide BLOOD widgets while the F3 debug screen is open.",
+    description: "Hide MOTION widgets while the F3 debug screen is open.",
     category: "utility",
     kind: "setting",
     setting: { keys: ["hud.hideWithDebug"], on: true, off: false, default: true },
@@ -337,7 +337,7 @@ export interface ModPreset {
   description: string;
   hud: HudPatch;
   settings: Record<string, string | number | boolean>;
-  /** BLOOD Client visual profile to select. */
+  /** MOTION Client visual profile to select. */
   profile?: string;
   /** Performance mods to install (Modrinth slugs), when compatible. */
   perfMods?: string[];
@@ -347,7 +347,7 @@ export const MOD_PRESETS: ModPreset[] = [
   {
     id: "performance",
     name: "Performance",
-    description: "Installs the core performance mods, keeps only an FPS counter and switches BLOOD Client to its Clean PvP look (no decorative particles or skybox).",
+    description: "Installs the core performance mods, keeps only an FPS counter and switches MOTION Client to its Clean PvP look (no decorative particles or skybox).",
     hud: { hideOthers: true, widgets: { fps: { visible: true, anchor: "top_left", x: 4, y: 4, options: { colorCoded: true } } } },
     settings: { "hud.enabled": true },
     profile: "competitive",

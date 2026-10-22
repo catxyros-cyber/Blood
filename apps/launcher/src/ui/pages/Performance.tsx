@@ -27,7 +27,7 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
   if (!inst) {
     return (
       <div className="animate-in">
-        <PageHeader title="BLOOD Performance" subtitle="Reversible optimizations, measured statistics." />
+        <PageHeader title="MOTION Performance" subtitle="Reversible optimizations, measured statistics." />
         <Card>
           <EmptyState icon={<Icon.Gauge size={24} />} title="Create an installation first" action={<Button onClick={() => navigate({ page: "library" })}>Go to Library</Button>}>
             Performance tools work per installation.
@@ -40,7 +40,7 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
   return (
     <div className="animate-in">
       <PageHeader
-        title="BLOOD Performance"
+        title="MOTION Performance"
         subtitle="Reversible optimizations and measured statistics — no guesses."
         actions={
           <Select
@@ -53,7 +53,7 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
       />
       <div className="mb-6">
         <Callout tone="info">
-          Real-world FPS depends on your hardware, game settings, the world you're in and the mods you install. BLOOD never claims an FPS gain it hasn't measured, and every change it makes can be undone.
+          Real-world FPS depends on your hardware, game settings, the world you're in and the mods you install. MOTION never claims an FPS gain it hasn't measured, and every change it makes can be undone.
         </Callout>
       </div>
       <div className="grid grid-cols-[1fr_340px] gap-6 items-start">
@@ -150,14 +150,14 @@ function Presets({ inst }: { inst: Instance }) {
           </Card>
         ) : (
           <PremiumLock title="Custom preset editor" compact>
-            Fine-tune every video setting BLOOD manages, with the same automatic backups.
+            Fine-tune every video setting MOTION manages, with the same automatic backups.
           </PremiumLock>
         )}
       </div>
       <CustomEditor inst={inst} open={custom} onClose={() => setCustom(false)} onApply={(v) => void apply("custom", v).then(() => setCustom(false))} />
       <Modal open={Boolean(result)} onClose={() => setResult(null)} title={`${result?.name} applied`} width={520} footer={<Button variant="primary" onClick={() => setResult(null)}>Done</Button>}>
         {result?.pending ? (
-          <p className="text-muted">This installation hasn't been started yet, so Minecraft hasn't created its settings file. BLOOD will apply the preset automatically after the first launch.</p>
+          <p className="text-muted">This installation hasn't been started yet, so Minecraft hasn't created its settings file. MOTION will apply the preset automatically after the first launch.</p>
         ) : result && result.changes.length === 0 ? (
           <p className="text-muted">Your settings already matched this preset — nothing changed.</p>
         ) : (
@@ -388,7 +388,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
             </Button>
           }
         >
-          This installation is vanilla. BLOOD can create a Fabric installation of Minecraft {inst.gameVersion} next to it, so you can add Sodium and friends without touching this one.
+          This installation is vanilla. MOTION can create a Fabric installation of Minecraft {inst.gameVersion} next to it, so you can add Sodium and friends without touching this one.
         </Callout>
       ) : (
         <>
@@ -570,7 +570,7 @@ function Monitor({ inst }: { inst: Instance }) {
           <Card className="p-4 flex items-start gap-3">
             <Icon.Monitor size={18} className="text-muted mt-0.5" />
             <div className="text-[13px] text-muted leading-relaxed">
-              <span className="text-fg font-medium">FPS and frame times</span> are only known inside the game. Minecraft doesn't report them to launchers, so BLOOD shows them through the in-game overlay below (or press F3).
+              <span className="text-fg font-medium">FPS and frame times</span> are only known inside the game. Minecraft doesn't report them to launchers, so MOTION shows them through the in-game overlay below (or press F3).
             </div>
           </Card>
         </div>
@@ -596,7 +596,7 @@ function Overlay({ inst }: { inst: Instance }) {
       <SectionTitle>In-game FPS overlay</SectionTitle>
       <Card className="p-5 space-y-4">
         <p className="text-[13px] text-muted leading-relaxed">
-          BLOOD doesn't draw over your game. The overlay comes from the <span className="text-fg">Sodium Extra</span> mod, which shows current and average FPS, frame-time extremes and memory inside Minecraft. BLOOD writes its overlay options before each launch.
+          MOTION doesn't draw over your game. The overlay comes from the <span className="text-fg">Sodium Extra</span> mod, which shows current and average FPS, frame-time extremes and memory inside Minecraft. MOTION writes its overlay options before each launch.
         </p>
         {!supported ? (
           <Callout tone="info">The overlay needs a Fabric, Quilt or NeoForge installation with Sodium.</Callout>
@@ -612,7 +612,7 @@ function Overlay({ inst }: { inst: Instance }) {
               </Button>
             }
           >
-            {hasSodium ? "BLOOD will show you what it installs before downloading." : "It also needs Sodium, which BLOOD installs with it after showing you the list."}
+            {hasSodium ? "MOTION will show you what it installs before downloading." : "It also needs Sodium, which MOTION installs with it after showing you the list."}
           </Callout>
         ) : null}
         <div className={cx("space-y-4", (!supported || !hasExtra) && "opacity-50 pointer-events-none")}>
@@ -664,7 +664,7 @@ function Backups({ inst }: { inst: Instance }) {
   async function restore(b: BackupInfo) {
     const ok = await confirm({
       title: "Restore this backup?",
-      message: `Your options.txt and BLOOD's performance settings go back to how they were on ${new Date(b.at).toLocaleString()}. The current state is backed up first.`,
+      message: `Your options.txt and MOTION's performance settings go back to how they were on ${new Date(b.at).toLocaleString()}. The current state is backed up first.`,
       confirmLabel: "Restore",
     });
     if (!ok) return;
@@ -699,7 +699,7 @@ function Backups({ inst }: { inst: Instance }) {
       {!list ? (
         <Skeleton className="h-16" />
       ) : list.length === 0 ? (
-        <div className="text-[13px] text-muted">No backups yet. BLOOD makes one automatically before every preset.</div>
+        <div className="text-[13px] text-muted">No backups yet. MOTION makes one automatically before every preset.</div>
       ) : (
         <div className="space-y-1.5 max-h-72 overflow-auto -mr-2 pr-2">
           {list.slice(0, 30).map((b) => (

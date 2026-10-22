@@ -15,14 +15,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Matrix4f;
 
 /**
- * BLOOD's block outline: custom colour, opacity, thickness and an optional face tint. Edges are
+ * MOTION's block outline: custom colour, opacity, thickness and an optional face tint. Edges are
  * drawn as thin camera-facing strips (so the thickness setting works on every graphics card).
  */
 public final class OutlineRenderer {
     private OutlineRenderer() {
     }
 
-    /** Returns true when BLOOD drew the outline (vanilla's should then be skipped). */
+    /** Returns true when MOTION drew the outline (vanilla's should then be skipped). */
     public static boolean render(Camera camera, Matrix4f modelView) {
         if (!BloomSettings.ENABLED.on() || !BloomSettings.OUTLINE.on()) return false;
         Minecraft mc = Minecraft.getInstance();

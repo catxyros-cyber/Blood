@@ -1,7 +1,7 @@
 package dev.bloom.client.core.visual;
 
 /**
- * Pure decision logic for BLOOD's post-processing, kept free of Minecraft classes so it can be
+ * Pure decision logic for MOTION's post-processing, kept free of Minecraft classes so it can be
  * unit tested: which shader chain to run (if any) and the uniform values to feed it.
  */
 public final class PostParams {

@@ -9,6 +9,8 @@ public final class Theme {
     }
 
     // window, sidebar, surface, surfaceHover, surfaceActive, border, text, textDim, textFaint, accent, onAccent, warn, danger, ok
+    private static final Palette MOTION = new Palette(0xF0070A08, 0xF00B0F0D, 0xFF111713, 0xFF18211C, 0xFF203027, 0xFF263A2F,
+            0xFFF2F7F4, 0xFFA9B8B0, 0xFF6E7D75, 0xFF39FF88, 0xFF03140A, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
     private static final Palette CRIMSON = new Palette(0xF0120C0E, 0xF0181012, 0xFF1F1517, 0xFF2A1C1F, 0xFF372428, 0xFF3D2A2E,
             0xFFF6EFEF, 0xFFBCADAE, 0xFF85767A, 0xFFE3192F, 0xFFFFFFFF, 0xFFF2C46B, 0xFFFF6B6B, 0xFF8BE3A6);
     private static final Palette OBSIDIAN = new Palette(0xF2060606, 0xF20B0B0B, 0xFF121212, 0xFF1B1A1A, 0xFF252323, 0xFF2D2A2A,
@@ -46,6 +48,7 @@ public final class Theme {
     /** Unknown ids (including the old Bloom themes) fall back to Crimson. */
     public static Palette palette(String themeId) {
         return switch (themeId) {
+            case "motion" -> MOTION;
             case "obsidian" -> OBSIDIAN;
             case "ash" -> ASH;
             case "ember" -> EMBER;

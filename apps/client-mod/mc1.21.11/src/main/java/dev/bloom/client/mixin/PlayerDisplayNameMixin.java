@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** BLOOD tags: "[OWNER] name" above the player's head. Only on this client; servers never see it. */
+/** MOTION tags: "[OWNER] name" above the player's head. Only on this client; servers never see it. */
 @Mixin(Player.class)
 public abstract class PlayerDisplayNameMixin {
     @Inject(method = "getDisplayName", at = @At("RETURN"), cancellable = true)

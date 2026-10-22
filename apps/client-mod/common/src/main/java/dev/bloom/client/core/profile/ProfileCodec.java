@@ -78,15 +78,15 @@ public final class ProfileCodec {
     public static ImportResult parse(String text, Function<String, Setting> settingLookup) throws ImportException {
         if (text == null) throw new ImportException("Nothing to import.");
         String t = text.trim();
-        if (t.length() > MAX_IMPORT_BYTES * 2) throw new ImportException("That's too large to be a BLOOD profile.");
+        if (t.length() > MAX_IMPORT_BYTES * 2) throw new ImportException("That's too large to be a MOTION profile.");
         String json;
         if (t.startsWith(SHARE_PREFIX)) {
             json = decodeShareCode(t.substring(SHARE_PREFIX.length()));
         } else if (t.startsWith("{")) {
-            if (t.getBytes(StandardCharsets.UTF_8).length > MAX_IMPORT_BYTES) throw new ImportException("That's too large to be a BLOOD profile.");
+            if (t.getBytes(StandardCharsets.UTF_8).length > MAX_IMPORT_BYTES) throw new ImportException("That's too large to be a MOTION profile.");
             json = t;
         } else {
-            throw new ImportException("This isn't a BLOOD profile. Paste a code starting with \"" + SHARE_PREFIX + "\" or choose a .json profile file.");
+            throw new ImportException("This isn't a MOTION profile. Paste a code starting with \"" + SHARE_PREFIX + "\" or choose a .json profile file.");
         }
         JsonObject root;
         try {
@@ -98,16 +98,16 @@ public final class ProfileCodec {
         }
         JsonElement type = root.get("type");
         if (type != null && !(type.isJsonPrimitive() && "bloom-profile".equals(type.getAsString()))) {
-            throw new ImportException("This file is not a BLOOD profile.");
+            throw new ImportException("This file is not a MOTION profile.");
         }
         int format = 0;
         try {
             format = root.has("format") ? root.get("format").getAsInt() : 0;
         } catch (RuntimeException ignored) {
         }
-        if (format < 1) throw new ImportException("This file is not a BLOOD profile.");
+        if (format < 1) throw new ImportException("This file is not a MOTION profile.");
         List<String> warnings = new ArrayList<>();
-        if (format > FORMAT) warnings.add("Made with a newer BLOOD Client; some options may be skipped.");
+        if (format > FORMAT) warnings.add("Made with a newer MOTION Client; some options may be skipped.");
 
         String name = cleanName(str(root, "name"));
         if (name.isEmpty()) name = "Imported profile";
@@ -141,7 +141,7 @@ public final class ProfileCodec {
         }
         try (InflaterInputStream in = new InflaterInputStream(new ByteArrayInputStream(compressed))) {
             byte[] data = in.readNBytes(MAX_IMPORT_BYTES + 1);
-            if (data.length > MAX_IMPORT_BYTES) throw new ImportException("That's too large to be a BLOOD profile.");
+            if (data.length > MAX_IMPORT_BYTES) throw new ImportException("That's too large to be a MOTION profile.");
             return new String(data, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new ImportException("The share code is damaged. Make sure you copied all of it.");

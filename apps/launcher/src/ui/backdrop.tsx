@@ -146,7 +146,7 @@ export function Embers({ color, count = 34 }: { color: string; count?: number })
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" />;
 }
 
-/** Falling petals/snow, used by the Visuals page preview of BLOOD Client's in-game effects. */
+/** Falling petals/snow, used by the Visuals page preview of MOTION Client's in-game effects. */
 interface Petal {
   x: number;
   y: number;

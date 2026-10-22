@@ -14,7 +14,7 @@ function signedIn(username: string) {
   toast({ kind: "success", title: `Signed in as ${username}`, message: "Ownership of Minecraft: Java Edition was verified." });
 }
 
-/** Default: Microsoft's sign-in page in a window inside BLOOD. Falls back to the code flow. */
+/** Default: Microsoft's sign-in page in a window inside MOTION. Falls back to the code flow. */
 function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [mode, setMode] = useState<"window" | "code">("window");
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +64,14 @@ function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             <div className="flex items-center justify-center gap-2 text-[14px]">
               <Spinner size={15} /> Finish signing in in the Microsoft window…
             </div>
-            <p className="text-[12.5px] text-faint mt-4 leading-relaxed">
-              The page is Microsoft's own, so BLOOD never sees your password. It only receives a sign-in token, stored in the Windows Credential Manager.
+            <div className="mt-4 rounded-xl border border-line bg-panel-2 p-3 text-left text-[12.5px] text-muted leading-relaxed">
+              <div className="font-semibold text-fg mb-1">No passkey?</div>
+              Microsoft accounts are passwordless by default, so Microsoft may offer a passkey or an emailed code first. Either works here. To use a password
+              instead, choose <span className="text-fg">Other ways to sign in</span> → <span className="text-fg">Use your password</span> on Microsoft's page
+              (only if your account has one). If Microsoft emails you a code, type it into that same window.
+            </div>
+            <p className="text-[12.5px] text-faint mt-3 leading-relaxed">
+              The page is Microsoft's own, so MOTION never sees your password. It only receives a sign-in token, stored in the Windows Credential Manager.
             </p>
             <button type="button" className="mt-5 text-[13px] text-accent hover:underline cursor-pointer" onClick={() => setMode("code")}>
               Having trouble? Sign in with a code in your browser instead
@@ -160,7 +166,7 @@ function CodeSignInModal({ open, onClose }: { open: boolean; onClose: () => void
               <Spinner size={13} /> Waiting for you to finish signing in…
             </div>
             <p className="text-[12px] text-faint mt-5 leading-relaxed">
-              You sign in on Microsoft's own website. BLOOD never sees your password; it receives a token that's stored in the Windows Credential Manager.
+              You sign in on Microsoft's own website. MOTION never sees your password; it receives a token that's stored in the Windows Credential Manager.
             </p>
           </div>
         )}
@@ -181,7 +187,7 @@ export function AccountsPage() {
   async function remove(id: string, username: string) {
     const ok = await confirm({
       title: `Sign out ${username}?`,
-      message: "BLOOD forgets this account's sign-in on this PC. Your installations and worlds are not affected.",
+      message: "MOTION forgets this account's sign-in on this PC. Your installations and worlds are not affected.",
       confirmLabel: "Sign out",
       danger: true,
     });
@@ -205,7 +211,7 @@ export function AccountsPage() {
       {!configured && (
         <div className="mb-5">
           <Callout tone="warn" title="Microsoft sign-in isn't configured">
-            This build of BLOOD has no Azure application id. Developers: set VITE_MS_CLIENT_ID when building (see docs/MICROSOFT_AUTH.md), or enter one under Settings → Advanced.
+            This build of MOTION has no Azure application id. Developers: set VITE_MS_CLIENT_ID when building (see docs/MICROSOFT_AUTH.md), or enter one under Settings → Advanced.
           </Callout>
         </div>
       )}
@@ -261,7 +267,7 @@ export function AccountsPage() {
           <Icon.Shield size={20} className="text-accent" />
           <h3 className="font-semibold mt-2">How sign-in works</h3>
           <p className="text-[13px] text-muted mt-1 leading-relaxed">
-            You sign in on Microsoft's own page in a BLOOD window (or with a code in your browser), then BLOOD goes through Xbox Live and Minecraft services, and checks that the account owns Java Edition. Tokens are kept in the Windows Credential Manager and never written to logs.
+            You sign in on Microsoft's own page in a MOTION window (or with a code in your browser), then MOTION goes through Xbox Live and Minecraft services, and checks that the account owns Java Edition. Tokens are kept in the Windows Credential Manager and never written to logs.
           </p>
         </Card>
         <Card className="p-5">

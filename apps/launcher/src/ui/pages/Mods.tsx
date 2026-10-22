@@ -1,5 +1,5 @@
 /**
- * BLOOD Mods: built-in HUD modules, performance mods and quality-of-life switches for one
+ * MOTION Mods: built-in HUD modules, performance mods and quality-of-life switches for one
  * installation, with search, categories and one-click presets. Every switch here writes to
  * the real place that controls it (see core/bloomclient/modules.ts).
  */
@@ -85,9 +85,9 @@ export function ModsPage({ instanceId, category = "all" }: { instanceId?: string
   if (!inst) {
     return (
       <>
-        <PageHeader title="BLOOD Mods" />
+        <PageHeader title="MOTION Mods" />
         <EmptyState icon={<Icon.Hud size={28} />} title="No installation yet" action={<Button variant="primary" onClick={() => navigate({ page: "library" })}>Create one</Button>}>
-          BLOOD Mods are configured per installation. Create one in the Library first.
+          MOTION Mods are configured per installation. Create one in the Library first.
         </EmptyState>
       </>
     );
@@ -98,7 +98,7 @@ export function ModsPage({ instanceId, category = "all" }: { instanceId?: string
       <PageHeader
         title={
           <span className="flex items-center gap-3">
-            BLOOD Mods
+            MOTION Mods
             <span className="h-[3px] w-10 rounded-full accent-rule" />
           </span>
         }
@@ -155,8 +155,8 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
   /** Why a module can't be switched here, or null when it can. */
   function blocked(m: ModuleInfo): string | null {
     if (m.kind === "hud" || m.kind === "setting") {
-      if (!client) return "Checking BLOOD Client…";
-      if (!client.enabled) return client.support.ok ? "Install BLOOD Client for this installation first." : client.support.message;
+      if (!client) return "Checking MOTION Client…";
+      if (!client.enabled) return client.support.ok ? "Install MOTION Client for this installation first." : client.support.message;
     }
     if (m.kind === "perf" && inst.loader === "vanilla") return "Needs a mod loader (Fabric, Quilt, Forge or NeoForge).";
     return null;
@@ -205,7 +205,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
     <div className="space-y-6">
       <ClientBanner inst={inst} client={client} running={running} problems={problems.length} onChanged={() => setTick((t) => t + 1)} />
       {loadError && (
-        <Callout tone="danger" title="BLOOD Client's settings file can't be read">
+        <Callout tone="danger" title="MOTION Client's settings file can't be read">
           {loadError}
         </Callout>
       )}
@@ -259,7 +259,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
         </div>
       )}
       <p className="text-[12px] text-faint leading-relaxed">
-        HUD modules and visual settings are part of BLOOD Client and only show legitimate game information. Performance mods come from Modrinth and are checked for your
+        HUD modules and visual settings are part of MOTION Client and only show legitimate game information. Performance mods come from Modrinth and are checked for your
         Minecraft version and loader before installing. Performance gains vary with hardware, settings and worlds.
       </p>
     </div>
@@ -275,11 +275,11 @@ function ClientBanner({ inst, client, running, problems, onChanged }: { inst: In
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
       <div className={cx("h-11 w-11 rounded-xl grid place-items-center shrink-0", client.enabled ? "bg-accent/15 text-accent glow-accent" : "bg-raised text-muted")}>
-        <Icon.Drop size={22} />
+        <Icon.Motion size={22} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="font-semibold flex items-center gap-2 flex-wrap">
-          BLOOD Client
+          MOTION Client
           {client.enabled ? <Badge tone="accent">v{client.installedVersion} installed</Badge> : <Badge>Not installed</Badge>}
           {client.updateAvailable && <Badge tone="info">Update {client.bundle?.version} on next launch</Badge>}
           {running && <Badge tone="warn">Game running · changes apply live</Badge>}
@@ -312,13 +312,13 @@ function ClientBanner({ inst, client, running, problems, onChanged }: { inst: In
                 bumpContent();
                 onChanged();
               } catch (e) {
-                reportError("Couldn't install BLOOD Client", e);
+                reportError("Couldn't install MOTION Client", e);
               } finally {
                 setBusy(false);
               }
             }}
           >
-            Install BLOOD Client
+            Install MOTION Client
           </Button>
         ) : client.support.fix === "create_fabric_copy" ? (
           <Button
@@ -337,7 +337,7 @@ function ClientBanner({ inst, client, running, problems, onChanged }: { inst: In
               }
             }}
           >
-            Create a BLOOD installation
+            Create a MOTION installation
           </Button>
         ) : null)}
     </Card>
@@ -356,7 +356,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
   async function apply(p: ModPreset) {
     const ok = await confirm({
       title: `Apply ${p.name}?`,
-      message: `${p.description} BLOOD Client's current settings are backed up first, so you can restore them from Backups.`,
+      message: `${p.description} MOTION Client's current settings are backed up first, so you can restore them from Backups.`,
       confirmLabel: "Apply preset",
     });
     if (!ok) return;
@@ -391,7 +391,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
                   label: `${timeAgo(b.at)} · ${b.reason}`,
                   icon: <Icon.Undo size={14} />,
                   onClick: async () => {
-                    const ok = await confirm({ title: "Restore this backup?", message: `BLOOD Client's settings go back to how they were ${timeAgo(b.at)} (${b.reason}). Your current settings are backed up first.`, confirmLabel: "Restore" });
+                    const ok = await confirm({ title: "Restore this backup?", message: `MOTION Client's settings go back to how they were ${timeAgo(b.at)} (${b.reason}). Your current settings are backed up first.`, confirmLabel: "Restore" });
                     if (!ok) return;
                     try {
                       await restoreClientBackup(inst, b);
@@ -457,7 +457,7 @@ function ModuleCard({
   const configurable = m.kind === "hud" || m.id === "crosshair";
   const labels: string[] = [];
   if (m.kind === "hud" || m.kind === "setting") {
-    labels.push("BLOOD Client");
+    labels.push("MOTION Client");
     if (client?.bundle) labels.push(`MC ${client.bundle.minecraft.join(", ")}`);
     labels.push("Fabric · Quilt · NeoForge");
   } else if (m.kind === "perf") {

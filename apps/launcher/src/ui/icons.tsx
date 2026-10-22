@@ -1,4 +1,4 @@
-/** BLOOD's icon set: simple 24px stroke icons drawn for the launcher. */
+/** MOTION's icon set: simple 24px stroke icons drawn for the launcher. */
 
 import type { ReactNode, SVGProps } from "react";
 
@@ -374,6 +374,14 @@ export const Icon = {
       <path d="M9.2 14.2a2.9 2.9 0 0 0 2.2 2.9" />
     </Svg>
   ),
+  /** The MOTION mark: a forward-leaning dollar sign with motion streaks. */
+  Motion: (p: IconProps) => (
+    <Svg {...p}>
+      <path d="M17 6.8c-1-1.6-5.4-1.9-6 .6-.7 2.6 6.5 2.6 6.6 6.1.1 3.5-5.3 4.3-7.3 2.5" />
+      <path d="M13.4 3.5 12.2 20.5" />
+      <path d="M2.5 10h4M1.5 13h5" />
+    </Svg>
+  ),
   Crosshair: (p: IconProps) => (
     <Svg {...p}>
       <path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5" />
@@ -399,12 +407,12 @@ export const Icon = {
   ),
 };
 
-/** The BLOOD mark (pixel blood drop), same geometry as branding/make_icons.py. */
+/** The MOTION mark (pixel blood drop), same geometry as branding/make_icons.py. */
 export function BloodMark({ size = 28 }: { size?: number }) {
-  return <img src="/blood-mark.svg" width={size} height={size} alt="" draggable={false} />;
+  return <img src="/motion-mark.svg" width={size} height={size} alt="" draggable={false} />;
 }
 
-/** The BLOOD wordmark (blocky, slanted letters with one drip). Width follows the height. */
+/** The MOTION wordmark (blocky, slanted letters with one drip). Width follows the height. */
 export function Wordmark({ height = 22, className }: { height?: number; className?: string }) {
-  return <img src="/blood-wordmark.svg" height={height} style={{ height, width: "auto" }} alt="BLOOD" draggable={false} className={["wordmark", className].filter(Boolean).join(" ")} />;
+  return <img src="/motion-wordmark.svg" height={height} style={{ height, width: "auto" }} alt="MOTION" draggable={false} className={["wordmark", className].filter(Boolean).join(" ")} />;
 }

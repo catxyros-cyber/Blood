@@ -119,11 +119,11 @@ export function LicenseCard({ compact = false }: { compact?: boolean }) {
           {status === "expired" && <p className="text-[13px] text-warn mb-2">Your key{lic?.hint ? ` …${lic.hint}` : ""} has expired.</p>}
           {status === "revoked" && <p className="text-[13px] text-danger mb-2">Your key{lic?.hint ? ` …${lic.hint}` : ""} has been disabled.</p>}
           {status === "none" && <p className="text-[13px] text-muted mb-3 leading-relaxed">Have a key? Redeem it to unlock Premium on this PC.</p>}
-          <TextInput value={key} onChange={setKey} placeholder="BLOOD-XXXXX-XXXXX-XXXXX-XXXXX" mono onEnter={() => valid && configured && void run("redeem", () => redeemKey(key))} />
+          <TextInput value={key} onChange={setKey} placeholder="MOTION-XXXXX-XXXXX-XXXXX-XXXXX" mono onEnter={() => valid && configured && void run("redeem", () => redeemKey(key))} />
           <Button className="mt-3 w-full" variant="primary" disabled={!valid || !configured || busy !== null} loading={busy === "redeem"} onClick={() => void run("redeem", () => redeemKey(key))}>
             Redeem key
           </Button>
-          {!configured && <p className="text-[12px] text-faint mt-2">This build isn't connected to BLOOD's server, so keys can't be checked.</p>}
+          {!configured && <p className="text-[12px] text-faint mt-2">This build isn't connected to MOTION's server, so keys can't be checked.</p>}
         </div>
       )}
 

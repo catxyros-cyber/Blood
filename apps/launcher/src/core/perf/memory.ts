@@ -2,7 +2,7 @@
 
 export interface MemoryAdvice {
   recommendedMb: number;
-  /** Highest value BLOOD considers safe on this machine. */
+  /** Highest value MOTION considers safe on this machine. */
   maxSafeMb: number;
   reason: string;
 }
@@ -98,14 +98,14 @@ export interface JvmArgIssue {
   message: string;
 }
 
-/** Catch custom JVM arguments that would stop the game from starting or fight BLOOD's own settings. */
+/** Catch custom JVM arguments that would stop the game from starting or fight MOTION's own settings. */
 export function validateJvmArgs(args: string[], javaMajor: number): JvmArgIssue[] {
   const issues: JvmArgIssue[] = [];
   for (const arg of args) {
     if (/^-Xm[sx]/i.test(arg)) {
       issues.push({ arg, severity: "warning", message: "Memory is set with the RAM slider; this argument will be ignored." });
     } else if (arg === "-cp" || arg === "-classpath" || arg.startsWith("-Djava.library.path")) {
-      issues.push({ arg, severity: "error", message: "BLOOD builds the classpath itself; remove this argument." });
+      issues.push({ arg, severity: "error", message: "MOTION builds the classpath itself; remove this argument." });
     } else if (/UseConcMarkSweepGC/.test(arg) && javaMajor >= 14) {
       issues.push({ arg, severity: "error", message: `CMS was removed in Java 14; Java ${javaMajor} will refuse to start.` });
     } else if (/UseZGC/.test(arg) && javaMajor < 15) {

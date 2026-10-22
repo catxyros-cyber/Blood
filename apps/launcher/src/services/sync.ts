@@ -1,5 +1,5 @@
 /**
- * Cloud sync of settings and installation profiles (BLOOD Premium).
+ * Cloud sync of settings and installation profiles (MOTION Premium).
  * Push after local changes (debounced), pull at startup. Conflicts — both this
  * PC and another one changed since the last sync — are left for the user to
  * resolve; nothing local is ever deleted by a sync.
@@ -67,7 +67,7 @@ export async function pushSync(opts: { force?: boolean } = {}): Promise<void> {
     }
     const base = opts.force && conflictRemote ? conflictRemote.version : st.version;
     try {
-      const doc = await premiumRequest<SyncDocument>("PUT", "/v1/sync", { baseVersion: base, device: "BLOOD for Windows", data });
+      const doc = await premiumRequest<SyncDocument>("PUT", "/v1/sync", { baseVersion: base, device: "MOTION for Windows", data });
       await writeState({ version: doc.version, fingerprint: fp, at: Date.now() });
       conflictRemote = null;
       setSync({ state: "idle", lastSyncAt: Date.now() });

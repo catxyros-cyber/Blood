@@ -163,7 +163,7 @@ pub async fn fs_trash(state: State<'_, AppState>, path: String) -> Result<()> {
     if p == state.roots.data_dir() {
         return Err(AppError::new(
             "forbidden_path",
-            "Refusing to remove BLOOD's data folder",
+            "Refusing to remove MOTION's data folder",
         ));
     }
     if !p.exists() {
@@ -435,7 +435,7 @@ pub async fn open_url(app: AppHandle, url: String) -> Result<()> {
         .map_err(|e| AppError::new("open_failed", e.to_string()))
 }
 
-/// Open the folder with BLOOD's own log files (outside the data dir, so not via `open_path`).
+/// Open the folder with MOTION's own log files (outside the data dir, so not via `open_path`).
 #[tauri::command]
 pub async fn open_log_dir(app: AppHandle) -> Result<()> {
     let dir = app
@@ -561,7 +561,7 @@ pub struct ImportResult {
     conflicts: Vec<String>,
 }
 
-/// Copy user-chosen files into a folder inside BLOOD (e.g. an installation's `mods`).
+/// Copy user-chosen files into a folder inside MOTION (e.g. an installation's `mods`).
 /// Never overwrites: name clashes are reported back so the UI can ask.
 #[tauri::command]
 pub async fn import_files(state: State<'_, AppState>, sources: Vec<String>, dest_dir: String) -> Result<ImportResult> {

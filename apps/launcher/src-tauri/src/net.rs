@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, State};
 use tokio::io::AsyncWriteExt;
 
-/// Hosts BLOOD talks to. Anything else is refused, including on redirects.
+/// Hosts MOTION talks to. Anything else is refused, including on redirects.
 const ALLOWED_HOSTS: &[&str] = &[
     // Mojang / Minecraft
     "piston-meta.mojang.com",
@@ -30,8 +30,8 @@ const ALLOWED_HOSTS: &[&str] = &[
     "user.auth.xboxlive.com",
     "xsts.auth.xboxlive.com",
     "api.minecraftservices.com",
-    // Server-join handshake used to prove account ownership to BLOOD's API
-    // (the access token itself never leaves for BLOOD's servers).
+    // Server-join handshake used to prove account ownership to MOTION's API
+    // (the access token itself never leaves for MOTION's servers).
     "sessionserver.mojang.com",
     // Mod loaders
     "meta.fabricmc.net",
@@ -56,7 +56,7 @@ const ALLOWED_HOSTS: &[&str] = &[
 pub fn host_allowed(url: &url::Url) -> bool {
     let Some(host) = url.host_str() else { return false };
     if url.scheme() != "https" {
-        // Debug builds may talk to a local BLOOD API over plain http (npm run dev in apps/api).
+        // Debug builds may talk to a local MOTION API over plain http (npm run dev in apps/api).
         return cfg!(debug_assertions)
             && url.scheme() == "http"
             && matches!(host, "localhost" | "127.0.0.1")
@@ -65,7 +65,7 @@ pub fn host_allowed(url: &url::Url) -> bool {
     if ALLOWED_HOSTS.contains(&host) {
         return true;
     }
-    // Optional BLOOD web API host, baked in at build time (BLOOM_API_HOST=api.example.com).
+    // Optional MOTION web API host, baked in at build time (BLOOM_API_HOST=api.example.com).
     if let Some(api) = option_env!("BLOOM_API_HOST") {
         if !api.is_empty() && host == api {
             return true;
@@ -79,7 +79,7 @@ pub fn build_client() -> reqwest::Client {
     let user_agent = format!(
         "bloom-launcher/{} ({})",
         env!("CARGO_PKG_VERSION"),
-        option_env!("BLOOM_CONTACT").unwrap_or("BLOOD Minecraft launcher")
+        option_env!("BLOOM_CONTACT").unwrap_or("MOTION Minecraft launcher")
     );
     reqwest::Client::builder()
         .user_agent(user_agent)
@@ -100,7 +100,7 @@ fn parse_allowed(raw: &str) -> Result<url::Url> {
     if !host_allowed(&url) {
         return Err(AppError::new(
             "host_not_allowed",
-            format!("BLOOD does not connect to {}", url.host_str().unwrap_or("this host")),
+            format!("MOTION does not connect to {}", url.host_str().unwrap_or("this host")),
         ));
     }
     Ok(url)

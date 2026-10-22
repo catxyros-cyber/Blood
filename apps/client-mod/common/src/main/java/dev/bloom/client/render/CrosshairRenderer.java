@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.level.GameType;
 
 /**
- * BLOOD's custom crosshair (HUD → Crosshair). Drawn in place of the vanilla crosshair from
+ * MOTION's custom crosshair (HUD → Crosshair). Drawn in place of the vanilla crosshair from
  * {@code GuiMixin}; it follows the same visibility rules (first person only, vanilla handles
  * spectator mode and the F3 axis crosshair). If anything goes wrong it switches itself off
  * for the session and Minecraft's crosshair comes back.
@@ -19,7 +19,7 @@ public final class CrosshairRenderer {
     private CrosshairRenderer() {
     }
 
-    /** Returns true when BLOOD drew (or deliberately hid) the crosshair, so vanilla's is skipped. */
+    /** Returns true when MOTION drew (or deliberately hid) the crosshair, so vanilla's is skipped. */
     public static boolean render(GuiGraphics g) {
         if (failed || !BloomClient.ready() || !BloomSettings.ENABLED.on() || !BloomSettings.CROSSHAIR.on()) return false;
         Minecraft mc = Minecraft.getInstance();

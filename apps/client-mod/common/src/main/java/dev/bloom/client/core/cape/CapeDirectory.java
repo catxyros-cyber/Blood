@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Which BLOOD cape each player wears, as told by the BLOOD server (/v1/cape-owners). Decides who
+ * Which MOTION cape each player wears, as told by the MOTION server (/v1/cape-owners). Decides who
  * needs looking up (new players, or answers older than {@link #TTL_MS}), batches at most
  * {@link #BATCH} players per request and parses the reply. Pure Java (no Minecraft), unit tested.
  */
@@ -22,8 +22,15 @@ public final class CapeDirectory {
     /** After a failed request, wait this long before asking again (server down, offline). */
     public static final long RETRY_MS = 60_000;
 
-    private record Known(String capeId, Tag tag, long at) {
+    private record Known(String capeId, Tag tag, String wingsId, Aura aura, long at) {
     }
+
+    /** A MOTION aura: a colour and a particle style ("glow", "embers", "sparkles", "orbit"). */
+    public record Aura(int rgb, String style) {
+    }
+
+    /** Accepted aura styles; anything else is ignored. */
+    public static final java.util.Set<String> AURA_STYLES = java.util.Set.of("glow", "embers", "sparkles", "orbit");
 
     private final Map<String, Known> known = new HashMap<>();
     private final Map<String, Long> pending = new HashMap<>();
@@ -36,7 +43,7 @@ public final class CapeDirectory {
         return u.matches("[0-9a-f]{32}") ? u : null;
     }
 
-    /** A BLOOD tag like [OWNER]: text (letters, digits, a few symbols) and an RGB colour. */
+    /** A MOTION tag like [OWNER]: text (letters, digits, a few symbols) and an RGB colour. */
     public record Tag(String text, int rgb) {
     }
 
@@ -44,6 +51,18 @@ public final class CapeDirectory {
     public synchronized Tag tagOf(String uuid) {
         Known k = known.get(normalize(uuid));
         return k == null ? null : k.tag();
+    }
+
+    /** Wings accessory id for a player, or null. */
+    public synchronized String wingsOf(String uuid) {
+        Known k = known.get(normalize(uuid));
+        return k == null ? null : k.wingsId();
+    }
+
+    /** The player's aura, or null. */
+    public synchronized Aura auraOf(String uuid) {
+        Known k = known.get(normalize(uuid));
+        return k == null ? null : k.aura();
     }
 
     /** Cape id for a player, or null (no cape, or not known yet). */
@@ -96,9 +115,31 @@ public final class CapeDirectory {
                 }
             }
         }
+        Map<String, String> wings = new HashMap<>();
+        if (root.isJsonObject() && root.getAsJsonObject().get("wings") instanceof JsonObject o) {
+            for (Map.Entry<String, JsonElement> e : o.entrySet()) {
+                String u = normalize(e.getKey());
+                if (u != null && e.getValue().isJsonPrimitive()) {
+                    String id = e.getValue().getAsString();
+                    if (id.matches("[0-9a-f-]{36}")) wings.put(u, id);
+                }
+            }
+        }
+        Map<String, Aura> auras = new HashMap<>();
+        if (root.isJsonObject() && root.getAsJsonObject().get("auras") instanceof JsonObject o) {
+            for (Map.Entry<String, JsonElement> e : o.entrySet()) {
+                String u = normalize(e.getKey());
+                if (u == null || !(e.getValue() instanceof JsonObject a)) continue;
+                JsonElement color = a.get("color"), style = a.get("style");
+                if (color == null || !color.isJsonPrimitive() || style == null || !style.isJsonPrimitive()) continue;
+                String c = color.getAsString(), st = style.getAsString();
+                if (!c.matches("#[0-9a-fA-F]{6}") || !AURA_STYLES.contains(st)) continue;
+                auras.put(u, new Aura(Integer.parseInt(c.substring(1), 16), st));
+            }
+        }
         for (String u : asked) {
             pending.remove(u);
-            known.put(u, new Known(capes.get(u), tags.get(u), now));
+            known.put(u, new Known(capes.get(u), tags.get(u), wings.get(u), auras.get(u), now));
         }
     }
 
