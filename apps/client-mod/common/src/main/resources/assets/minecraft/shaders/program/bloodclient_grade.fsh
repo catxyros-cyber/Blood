@@ -45,17 +45,23 @@ void main() {
     vec3 c = src.rgb;
 
     if (Sharpen > 0.001) {
-        vec3 n = texture(DiffuseSampler, texCoord + vec2(oneTexel.x, 0.0)).rgb
-               + texture(DiffuseSampler, texCoord - vec2(oneTexel.x, 0.0)).rgb
-               + texture(DiffuseSampler, texCoord + vec2(0.0, oneTexel.y)).rgb
-               + texture(DiffuseSampler, texCoord - vec2(0.0, oneTexel.y)).rgb;
-        vec3 detail = c - n * 0.25;
-        // Limit the boost so edges get crisper without bright halos.
-        c = clamp(c + clamp(detail, -0.08, 0.08) * Sharpen * 2.0, 0.0, 1.0);
+        // Contrast-adaptive sharpening: strongest on soft detail, gentle on edges that are already
+        // crisp, so textures get clearer without halos.
+        vec3 n = texture(DiffuseSampler, texCoord + vec2(oneTexel.x, 0.0)).rgb;
+        vec3 s = texture(DiffuseSampler, texCoord - vec2(oneTexel.x, 0.0)).rgb;
+        vec3 e = texture(DiffuseSampler, texCoord + vec2(0.0, oneTexel.y)).rgb;
+        vec3 w = texture(DiffuseSampler, texCoord - vec2(0.0, oneTexel.y)).rgb;
+        vec3 mn = min(c, min(min(n, s), min(e, w)));
+        vec3 mx = max(c, max(max(n, s), max(e, w)));
+        vec3 amp = sqrt(clamp(min(mn, 1.0 - mx) / max(mx, 1e-4), 0.0, 1.0));
+        vec3 detail = c - (n + s + e + w) * 0.25;
+        c = clamp(c + detail * amp * Sharpen * 2.2, 0.0, 1.0);
     }
 
     if (GlowStrength > 0.001) {
-        c += texture(BloomSampler, texCoord).rgb * GlowStrength;
+        vec3 glow = texture(BloomSampler, texCoord).rgb;
+        // Screen-blend the glow so bright areas bloom without blowing out to flat white.
+        c = 1.0 - (1.0 - c) * (1.0 - clamp(glow * GlowStrength, 0.0, 1.0));
     }
 
     c *= exp2(Exposure);
@@ -76,7 +82,10 @@ void main() {
 
     float l = dot(c, LUMA);
     float sat = Saturation * (1.0 - 0.3 * Mood);
-    c = max(mix(vec3(l), c, sat), 0.0);
+    // Vibrance-style saturation: muted colours gain more than already-saturated ones.
+    float chroma = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
+    float satAmount = sat > 1.0 ? 1.0 + (sat - 1.0) * (1.0 - 0.5 * chroma) : sat;
+    c = max(mix(vec3(l), c, satAmount), 0.0);
 
     float con = mix(Contrast, 1.0, 0.1 * Mood);
     c = (c - 0.5) * con + 0.5;

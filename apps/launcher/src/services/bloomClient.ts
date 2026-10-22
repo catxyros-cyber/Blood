@@ -11,7 +11,7 @@ import { BUILT_IN_PROFILES, type ProfileInfo } from "../core/bloomclient/catalog
 import { conflictsFor, MENU_KEY_OPTION, readOption, writeOption } from "../core/bloomclient/optionsTxt";
 import { dataUrlBytes, pngSize, skyboxImageProblem } from "../core/bloomclient/png";
 import { applyPatch, parseSettings, type SettingsPatch, type SettingsView } from "../core/bloomclient/settingsFile";
-import { compareVersions, compatNotes, support, versionFromFileName, type Bundle, type CompatNote, type SupportStatus } from "../core/bloomclient/support";
+import { compareVersions, compatNotes, preferredVersion, support, versionFromFileName, type Bundle, type CompatNote, type SupportStatus } from "../core/bloomclient/support";
 import type { Instance } from "../core/instances/model";
 import { BloomError } from "../core/platform";
 import { slugify } from "../core/util/path";
@@ -57,7 +57,10 @@ export async function status(inst: Instance): Promise<ClientStatus> {
     installed,
     installedVersion,
     enabled: Boolean(active),
-    updateAvailable: Boolean(b && installedVersion && compareVersions(b.version, installedVersion) > 0),
+    // Newer version bundled, or the jar in the folder is for another Minecraft version.
+    updateAvailable: Boolean(
+      b && active && ((installedVersion && compareVersions(b.version, installedVersion) > 0) || (sup.ok && active.baseName !== sup.file && versionFromFileName(active.baseName) !== null)),
+    ),
     notes: active ? compatNotes(inst.loader, ids) : [],
   };
 }
@@ -71,14 +74,14 @@ export async function enable(inst: Instance): Promise<void> {
   startTask({ id: taskId, title: "Installing BLOOD Client", instanceId: inst.id, cancellable: false, stage: "Copying files" });
   try {
     const mods = await listContent(inst, "mods");
-    const file = b.files.find((f) => f.loader === sup.loaderFile)!;
+    const file = b.files.find((f) => f.file === sup.file)!;
     // Replace older BLOOD Client jars (ours) by moving them to the Recycle Bin.
     for (const old of mods.filter(isBloomJar)) {
       if (old.baseName === file.file && old.enabled) continue;
       await P().trash(old.path);
     }
     if (!mods.some((m) => m.baseName === file.file && m.enabled)) {
-      await native.bloomClientInstall(sup.loaderFile, contentDir(inst, "mods"));
+      await native.bloomClientInstall(sup.loaderFile, contentDir(inst, "mods"), file.file);
     }
     if (inst.loader === "fabric" || inst.loader === "quilt") {
       const ids = new Set(mods.filter((m) => m.enabled && m.meta?.id).map((m) => m.meta!.id));
@@ -238,7 +241,7 @@ export async function importSkybox(inst: Instance, source: string): Promise<Cust
 export async function createBloomInstallation(basedOn?: Instance): Promise<Instance> {
   const b = await bundle();
   if (!b) throw new BloomError("not_bundled", "This build of the launcher doesn't include BLOOD Client.");
-  const gameVersion = b.minecraft[0]!;
+  const gameVersion = preferredVersion(b);
   const { loaderVersions, pickLoaderVersion } = await import("../core/loaders/loaders");
   const { createInstance } = await import("./instances");
   const lv = pickLoaderVersion(await loaderVersions(P(), "fabric", gameVersion));

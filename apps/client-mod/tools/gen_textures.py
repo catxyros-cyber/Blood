@@ -2,7 +2,9 @@
 """Generates BLOOD Client's GUI sprites, menu icons, particle textures and logo (original art).
 
 Run: python3 tools/gen_textures.py
-Everything is drawn at 4x and downsampled for clean edges. Sprites are white/grey so the
+Everything is drawn at 16x and downsampled for clean edges; GUI sprites and icons are stored at
+4x their GUI size (nine-slice sizes in the .mcmeta stay in GUI pixels).
+Only sprites() and icons() are re-run for the HD menu; the particle atlas and logo are kept. Sprites are white/grey so the
 mod can tint them with the selected theme colour.
 """
 import json
@@ -14,7 +16,8 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEX = os.path.join(ROOT, "common/src/main/resources/assets/bloomclient/textures")
 SPR = os.path.join(TEX, "gui/sprites")
-SS = 4  # supersampling
+SS = 16  # supersampling (shapes are drawn at SS x and filtered down)
+OUT = 4  # GUI sprites and icons are stored at 4x their GUI size, so they stay sharp at GUI scale 4
 
 
 def canvas(w, h):
@@ -45,7 +48,7 @@ def rounded(w, h, r, fill=(255, 255, 255, 255), outline=None, width=1):
         d.rounded_rectangle([0, 0, w * SS - 1, h * SS - 1], r * SS, outline=outline, width=width * SS)
     else:
         d.rounded_rectangle([0, 0, w * SS - 1, h * SS - 1], r * SS, fill=fill)
-    return finish(im, w, h)
+    return finish(im, w * OUT, h * OUT)
 
 
 W = (255, 255, 255, 255)
@@ -61,10 +64,10 @@ def sprites():
     # circles
     im = canvas(16, 16)
     ImageDraw.Draw(im).ellipse([0, 0, 16 * SS - 1, 16 * SS - 1], fill=W)
-    save(finish(im, 16, 16), f"{SPR}/circle.png")
+    save(finish(im, 16 * OUT, 16 * OUT), f"{SPR}/circle.png")
     im = canvas(16, 16)
     ImageDraw.Draw(im).ellipse([SS, SS, 15 * SS - 1, 15 * SS - 1], outline=W, width=2 * SS)
-    save(finish(im, 16, 16), f"{SPR}/ring.png")
+    save(finish(im, 16 * OUT, 16 * OUT), f"{SPR}/ring.png")
     # soft shadow
     sh = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
     d = ImageDraw.Draw(sh)
@@ -106,7 +109,7 @@ def icon(name, draw_fn, size=16):
     im = canvas(size, size)
     d = ImageDraw.Draw(im)
     draw_fn(d, SS)
-    save(finish(im, size, size), f"{SPR}/icons/{name}.png")
+    save(finish(im, size * OUT, size * OUT), f"{SPR}/icons/{name}.png")
 
 
 def P(*pts):

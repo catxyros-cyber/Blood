@@ -21,6 +21,9 @@ pub struct BundleFile {
     pub file: String,
     pub sha1: String,
     pub size: u64,
+    /// Minecraft version this jar is for (manifests before 0.3 list one version for every file).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minecraft: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -73,7 +76,8 @@ pub async fn bloom_client_bundle(app: AppHandle) -> Result<Option<Bundle>> {
     read_bundle(&bundle_dir(&app)?)
 }
 
-/// Copy the bundled jar for `loader` into `mods_dir` (an installation's mods folder).
+/// Copy a bundled jar into `mods_dir` (an installation's mods folder): the one named `file`
+/// (it must be listed in the manifest), or the first one for `loader`.
 /// Fails if a file with the same name already exists; returns the installed path.
 #[tauri::command]
 pub async fn bloom_client_install(
@@ -81,14 +85,16 @@ pub async fn bloom_client_install(
     state: State<'_, AppState>,
     loader: String,
     mods_dir: String,
+    file: Option<String>,
 ) -> Result<String> {
     let dir = bundle_dir(&app)?;
     let bundle = read_bundle(&dir)?
         .ok_or_else(|| AppError::new("not_bundled", "This build of BLOOD doesn't include BLOOD Client"))?;
+    let wanted = file;
     let file = bundle
         .files
         .iter()
-        .find(|f| f.loader == loader)
+        .find(|f| f.loader == loader && wanted.as_deref().map_or(true, |w| w == f.file))
         .ok_or_else(|| AppError::new("unsupported_loader", format!("BLOOD Client isn't available for {loader}")))?;
     let dest_dir = state.roots.resolve(&mods_dir)?;
     if dest_dir.file_name().map(|n| n != "mods").unwrap_or(true) {
@@ -175,5 +181,13 @@ mod tests {
         .unwrap();
         let b = read_bundle(&dir).unwrap().unwrap();
         assert_eq!(b.files[0].loader, "fabric");
+        assert!(b.files[0].minecraft.is_none());
+        std::fs::write(
+            dir.join("manifest.json"),
+            r#"{"version":"0.3.0","minecraft":["1.21.1","1.21.11"],"files":[{"loader":"fabric","minecraft":"1.21.11","file":"bloomclient-fabric-1.21.11-0.3.0.jar","sha1":"0","size":1}]}"#,
+        )
+        .unwrap();
+        let b = read_bundle(&dir).unwrap().unwrap();
+        assert_eq!(b.files[0].minecraft.as_deref(), Some("1.21.11"));
     }
 }

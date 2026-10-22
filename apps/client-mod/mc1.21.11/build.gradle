@@ -1,0 +1,91 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+// Shared settings (version, mod id, name…) live in the 1.21.1 build's gradle.properties.
+def shared = new Properties()
+file('../gradle.properties').withInputStream { shared.load(it) }
+def modId = shared.getProperty('mod_id')
+version = shared.getProperty('version')
+group = shared.getProperty('group')
+
+base {
+    archivesName = "${modId}-fabric-${minecraft_version}"
+}
+
+// The pure-Java core (settings, skyboxes, particles, HUD layouts…) is the same for every
+// Minecraft version: compile it straight from ../common.
+def coreSrc = layout.buildDirectory.dir('generated/bloom-core')
+def sharedRes = layout.buildDirectory.dir('generated/bloom-res')
+def syncCore = tasks.register('syncCore', Sync) {
+    from('../common/src/main/java') { include 'dev/bloom/client/core/**' }
+    into coreSrc
+}
+def syncRes = tasks.register('syncSharedResources', Sync) {
+    from('../common/src/main/resources') {
+        include 'assets/**'
+        // 1.21.1-only shader formats; this build has its own in src/main/resources.
+        exclude 'assets/minecraft/shaders/**'
+        exclude 'assets/bloomclient/shaders/**'
+    }
+    into sharedRes
+}
+sourceSets {
+    main {
+        java.srcDir(coreSrc)
+        resources.srcDir(sharedRes)
+    }
+}
+tasks.named('compileJava') { dependsOn syncCore }
+tasks.named('processResources') { dependsOn syncRes }
+tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn syncCore, syncRes }
+
+repositories {
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+}
+
+loom {
+    mixin {
+        defaultRefmapName.set("${modId}.refmap.json")
+    }
+}
+
+processResources {
+    def props = [
+            version              : project.version,
+            mod_id               : modId,
+            mod_name             : shared.getProperty('mod_name'),
+            mod_author           : shared.getProperty('mod_author'),
+            description          : shared.getProperty('description'),
+            license              : shared.getProperty('license'),
+            minecraft_version    : minecraft_version,
+            fabric_loader_version: loader_version,
+    ]
+    inputs.properties(props)
+    filesMatching(['fabric.mod.json', '*.mixins.json']) {
+        expand props
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    from('../LICENSE') {
+        rename { "${it}_BLOOD Client" }
+    }
+}

@@ -34,8 +34,31 @@ jobs:
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
+  client-mod-12111:
+    name: BLOOD Client mod (Fabric, MC 1.21.11)
+    runs-on: ubuntu-latest
+    # The newest port must not block a release: if it fails, the release ships without it.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the Minecraft 1.21.11 jar
+        working-directory: apps/client-mod/mc1.21.11
+        run: chmod +x gradlew && ./gradlew build --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bloom-client-jars-12111
+          path: |
+            apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar
+            !apps/client-mod/**/*-sources.jar
+          if-no-files-found: error
+
   windows:
-    needs: client-mod
+    needs: [client-mod, client-mod-12111]
     runs-on: windows-latest
     env:
       # Job-level so step conditions can see whether signing is configured.
@@ -59,6 +82,12 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: bloom-client-jars
+          path: apps/client-mod
+      - uses: actions/download-artifact@v4
+        # Optional: if the 1.21.11 build failed, the release ships without it.
+        continue-on-error: true
+        with:
+          name: bloom-client-jars-12111
           path: apps/client-mod
       - name: Bundle BLOOD Client into the installer
         run: node apps/client-mod/tools/bundle.mjs

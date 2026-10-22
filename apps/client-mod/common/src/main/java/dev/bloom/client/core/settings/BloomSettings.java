@@ -374,7 +374,7 @@ public final class BloomSettings {
     public static final NumberSetting EFFECT_DISTANCE = num("perf.effectDistance", PERFORMANCE, "Effect quality", "Effect distance",
             "Particles beyond this distance are thinned out and then hidden.", 36f, 12f, 72f, 2f, INTEGER, " blocks", "lod", "cull").profile();
     public static final ChoiceSetting POST_QUALITY = choice("perf.postQuality", PERFORMANCE, "Shader effects", "Shader quality",
-            "Low: colour grading only (one pass, glow off). Medium: adds glow from a 320×180 buffer. High: wider, smoother glow from 480×270 with two blur rounds.",
+            "Low: colour grading only (one pass, glow off). Medium: adds glow from a 320×180 buffer. High: wider, smoother glow with three blur rounds.",
             "medium", ChoiceSetting.of("low", "Low", "medium", "Medium", "high", "High"), "glow", "bloom").profile();
     public static final BoolSetting LITE_MODE = bool("perf.lite", PERFORMANCE, "Shader effects", "Performance-friendly mode",
             "Keeps colour grading but turns off glow and sharpening, halves BLOOD's particle budget and drops BLOOD's starfield. Your other settings are kept.",
@@ -383,7 +383,7 @@ public final class BloomSettings {
             "Largest skybox face BLOOD loads: Performance 256 px, Balanced 512 px, High 1024 px (full 4K for the Halloween skies), Ultra up to 2048 px for your own imports. "
                     + "Larger skies are shrunk on a background thread. Each step down uses a quarter of the video memory.",
             "high", ChoiceSetting.of("performance", "Performance", "balanced", "Balanced", "high", "High", "ultra", "Ultra"),
-            "texture", "vram", "resolution", "4k").profile();
+            "texture", "vram", "resolution", "4k", "8k").profile();
     public static final NumberSetting SKY_CACHE = num("perf.skyCache", PERFORMANCE, "Skyboxes", "Skybox cache",
             "How many skyboxes stay loaded on the GPU for instant switching. Older ones are released.",
             3f, 1f, 6f, 1f, INTEGER, "", "memory", "cache");

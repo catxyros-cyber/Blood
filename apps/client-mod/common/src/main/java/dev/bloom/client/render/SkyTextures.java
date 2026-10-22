@@ -151,8 +151,9 @@ public final class SkyTextures {
             request(entry, look);
         }
         if (entry.texture != null) return entry.location;
-        // Built-ins: show the bundled texture until the processed one is ready, so the sky never blinks.
-        return e.builtIn() ? builtIn(id) : null;
+        // Built-ins: show the bundled texture until the processed one is ready, so the sky never blinks
+        // (unless it's bigger than the quality cap: an 8K texture isn't uploaded on lower settings).
+        return e.builtIn() && SkyboxCatalog.nativeFace(id) <= look.maxFace() ? builtIn(id) : null;
     }
 
     /** Built-in atlases ship with 512 px faces (see tools/gen_skyboxes.py, tools/import_sbs_skies.py). */
@@ -194,9 +195,13 @@ public final class SkyTextures {
                 } catch (Exception ex) {
                     throw new IllegalStateException(ex);
                 }
-                synchronized (SOURCE) {
-                    if (SOURCE.size() >= maxCached()) SOURCE.clear();
-                    SOURCE.put(id, src);
+                // 8K sources (6144x4096 = 100 MB of pixels) aren't kept: they're decoded again if the
+                // look changes, so memory stays low.
+                if ((long) src[0] * src[1] <= 3072L * 2048L) {
+                    synchronized (SOURCE) {
+                        if (SOURCE.size() >= maxCached()) SOURCE.clear();
+                        SOURCE.put(id, src);
+                    }
                 }
             }
             return process(src, look);

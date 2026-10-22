@@ -30,6 +30,7 @@ ROOT = os.path.dirname(HERE)
 RES = os.path.join(ROOT, "common/src/main/resources/assets/bloomclient/textures")
 LAUNCHER_SKY = os.path.join(ROOT, "..", "launcher", "public", "bloomclient", "sky")
 PX = np.pi / 2 / 1024  # angular size of one texel at 1024 px faces (anti-aliasing width)
+STAR_PX = np.pi / 2 / 1024  # star sizes are defined in 4K texels
 
 
 # ---------------------------------------------------------------- building blocks
@@ -68,7 +69,9 @@ def stars(x, y, z, density, seed, cells=260, bright=1.0, warm=0.35):
         mag = value_noise3(ix + 0.0, iy + 0.0, iz + 0.0, s + 4)
         tint = value_noise3(ix + 0.0, iy + 0.0, iz + 0.0, s + 5)
         fx, fy, fz = x * cs - gx - jx, y * cs - gy - jy, z * cs - gz - jz
-        d = np.sqrt(fx * fx + fy * fy + fz * fz) / cs / PX  # distance in texels
+        # Distance in 4K texels: stars keep the same size and brightness at any resolution
+        # (at 8K each star simply gets more pixels).
+        d = np.sqrt(fx * fx + fy * fy + fz * fz) / cs / STAR_PX
         core = np.exp(-(d / 0.75) ** 2)
         lum = np.where(on, core * b * (0.15 + 0.85 * mag ** 4), 0.0)
         col = mix(c3("#BFD3FF", x.shape), c3("#FFE2C0", x.shape), tint * warm * 2)
@@ -411,12 +414,14 @@ def save(arr, path, seed):
 
 
 def main():
+    global PX
     args = [a for a in sys.argv[1:]]
     face = 1024
     if "--face" in args:
         i = args.index("--face")
         face = int(args[i + 1])
         del args[i:i + 2]
+    PX = np.pi / 2 / face  # anti-aliasing width follows the resolution
     only = args or list(SKIES)
     for k, sid in enumerate(only):
         fn = SKIES[sid]

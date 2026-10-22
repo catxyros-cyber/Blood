@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.bloom.client.mixin",
+  "refmap": "${mod_id}.refmap.json",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "AbstractClientPlayerMixin",
+    "PlayerDisplayNameMixin",
+    "PlayerTabOverlayMixin",
+    "ClientLevelDataMixin",
+    "CloudRendererMixin",
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "GuiMixin",
+    "LevelRendererMixin",
+    "MouseHandlerMixin",
+    "WeatherEffectRendererMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

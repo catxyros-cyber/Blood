@@ -7,6 +7,8 @@ export interface BundleFile {
   file: string;
   sha1: string;
   size: number;
+  /** Minecraft version of this jar (older manifests: every file is for minecraft[0]). */
+  minecraft?: string;
 }
 
 export interface Bundle {
@@ -16,7 +18,7 @@ export interface Bundle {
 }
 
 export type SupportStatus =
-  | { ok: true; loaderFile: "fabric" | "neoforge" }
+  | { ok: true; loaderFile: "fabric" | "neoforge"; file: string }
   | { ok: false; reason: "not_bundled" | "vanilla" | "forge" | "version" | "loader"; message: string; fix?: "create_fabric_copy" };
 
 /** Quilt loads Fabric mods, so it uses the Fabric build. */
@@ -24,6 +26,23 @@ export function bundleLoaderFor(loader: Instance["loader"]): "fabric" | "neoforg
   if (loader === "fabric" || loader === "quilt") return "fabric";
   if (loader === "neoforge") return "neoforge";
   return null;
+}
+
+/** Minecraft version a bundled jar is for. */
+export function fileMinecraft(bundle: Bundle, f: BundleFile): string {
+  return f.minecraft ?? bundle.minecraft[0] ?? "";
+}
+
+/** The bundled jar for a loader and Minecraft version, if there is one. */
+export function bundleFileFor(bundle: Bundle, loader: "fabric" | "neoforge", gameVersion: string): BundleFile | null {
+  return bundle.files.find((f) => f.loader === loader && fileMinecraft(bundle, f) === gameVersion) ?? null;
+}
+
+/** Newest Minecraft version with a Fabric build (what "Create Fabric installation" uses). */
+export function preferredVersion(bundle: Bundle): string {
+  const fabric = bundle.files.filter((f) => f.loader === "fabric").map((f) => fileMinecraft(bundle, f));
+  const all = fabric.length ? fabric : bundle.minecraft;
+  return [...all].sort((a, b) => compareVersions(b, a))[0] ?? bundle.minecraft[0] ?? "";
 }
 
 export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: Bundle | null): SupportStatus {
@@ -51,7 +70,8 @@ export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: 
   if (!lf || !bundle.files.some((f) => f.loader === lf)) {
     return { ok: false, reason: "loader", message: `BLOOD Client isn't available for this mod loader.` };
   }
-  if (!bundle.minecraft.includes(inst.gameVersion)) {
+  const file = bundleFileFor(bundle, lf, inst.gameVersion);
+  if (!file) {
     return {
       ok: false,
       reason: "version",
@@ -59,7 +79,7 @@ export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: 
       fix: "create_fabric_copy",
     };
   }
-  return { ok: true, loaderFile: lf };
+  return { ok: true, loaderFile: lf, file: file.file };
 }
 
 /** "bloomclient-fabric-1.21.1-0.1.0.jar" → "0.1.0" (null for other files). */

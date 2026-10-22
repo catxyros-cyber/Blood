@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { BUILT_IN_SKYBOXES, MENU_KEYS, MENU_THEMES, QUALITY_PRESETS, menuKeyLabel, type ProfileInfo } from "../../core/bloomclient/catalog";
 import type { SettingsView } from "../../core/bloomclient/settingsFile";
+import { preferredVersion } from "../../core/bloomclient/support";
 import type { Instance } from "../../core/instances/model";
 import { app, errorMessage, navigate, reportError, toast, updateSettings, THEMES } from "../../services/app";
 import {
@@ -330,7 +331,7 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
           )}
           {!sup.ok && sup.fix === "create_fabric_copy" && st.bundle && (
             <Button variant="primary" loading={busy} icon={<Icon.Plus size={16} />} onClick={onCreateCopy}>
-              Create Fabric {st.bundle.minecraft[0]} installation
+              Create Fabric {preferredVersion(st.bundle)} installation
             </Button>
           )}
           {running && <span className="text-[12px] text-faint">Close the game to change mods.</span>}

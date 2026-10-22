@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { applyPatch, parseSettings, SettingsFileError } from "./settingsFile";
 import { conflictsFor, readOption, writeOption, MENU_KEY_OPTION } from "./optionsTxt";
-import { compareVersions, compatNotes, support, versionFromFileName, type Bundle } from "./support";
+import { compareVersions, compatNotes, preferredVersion, support, versionFromFileName, type Bundle } from "./support";
 import { pngSize, skyboxImageProblem } from "./png";
 
 const bundle: Bundle = {
@@ -15,9 +15,9 @@ const bundle: Bundle = {
 };
 
 test("support: loaders and versions", () => {
-  assert.deepEqual(support({ loader: "fabric", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "fabric" });
-  assert.deepEqual(support({ loader: "quilt", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "fabric" });
-  assert.deepEqual(support({ loader: "neoforge", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "neoforge" });
+  assert.deepEqual(support({ loader: "fabric", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "fabric", file: "bloomclient-fabric-1.21.1-0.1.0.jar" });
+  assert.deepEqual(support({ loader: "quilt", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "fabric", file: "bloomclient-fabric-1.21.1-0.1.0.jar" });
+  assert.deepEqual(support({ loader: "neoforge", gameVersion: "1.21.1" }, bundle), { ok: true, loaderFile: "neoforge", file: "bloomclient-neoforge-1.21.1-0.1.0.jar" });
   const v = support({ loader: "vanilla", gameVersion: "1.21.1" }, bundle);
   assert.equal(v.ok, false);
   assert.equal(!v.ok && v.reason, "vanilla");
@@ -27,6 +27,25 @@ test("support: loaders and versions", () => {
   assert.equal(!old.ok && old.reason, "version");
   const none = support({ loader: "fabric", gameVersion: "1.21.1" }, null);
   assert.equal(!none.ok && none.reason, "not_bundled");
+});
+
+test("support: one bundle, several Minecraft versions", () => {
+  const multi: Bundle = {
+    version: "0.3.0",
+    minecraft: ["1.21.1", "1.21.11"],
+    files: [
+      { loader: "fabric", minecraft: "1.21.1", file: "bloomclient-fabric-1.21.1-0.3.0.jar", sha1: "a", size: 1 },
+      { loader: "neoforge", minecraft: "1.21.1", file: "bloomclient-neoforge-1.21.1-0.3.0.jar", sha1: "b", size: 1 },
+      { loader: "fabric", minecraft: "1.21.11", file: "bloomclient-fabric-1.21.11-0.3.0.jar", sha1: "c", size: 1 },
+    ],
+  };
+  const s = support({ loader: "fabric", gameVersion: "1.21.11" }, multi);
+  assert.ok(s.ok && s.file === "bloomclient-fabric-1.21.11-0.3.0.jar");
+  const neo = support({ loader: "neoforge", gameVersion: "1.21.11" }, multi);
+  assert.equal(!neo.ok && neo.reason, "version");
+  assert.equal(preferredVersion(multi), "1.21.11");
+  assert.equal(preferredVersion(bundle), "1.21.1");
+  assert.equal(versionFromFileName("bloomclient-fabric-1.21.11-0.3.0.jar"), "0.3.0");
 });
 
 test("support: versions in file names", () => {

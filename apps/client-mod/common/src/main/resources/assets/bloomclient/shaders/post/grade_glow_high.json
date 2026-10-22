@@ -104,6 +104,48 @@
       ]
     },
     {
+      "name": "bloodclient_blur",
+      "intarget": "glowA",
+      "outtarget": "glowB",
+      "use_linear_filter": true,
+      "uniforms": [
+        {
+          "name": "BlurDir",
+          "values": [
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "name": "BlurRadius",
+          "values": [
+            3.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bloodclient_blur",
+      "intarget": "glowB",
+      "outtarget": "glowA",
+      "use_linear_filter": true,
+      "uniforms": [
+        {
+          "name": "BlurDir",
+          "values": [
+            0.0,
+            1.0
+          ]
+        },
+        {
+          "name": "BlurRadius",
+          "values": [
+            3.5
+          ]
+        }
+      ]
+    },
+    {
       "name": "bloodclient_grade_glow",
       "intarget": "minecraft:main",
       "outtarget": "swap",

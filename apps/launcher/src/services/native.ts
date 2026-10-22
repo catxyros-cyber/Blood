@@ -90,7 +90,7 @@ export const native = {
   secretSet: (key: string, value: string) => call<void>("secret_set", { key, value }),
   secretDelete: (key: string) => call<void>("secret_delete", { key }),
   bloomClientBundle: () => call<Bundle | null>("bloom_client_bundle"),
-  bloomClientInstall: (loader: string, modsDir: string) => call<string>("bloom_client_install", { loader, modsDir }),
+  bloomClientInstall: (loader: string, modsDir: string, file?: string) => call<string>("bloom_client_install", { loader, modsDir, file: file ?? null }),
   readDataUrl: (path: string, maxBytes: number) => call<string | null>("fs_read_data_url", { path, maxBytes }),
   /** Opens Microsoft's sign-in page in a window; resolves with the redirect URL, or null if closed. */
   msLoginWindow: (authorizeUrl: string) => call<string | null>("ms_login_window", { authorizeUrl }),

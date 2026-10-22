@@ -1,0 +1,13 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// BLOOD Client for Minecraft 1.21.11 (Fabric). Shares the pure-Java core with ../common.
+rootProject.name = 'bloomclient-1.21.11'

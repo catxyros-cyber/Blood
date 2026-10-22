@@ -15,3 +15,7 @@ Thumbs.db
 apps/launcher/src-tauri/tauri.release.conf.json
 __pycache__/
 *.pyc
+# Gradle (BLOOD Client)
+.gradle/
+apps/client-mod/**/build/
+apps/client-mod/**/runs/
