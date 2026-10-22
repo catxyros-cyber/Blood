@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.8",
+    "date": "2026-10-22",
+    "notes": "Cape fixes\n\nBLOOD Client 0.2.5."
+  },
+  {
     "version": "1.0.7",
     "date": "2026-10-21",
     "notes": "Owner tags\n\nBLOOD Client 0.2.4."
