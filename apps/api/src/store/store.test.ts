@@ -93,6 +93,45 @@ async function contract(name: string, make: () => Promise<{ store: Store; done: 
       await done();
     }
   });
+
+  test(`${name}: accessories (wings and auras)`, async () => {
+    const { store, done } = await make();
+    try {
+      const t = Date.UTC(2026, 9, 23);
+      const wingsId = "11111111-1111-4111-8111-111111111111";
+      const auraId = "22222222-2222-4222-8222-222222222222";
+      await store.createAccessory({ id: wingsId, name: "Neon", kind: "wings", access: "everyone", png: Buffer.from("png-bytes"), width: 640, height: 316, color: "#39ff88", style: null, enabled: true, createdAt: t });
+      await store.createAccessory({ id: auraId, name: "Toxic", kind: "aura", access: "premium", png: null, width: 0, height: 0, color: "#39ff88", style: "embers", enabled: true, createdAt: t + 1 });
+      const got = await store.getAccessory(wingsId);
+      assert.equal(got?.png?.toString(), "png-bytes");
+      const listed = await store.listAccessories(false);
+      assert.deepEqual(listed.map((a) => a.name), ["Neon", "Toxic"]);
+      assert.ok(listed.every((a) => a.png === null), "lists leave out image bytes");
+
+      const u = "8667ba71b85a4004af54457a9734eed7";
+      await store.setPlayerAccessory(u, "wings", wingsId, t);
+      await store.setPlayerAccessory(u, "aura", auraId, t);
+      assert.deepEqual(await store.getPlayerAccessories(u), { wings: wingsId, aura: auraId });
+      assert.deepEqual(await store.playerAccessories([u, "00000000000000000000000000000001"]), {
+        wings: { [u]: wingsId },
+        auras: { [u]: { color: "#39ff88", style: "embers" } },
+      });
+      // Changing one kind replaces it; disabled accessories disappear from lookups.
+      await store.setPlayerAccessory(u, "aura", null, t);
+      assert.equal((await store.getPlayerAccessories(u)).aura, null);
+      assert.ok(await store.updateAccessory(wingsId, { enabled: false }));
+      assert.deepEqual((await store.playerAccessories([u])).wings, {});
+      assert.equal((await store.listAccessories(false)).length, 1);
+      assert.ok(await store.updateAccessory(auraId, { access: "everyone" }));
+      assert.equal((await store.getAccessory(auraId))?.access, "everyone");
+      // Deleting removes it from players too.
+      assert.ok(await store.deleteAccessory(wingsId));
+      assert.equal((await store.getPlayerAccessories(u)).wings, null);
+      assert.equal(await store.deleteAccessory(wingsId), false);
+    } finally {
+      await done();
+    }
+  });
 }
 
 await contract("memory", async () => ({ store: new MemoryStore(), done: async () => undefined }));
@@ -105,7 +144,7 @@ if (url) {
     // Fresh schema for every test.
     await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
     const applied = await migrate(pool, migrations, () => undefined);
-    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql"]);
+    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql", "006_accessories.sql"]);
     assert.deepEqual(await migrate(pool, migrations, () => undefined), [], "migrations are applied once");
     return { store: new PgStore(pool), done: async () => undefined };
   });
