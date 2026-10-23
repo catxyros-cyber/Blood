@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.world.item.Items;
+import org.joml.Vector3f;
 
 /** Cosmetic mace motes only; this class never changes item use, hit detection, or damage. */
 public final class MaceVisuals {
@@ -15,7 +16,7 @@ public final class MaceVisuals {
 
     public static void tick(Minecraft mc) {
         if (!BloomSettings.MACE_VISUALS.on() || mc.level == null || mc.isPaused()) return;
-        var camera = mc.gameRenderer.getMainCamera().position();
+        var camera = mc.gameRenderer.getMainCamera().getPosition();
         long tick = mc.level.getGameTime();
         for (AbstractClientPlayer player : mc.level.players()) {
             if (player.isInvisible() || player.isSpectator() || player.position().distanceToSqr(camera) > MAX_DIST_SQ) continue;
@@ -37,17 +38,20 @@ public final class MaceVisuals {
         int gold = 0xFFD36A;
         float blend = (float) ((Math.sin(a) + 1.0) * 0.5);
         int color = lerp(accent, gold, blend);
-        mc.level.addParticle(new DustParticleOptions(color, 0.55f),
+        mc.level.addParticle(new DustParticleOptions(vectorColor(color), 0.55f),
                 handX + Math.cos(a) * radius, handY + Math.sin(a * 1.7) * 0.09, handZ + Math.sin(a) * radius,
                 -Math.cos(a) * 0.006, 0.012, -Math.sin(a) * 0.006);
         if (Math.floorMod(tick + side, 4) == 0) {
             double b = a + Math.PI;
-            mc.level.addParticle(new DustParticleOptions(lerp(gold, 0xE9FFF5, blend), 0.38f),
+            mc.level.addParticle(new DustParticleOptions(vectorColor(lerp(gold, 0xE9FFF5, blend)), 0.38f),
                     handX + Math.cos(b) * 0.17, handY + Math.sin(b * 1.7) * 0.12, handZ + Math.sin(b) * 0.17,
                     0, 0.018, 0);
         }
     }
 
+    private static Vector3f vectorColor(int rgb) {
+        return new Vector3f(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
+    }
     private static int lerp(int a, int b, float t) {
         int r = Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * t);
         int g = Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * t);
