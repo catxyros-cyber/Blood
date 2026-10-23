@@ -82,8 +82,8 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         float length = LENGTH;
         float height = Math.max(6f, Math.min(28f, length / Math.max(0.4f, aspect)));
         // Folded: tips point back and slightly down. Open: out to the side.
-        float yaw = lerp(48f, 15f, m.open);
-        float flap = (float) Math.sin(m.phase) * lerp(1.5f, 12f, m.open);
+        float yaw = lerp(40f, 8f, m.open);
+        float flap = (float) Math.sin(m.phase) * lerp(1f, 8.5f, m.open);
         float droop = lerp(-2f, 5f, m.open);
 
         pose.pushPose();
@@ -97,22 +97,27 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
             pose.mulPose(Axis.ZP.rotationDegrees(side * (droop + flap)));
             final int s = side;
             final float w = length / 16f, h = height / 16f;
-            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(tex), (p, vc) -> quad(p, vc, s, w, h, light, overlay));
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(tex), (p, vc) -> wing(p, vc, s, w, h, light, overlay));
             pose.popPose();
         }
         pose.popPose();
     }
 
-    /** Swept, tapered wing mesh with a feathered lower edge and a softly curved leading edge. */
+    /** Smooth, tapered silhouette with a gently raised leading edge. */
+    private static void wing(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
+        quad(p, vc, side, w, h, light, overlay);
+        featherRibs(p, vc, side, w, h, light, overlay);
+    }
+
     private static void quad(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
-        final int segments = 10;
+        final int segments = 24;
         for (int i = 0; i < segments; i++) {
             float t0 = i / (float) segments;
             float t1 = (i + 1) / (float) segments;
             float x0 = side * w * t0;
             float x1 = side * w * t1;
-            float z0 = (float) Math.sin(t0 * Math.PI) * 0.075f + t0 * 0.035f;
-            float z1 = (float) Math.sin(t1 * Math.PI) * 0.075f + t1 * 0.035f;
+            float z0 = depth(t0);
+            float z1 = depth(t1);
             float top0 = topEdge(t0, h), top1 = topEdge(t1, h);
             float bottom0 = bottomEdge(t0, h), bottom1 = bottomEdge(t1, h);
             vertex(p, vc, x0, bottom0, z0, t0, 1f, light, overlay);
@@ -122,23 +127,62 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         }
     }
 
+    /** Fine, translucent veins fan from the hinge toward the feather tips. */
+    private static void featherRibs(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
+        final float thickness = 0.0065f;
+        for (int i = 1; i <= 6; i++) {
+            float t = i / 7f;
+            float x0 = side * w * 0.10f;
+            float y0 = h * 0.10f;
+            float x1 = side * w * t;
+            float y1 = bottomEdge(t, h) * 0.82f;
+            float dx = x1 - x0;
+            float dy = y1 - y0;
+            float length = Math.max(0.001f, (float) Math.sqrt(dx * dx + dy * dy));
+            float ox = -dy / length * thickness;
+            float oy = dx / length * thickness;
+            float z0 = depth(0.10f) + 0.004f;
+            float z1 = depth(t) + 0.004f;
+            int tint = 0x70D8F3E2;
+            vertex(p, vc, x0 - ox, y0 - oy, z0, 0.10f, 0.42f, light, overlay, tint);
+            vertex(p, vc, x0 + ox, y0 + oy, z0, 0.10f, 0.48f, light, overlay, tint);
+            vertex(p, vc, x1 + ox, y1 + oy, z1, t, 0.88f, light, overlay, tint);
+            vertex(p, vc, x1 - ox, y1 - oy, z1, t, 0.94f, light, overlay, tint);
+        }
+    }
+
+    private static float depth(float t) {
+        return (float) Math.sin(t * Math.PI) * 0.105f + t * 0.025f;
+    }
+
     private static float topEdge(float t, float h) {
-        float envelope = (1f - t) * 0.68f + (float) Math.sin(t * Math.PI) * 0.35f;
-        float sweep = (float) Math.sin(t * Math.PI) * h * 0.045f;
-        float ridge = (float) Math.sin(t * Math.PI * 3f) * h * 0.018f;
-        return h * Math.max(0.035f, envelope) * 0.5f + sweep + ridge;
+        float curve = (float) Math.pow(Math.max(0f, Math.sin(t * Math.PI)), 0.82);
+        float envelope = (1f - t) * 0.58f + curve * 0.46f;
+        float lift = (float) Math.sin(t * Math.PI) * h * 0.075f;
+        float ridge = (float) Math.sin(t * Math.PI * 2f) * h * 0.012f;
+        return h * Math.max(0.025f, envelope) * 0.5f + lift + ridge;
     }
 
     private static float bottomEdge(float t, float h) {
-        float envelope = (1f - t) * 0.68f + (float) Math.sin(t * Math.PI) * 0.35f;
-        float feather = Math.max(0f, (float) Math.sin(t * Math.PI * 8f)) * h * 0.045f;
-        float sweep = (float) Math.sin(t * Math.PI) * h * 0.025f;
-        return -h * Math.max(0.035f, envelope) * 0.5f - feather + sweep;
+        float curve = (float) Math.pow(Math.max(0f, Math.sin(t * Math.PI)), 0.82);
+        float envelope = (1f - t) * 0.58f + curve * 0.34f;
+        float feather = 0f;
+        for (int i = 1; i <= 6; i++) {
+            float center = i / 7f;
+            float point = Math.max(0f, 1f - Math.abs(t - center) / 0.105f);
+            feather = Math.max(feather, point * h * 0.095f);
+        }
+        float sweep = (float) Math.sin(t * Math.PI) * h * 0.035f;
+        return -h * Math.max(0.025f, envelope) * 0.5f - feather + sweep;
+    }
+    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
+                               float u, float v, int light, int overlay) {
+        vertex(p, vc, x, y, z, u, v, light, overlay, 0xFFFFFFFF);
     }
 
     private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
-                               float u, float v, int light, int overlay) {
-        vc.addVertex(p, x, y, z).setColor(0xFFFFFFFF).setUv(u, v).setOverlay(overlay)
+                               float u, float v, int light, int overlay, int tint) {
+        vc.addVertex(p, x, y, z).setColor(tint).setUv(u, v).setOverlay(overlay)
                 .setLight(light).setNormal(p, 0f, 0f, 1f);
     }
 
