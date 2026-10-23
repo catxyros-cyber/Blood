@@ -37,8 +37,6 @@ jobs:
   client-mod-12111:
     name: BLOOD Client mod (Fabric, MC 1.21.11)
     runs-on: ubuntu-latest
-    # The newest port must not block a release: if it fails, the release ships without it.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -85,11 +83,9 @@ jobs:
           name: bloom-client-jars
           path: apps/client-mod
       - uses: actions/download-artifact@v4
-        # Optional: if the 1.21.11 build failed, the release ships without it.
-        continue-on-error: true
         with:
           name: bloom-client-jars-12111
-          path: apps/client-mod
+          path: apps/client-mod/mc1.21.11/build/libs
       - name: Bundle BLOOD Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
 

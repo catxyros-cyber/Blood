@@ -22,12 +22,11 @@ const props = Object.fromEntries(
 const { version, minecraft_version: mc, mod_id: modId } = props;
 if (!version || !mc || !modId) throw new Error("gradle.properties is missing version, minecraft_version or mod_id");
 
-// Every build BLOOD Client ships. Optional builds are skipped (with a warning) when their jar is
-// missing, so a release still goes out if only the newest port failed to build.
+// Every supported build must be present. A release cannot publish without the newest Minecraft port.
 const builds = [
   { loader: "fabric", minecraft: mc, dir: "fabric" },
   { loader: "neoforge", minecraft: mc, dir: "neoforge" },
-  { loader: "fabric", minecraft: "1.21.11", dir: "mc1.21.11", optional: true },
+  { loader: "fabric", minecraft: "1.21.11", dir: "mc1.21.11" },
 ];
 const files = [];
 mkdirSync(out, { recursive: true });
@@ -37,13 +36,7 @@ for (const f of readdirSync(out)) if (f.endsWith(".jar") || f === "manifest.json
 for (const b of builds) {
   const name = `${modId}-${b.loader}-${b.minecraft}-${version}.jar`;
   const src = join(modRoot, b.dir, "build", "libs", name);
-  if (!existsSync(src)) {
-    if (b.optional) {
-      console.warn(`skipped ${name}: not built (BLOOD Client for Minecraft ${b.minecraft} won't be in this release)`);
-      continue;
-    }
-    throw new Error(`Missing ${src}. Run ./gradlew build first.`);
-  }
+  if (!existsSync(src)) throw new Error(`Missing ${src}. Run ./gradlew build first.`);
   const bytes = readFileSync(src);
   copyFileSync(src, join(out, name));
   files.push({ loader: b.loader, minecraft: b.minecraft, file: name, sha1: createHash("sha1").update(bytes).digest("hex"), size: statSync(src).size });
