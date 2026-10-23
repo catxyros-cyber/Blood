@@ -35,7 +35,21 @@ for (const f of readdirSync(out)) if (f.endsWith(".jar") || f === "manifest.json
 
 for (const b of builds) {
   const name = `${modId}-${b.loader}-${b.minecraft}-${version}.jar`;
-  const src = join(modRoot, b.dir, "build", "libs", name);
+  const expected = join(modRoot, b.dir, "build", "libs", name);
+  const searchRoot = join(modRoot, b.dir);
+  const stack = [searchRoot];
+  let src = expected;
+  while (!existsSync(src) && stack.length) {
+    const dir = stack.pop();
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const candidate = join(dir, entry.name);
+      if (entry.isDirectory()) stack.push(candidate);
+      else if (entry.isFile() && entry.name === name) {
+        src = candidate;
+        break;
+      }
+    }
+  }
   if (!existsSync(src)) throw new Error(`Missing ${src}. Run ./gradlew build first.`);
   const bytes = readFileSync(src);
   copyFileSync(src, join(out, name));
