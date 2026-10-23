@@ -20,6 +20,8 @@
     "GuiMixin",
     "LevelRendererMixin",
     "MouseHandlerMixin",
+    "CameraFreeLookMixin",
+    "MinecraftTitleScreenMixin",
     "WeatherEffectRendererMixin"
   ],
   "server": [],

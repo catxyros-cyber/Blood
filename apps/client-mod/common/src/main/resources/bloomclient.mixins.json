@@ -16,6 +16,8 @@
     "GuiMixin",
     "LevelRendererMixin",
     "MouseHandlerMixin",
+    "CameraFreeLookMixin",
+    "MinecraftTitleScreenMixin",
     "ScreenEffectRendererMixin"
   ],
   "server": [],

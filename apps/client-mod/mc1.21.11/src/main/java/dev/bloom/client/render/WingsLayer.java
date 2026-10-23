@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
     /** Wing length in model pixels (16 = one block). */
-    private static final float LENGTH = 20f;
+    private static final float LENGTH = 18f;
 
     private static final class Motion {
         float open, phase;
@@ -63,9 +63,9 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         // How open the wings are (0 folded … 1 spread), eased toward a target from movement.
         boolean airborne = !player.onGround() && !player.isInWater();
         float target = state.isFallFlying ? 1f
-                : airborne ? 0.85f
-                : player.isSprinting() ? 0.55f
-                : Math.min(0.4f, state.walkAnimationSpeed * 0.9f);
+                : airborne ? 0.78f
+                : player.isSprinting() ? 0.62f
+                : Math.min(0.38f, state.walkAnimationSpeed * 0.8f);
         long now = System.nanoTime();
         Motion m = motion.computeIfAbsent(state.id, k -> new Motion());
         float dt = m.at == 0 ? 0f : Math.min(0.1f, (now - m.at) / 1e9f);
@@ -82,9 +82,9 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         float length = LENGTH;
         float height = Math.max(6f, Math.min(28f, length / Math.max(0.4f, aspect)));
         // Folded: tips point back and slightly down. Open: out to the side.
-        float yaw = lerp(72f, 12f, m.open);
-        float flap = (float) Math.sin(m.phase) * lerp(2.5f, 22f, m.open);
-        float droop = lerp(-14f, 6f, m.open);
+        float yaw = lerp(48f, 15f, m.open);
+        float flap = (float) Math.sin(m.phase) * lerp(1.5f, 12f, m.open);
+        float droop = lerp(-2f, 5f, m.open);
 
         pose.pushPose();
         getParentModel().body.translateAndRotate(pose);
@@ -103,17 +103,27 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         pose.popPose();
     }
 
-    /** One wing: root at x=0, tip at x=side·w; the hinge is halfway down the image's left edge. */
+    /** A lightly curved mesh keeps the textured feather wing from looking like a flat card. */
     private static void quad(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
-        float x1 = side * w, top = -h * 0.5f, bottom = h * 0.5f;
-        vertex(p, vc, 0f, top, 0f, 0f, light, overlay);
-        vertex(p, vc, 0f, bottom, 0f, 1f, light, overlay);
-        vertex(p, vc, x1, bottom, 1f, 1f, light, overlay);
-        vertex(p, vc, x1, top, 1f, 0f, light, overlay);
+        final int segments = 6;
+        for (int i = 0; i < segments; i++) {
+            float t0 = i / (float) segments;
+            float t1 = (i + 1) / (float) segments;
+            float x0 = side * w * t0;
+            float x1 = side * w * t1;
+            float z0 = (float) Math.sin(t0 * Math.PI) * 0.055f;
+            float z1 = (float) Math.sin(t1 * Math.PI) * 0.055f;
+            vertex(p, vc, x0, -h * 0.5f, z0, t0, 0f, light, overlay);
+            vertex(p, vc, x0, h * 0.5f, z0, t0, 1f, light, overlay);
+            vertex(p, vc, x1, h * 0.5f, z1, t1, 1f, light, overlay);
+            vertex(p, vc, x1, -h * 0.5f, z1, t1, 0f, light, overlay);
+        }
     }
 
-    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float u, float v, int light, int overlay) {
-        vc.addVertex(p, x, y, 0f).setColor(0xFFFFFFFF).setUv(u, v).setOverlay(overlay).setLight(light).setNormal(p, 0f, 0f, 1f);
+    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
+                               float u, float v, int light, int overlay) {
+        vc.addVertex(p, x, y, z).setColor(0xFFFFFFFF).setUv(u, v).setOverlay(overlay)
+                .setLight(light).setNormal(p, 0f, 0f, 1f);
     }
 
     private static float lerp(float a, float b, float t) {

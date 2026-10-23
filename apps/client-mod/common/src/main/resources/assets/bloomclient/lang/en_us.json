@@ -6,5 +6,6 @@
   "key.bloomclient.hud_editor": "Open HUD editor",
   "key.bloomclient.toggle_visuals": "Turn MOTION visuals on/off",
   "key.bloomclient.next_profile": "Next visual profile",
-  "key.bloomclient.toggle_hud": "Show/hide MOTION HUD"
+  "key.bloomclient.toggle_hud": "Show/hide MOTION HUD",
+  "key.bloomclient.free_look": "Free look (hold)"
 }

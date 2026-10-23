@@ -142,6 +142,7 @@ public final class HudLayouts implements SettingsStore.Section {
     @Override
     public JsonElement save() {
         JsonObject o = new JsonObject();
+        o.addProperty("schema", 1);
         o.addProperty("activeLayout", active);
         JsonArray arr = new JsonArray();
         for (HudLayout l : layouts.values()) arr.add(l.toJson());
@@ -171,6 +172,18 @@ public final class HudLayouts implements SettingsStore.Section {
         layouts.putAll(loaded);
         JsonElement act = o.get("activeLayout");
         active = act != null && act.isJsonPrimitive() && layouts.containsKey(act.getAsString()) ? act.getAsString() : layouts.keySet().iterator().next();
+        int schema = 0;
+        try {
+            if (o.has("schema") && o.get("schema").isJsonPrimitive()) schema = o.get("schema").getAsInt();
+        } catch (RuntimeException ignored) {
+            // Malformed version metadata is treated as an old layout.
+        }
+        boolean migrateArmor = schema < 1;
+        if (migrateArmor) {
+            // Armor was previously opt-in; enable it once in the layout the player already uses.
+            layouts.get(active).get(HudWidgetType.ARMOR).visible = true;
+        }
         version++;
+        if (migrateArmor && store != null && !external) store.markSectionDirty(SECTION);
     }
 }

@@ -1,6 +1,7 @@
 package dev.bloom.client.mixin;
 
 import dev.bloom.client.BloomClient;
+import dev.bloom.client.FreeLook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -22,5 +23,10 @@ public abstract class MouseHandlerMixin {
     @Inject(method = "onButton", at = @At("HEAD"))
     private void bloom$countClick(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
         if (action == GLFW.GLFW_PRESS && minecraft.screen == null && BloomClient.ready()) BloomClient.get().onMouseClick(info.button());
+    }
+
+    @Inject(method = "turnPlayer", at = @At("TAIL"))
+    private void motion$freeLookTurn(CallbackInfo ci) {
+        if (minecraft.player != null) FreeLook.afterMouseTurn(minecraft.player);
     }
 }

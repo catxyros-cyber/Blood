@@ -16,8 +16,9 @@ public final class BloomKeys {
     public static final KeyMapping TOGGLE_VISUALS = new KeyMapping("key.bloomclient.toggle_visuals", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping NEXT_PROFILE = new KeyMapping("key.bloomclient.next_profile", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping TOGGLE_HUD = new KeyMapping("key.bloomclient.toggle_hud", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping FREE_LOOK = new KeyMapping("key.bloomclient.free_look", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, CATEGORY);
 
-    public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD);
+    public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD, FREE_LOOK);
 
     private BloomKeys() {
     }
@@ -29,6 +30,7 @@ public final class BloomKeys {
         if (k == TOGGLE_VISUALS) return "Turn MOTION visuals on/off";
         if (k == NEXT_PROFILE) return "Next visual profile";
         if (k == TOGGLE_HUD) return "Show/hide MOTION HUD";
+        if (k == FREE_LOOK) return "Free look (hold)";
         return k.getName();
     }
 
@@ -39,6 +41,7 @@ public final class BloomKeys {
         if (k == TOGGLE_VISUALS) return "Quickly compare MOTION's visuals with plain Minecraft.";
         if (k == NEXT_PROFILE) return "Cycles through your visual profiles.";
         if (k == TOGGLE_HUD) return "Hides or shows all MOTION HUD widgets.";
+        if (k == FREE_LOOK) return "Look around while keeping your movement facing direction fixed. Hold the key; release to recenter.";
         return "";
     }
 }
