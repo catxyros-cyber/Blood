@@ -103,6 +103,9 @@ public final class BloomSettings {
     public static final BoolSetting AURAS = bool("accessories.auras", GENERAL, "Accessories", "Auras",
             "Show the glow and particle auras MOTION players picked in the launcher. Yours is hidden in first person so it never blocks your view.",
             true, "aura", "particles", "cosmetic", "accessory");
+    public static final BoolSetting MACE_VISUALS = bool("visuals.mace", GENERAL, "Accessories", "Mace visuals",
+            "Add a subtle colored particle trail around players holding a mace. Visual only; it does not change attacks or damage.",
+            true, "mace", "trail", "weapon", "particles");
     public static final ChoiceSetting MENU_BACKGROUND = choice("ui.menuBackground", GENERAL, "Menu background", "Background",
             "What Minecraft's own screens show behind them: the title screen, pause and option menus, and loading screens. Pick a custom image in the launcher (Customize).",
             "vanilla", ChoiceSetting.of("vanilla", "Minecraft's own", "red", "Fully red", "black", "Fully black", "white", "Fully white", "green", "Motion green", "custom", "Custom image"),

@@ -279,6 +279,7 @@ public final class BloomClient {
             } else {
                 hadLevel = true;
                 CapeManager.tick(mc);
+                dev.bloom.client.game.MaceVisuals.tick(mc);
             }
             if (mc.level != null && mc.gameRenderer != null) {
                 Vec3 cam = mc.gameRenderer.getMainCamera().getPosition();

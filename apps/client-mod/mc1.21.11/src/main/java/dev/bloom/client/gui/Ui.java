@@ -132,6 +132,16 @@ public final class Ui {
         return Math.min(wrap(s, width).size(), maxLines) * 10;
     }
 
+    /** Lightweight horizontal gradient band. A small fixed number of strips avoids per-pixel GUI work. */
+    public static void gradientBand(GuiGraphics g, int x, int y, int w, int h, int left, int right, int steps) {
+        if (w <= 0 || h <= 0) return;
+        int n = Math.max(1, Math.min(w, steps));
+        for (int i = 0; i < n; i++) {
+            int x0 = x + i * w / n;
+            int x1 = x + (i + 1) * w / n;
+            g.fill(x0, y, x1, y + h, Theme.lerp(left, right, (i + 0.5f) / n));
+        }
+    }
     /** Four-corner colour gradient (for the colour picker), drawn as thin vertical gradient strips. */
     public static void gradientQuad(GuiGraphics g, int x0, int y0, int x1, int y1, int topLeft, int topRight, int bottomRight, int bottomLeft) {
         int w = x1 - x0;

@@ -274,6 +274,7 @@ public final class BloomClient {
             } else {
                 hadLevel = true;
                 CapeManager.tick(mc);
+                dev.bloom.client.game.MaceVisuals.tick(mc);
                 dev.bloom.client.game.Auras.tick(mc);
             }
             if (mc.level != null && mc.gameRenderer != null) {

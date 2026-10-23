@@ -60,10 +60,14 @@ public final class Auras {
                 }
             }
             case "orbit" -> {
-                for (int i = 0; i < 2; i++) {
-                    double a = t * 0.22 + i * Math.PI;
-                    mc.level.addParticle(new DustParticleOptions(rgb, 0.8f),
-                            x + Math.cos(a) * 0.65, y + h * 0.5 + Math.sin(t * 0.05 + i) * 0.15, z + Math.sin(a) * 0.65, 0, 0, 0);
+                // Two counter-rotating ribbons at different heights, plus a small crown sparkle.
+                for (int i = 0; i < 3; i++) {
+                    double a = t * 0.18 + i * (Math.PI * 2 / 3);
+                    double b = -t * 0.13 + i * (Math.PI * 2 / 3);
+                    mc.level.addParticle(new DustParticleOptions(rgb, 0.88f),
+                            x + Math.cos(a) * 0.68, y + h * 0.42 + Math.sin(t * 0.045 + i) * 0.12, z + Math.sin(a) * 0.68, 0, 0, 0);
+                    if (i == 0) mc.level.addParticle(new DustParticleOptions(lighten(rgb, 0.38f), 0.62f),
+                            x + Math.cos(b) * 0.42, y + h * 0.78 + Math.sin(t * 0.04) * 0.08, z + Math.sin(b) * 0.42, 0, 0.008, 0);
                 }
             }
             default -> { // glow

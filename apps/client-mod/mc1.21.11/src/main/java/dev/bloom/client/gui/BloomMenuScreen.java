@@ -293,6 +293,9 @@ public class BloomMenuScreen extends Screen implements Host {
         int alphaMul = Math.round(255 * t);
         Ui.shadow(g, wx, wy, ww, wh, t);
         Ui.panel(g, wx, wy, ww, wh, Theme.alpha(p.window(), t));
+        int accentEnd = Theme.lerp(p.accent(), 0xFF8AF7FF, 0.32f);
+        Ui.gradientBand(g, wx + 1, wy + 1, ww - 2, 2,
+                Theme.alpha(p.accent(), 0.96f * t), Theme.alpha(accentEnd, 0.96f * t), 36);
         // Sidebar
         Ui.panel(g, wx, wy, sidebar, wh, Theme.alpha(p.sidebar(), t));
         g.fill(wx + sidebar - 1, wy + 6, wx + sidebar, wy + wh - 6, Theme.alpha(p.border(), t));
@@ -351,8 +354,14 @@ public class BloomMenuScreen extends Screen implements Host {
             boolean sel = i == navIndex && search.value().isBlank();
             boolean over = Ui.inside(mx, my, ix, y, iw, itemH);
             navHover[i] = Anim.approach(navHover[i], sel ? 1f : over ? 0.5f : 0f, 16f, dt);
-            if (navHover[i] > 0.01f) Ui.smallPanel(g, ix, y, iw, itemH, Theme.alpha(sel ? p.surfaceActive() : p.surfaceHover(), navHover[i] * t));
-            if (sel) g.fill(ix, y + 3, ix + 2, y + itemH - 3, Theme.accentArgb());
+            if (navHover[i] > 0.01f) {
+                Ui.smallPanel(g, ix, y, iw, itemH, Theme.alpha(sel ? p.surfaceActive() : p.surfaceHover(), navHover[i] * t));
+                Ui.gradientBand(g, ix + 1, y + 1, iw - 2, itemH - 2,
+                        Theme.alpha(p.surfaceActive(), navHover[i] * t),
+                        Theme.alpha(p.accent(), navHover[i] * 0.18f * t), 12);
+            }
+            if (sel) g.fillGradient(ix, y + 3, ix + 2, y + itemH - 3,
+                    Theme.alpha(p.accent(), t), Theme.alpha(accentEnd, t));
             int col = sel ? Theme.accentArgb() : over ? p.text() : p.textDim();
             Ui.icon(g, c.icon(), ix + (compact ? 3 : 6), y + (itemH - 14) / 2, 14, Theme.alpha(col, t));
             if (!compact) Ui.text(g, Ui.ellipsize(c.label(), iw - 30), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));

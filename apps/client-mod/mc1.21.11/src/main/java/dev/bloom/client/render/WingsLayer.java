@@ -103,21 +103,37 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
         pose.popPose();
     }
 
-    /** A lightly curved mesh keeps the textured feather wing from looking like a flat card. */
+    /** Swept, tapered wing mesh with a feathered lower edge and a softly curved leading edge. */
     private static void quad(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
-        final int segments = 6;
+        final int segments = 10;
         for (int i = 0; i < segments; i++) {
             float t0 = i / (float) segments;
             float t1 = (i + 1) / (float) segments;
             float x0 = side * w * t0;
             float x1 = side * w * t1;
-            float z0 = (float) Math.sin(t0 * Math.PI) * 0.055f;
-            float z1 = (float) Math.sin(t1 * Math.PI) * 0.055f;
-            vertex(p, vc, x0, -h * 0.5f, z0, t0, 0f, light, overlay);
-            vertex(p, vc, x0, h * 0.5f, z0, t0, 1f, light, overlay);
-            vertex(p, vc, x1, h * 0.5f, z1, t1, 1f, light, overlay);
-            vertex(p, vc, x1, -h * 0.5f, z1, t1, 0f, light, overlay);
+            float z0 = (float) Math.sin(t0 * Math.PI) * 0.075f + t0 * 0.035f;
+            float z1 = (float) Math.sin(t1 * Math.PI) * 0.075f + t1 * 0.035f;
+            float top0 = topEdge(t0, h), top1 = topEdge(t1, h);
+            float bottom0 = bottomEdge(t0, h), bottom1 = bottomEdge(t1, h);
+            vertex(p, vc, x0, bottom0, z0, t0, 1f, light, overlay);
+            vertex(p, vc, x0, top0, z0, t0, 0f, light, overlay);
+            vertex(p, vc, x1, top1, z1, t1, 0f, light, overlay);
+            vertex(p, vc, x1, bottom1, z1, t1, 1f, light, overlay);
         }
+    }
+
+    private static float topEdge(float t, float h) {
+        float envelope = (1f - t) * 0.68f + (float) Math.sin(t * Math.PI) * 0.35f;
+        float sweep = (float) Math.sin(t * Math.PI) * h * 0.045f;
+        float ridge = (float) Math.sin(t * Math.PI * 3f) * h * 0.018f;
+        return h * Math.max(0.035f, envelope) * 0.5f + sweep + ridge;
+    }
+
+    private static float bottomEdge(float t, float h) {
+        float envelope = (1f - t) * 0.68f + (float) Math.sin(t * Math.PI) * 0.35f;
+        float feather = Math.max(0f, (float) Math.sin(t * Math.PI * 8f)) * h * 0.045f;
+        float sweep = (float) Math.sin(t * Math.PI) * h * 0.025f;
+        return -h * Math.max(0.035f, envelope) * 0.5f - feather + sweep;
     }
 
     private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
