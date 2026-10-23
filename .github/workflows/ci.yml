@@ -108,7 +108,7 @@ jobs:
         continue-on-error: true
         with:
           name: bloom-client-jars-12111
-          path: apps/client-mod
+          path: apps/client-mod/mc1.21.11/build/libs
       - name: Bundle BLOOD Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
       - run: npm install --no-audit --no-fund
