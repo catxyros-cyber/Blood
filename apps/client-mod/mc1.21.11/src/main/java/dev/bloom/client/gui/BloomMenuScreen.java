@@ -338,6 +338,7 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private void renderSidebar(GuiGraphics g, int mx, int my, float dt, float t) {
         Theme.Palette p = Theme.palette();
+        int accentEnd = Theme.lerp(p.accent(), 0xFF8AF7FF, 0.32f);
         boolean compact = sidebar < 60;
         int y = wy + 8;
         Ui.spriteTinted(g, "logo", wx + (compact ? 7 : 9), y, 16, 16, 0xFFFFFFFF);

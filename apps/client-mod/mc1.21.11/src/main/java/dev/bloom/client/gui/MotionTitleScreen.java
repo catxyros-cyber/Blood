@@ -1,6 +1,5 @@
 package dev.bloom.client.gui;
 
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -159,27 +158,27 @@ public final class MotionTitleScreen extends Screen {
     }
 
     private void drawLimb(GuiGraphics g, int pivotX, int pivotY, float scale, float angle, int front, int side) {
-        g.pose().pushPose();
-        g.pose().translate(pivotX, pivotY, 0);
-        g.pose().mulPose(Axis.ZP.rotationDegrees(angle));
+        g.pose().pushMatrix();
+        g.pose().translate((float) pivotX, (float) pivotY);
+        g.pose().rotate((float) Math.toRadians(angle));
         int w = Math.round(20 * scale);
         int h = Math.round(54 * scale);
         g.fill(-w / 2, 0, w / 2, h, front);
         g.fill(-w / 2, 0, -w / 2 + Math.max(2, Math.round(4 * scale)), h - 3, side);
         g.fill(-w / 2 - 1, h - 4, w / 2 + 1, h, 0xFF151A17);
-        g.pose().popPose();
+        g.pose().popMatrix();
     }
 
     private void drawArm(GuiGraphics g, int pivotX, int pivotY, float scale, float angle) {
-        g.pose().pushPose();
-        g.pose().translate(pivotX, pivotY, 0);
-        g.pose().mulPose(Axis.ZP.rotationDegrees(angle));
+        g.pose().pushMatrix();
+        g.pose().translate((float) pivotX, (float) pivotY);
+        g.pose().rotate((float) Math.toRadians(angle));
         int w = Math.round(16 * scale);
         int h = Math.round(50 * scale);
         g.fill(-w / 2, 0, w / 2, h, 0xFF293A31);
         g.fill(-w / 2, 0, -w / 2 + Math.max(2, Math.round(4 * scale)), h - 7, 0xFF3A4E42);
         g.fill(-w / 2, h - 8, w / 2, h, 0xFFD0AA8C);
-        g.pose().popPose();
+        g.pose().popMatrix();
     }
 
     private static float easeOutCubic(float value) {
