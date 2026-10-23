@@ -1,6 +1,7 @@
 package dev.bloom.client.gui.page;
 
 import dev.bloom.client.BloomClient;
+import dev.bloom.client.BloomKeys;
 import dev.bloom.client.core.compat.CompatReport;
 import dev.bloom.client.core.settings.BloomSettings;
 import dev.bloom.client.core.settings.Category;
@@ -10,7 +11,6 @@ import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.widget.Button;
 import dev.bloom.client.gui.widget.Element;
 import dev.bloom.client.gui.widget.Rows;
-import net.minecraft.SharedConstants;
 import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 
@@ -31,6 +31,8 @@ public class GeneralPage extends GenericPage {
         rows.add(new Rows.Info("info", "MOTION Client " + bc.platform().modVersion() + " on " + bc.platform().loaderName()
                 + " · Minecraft " + "1.21.11"
                 + ". Everything here is visual and client-side: it never changes the world, the server or other players.", Theme.accentArgb()));
+        rows.add(new Rows.Info("freeLookInfo", "FREE LOOK — hold the key below to look around while your player keeps moving. Click the key to rebind it.", Theme.accentArgb()));
+        rows.add(new KeybindsPage.KeyRow(screen, BloomKeys.FREE_LOOK));
         if (bc.shaderActive()) {
             rows.add(new Rows.Info("warning", BloomSettings.SKY_WITH_SHADERS.on()
                     ? "A shader pack is active and \"Use with shader packs\" is on. Results depend on the shader pack."
