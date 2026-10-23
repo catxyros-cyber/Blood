@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -8,10 +9,21 @@ import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.player.PlayerModel;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.PlayerModelType;
+import net.minecraft.world.entity.player.PlayerSkin;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 /** MOTION title screen: restrained entry splash followed by a custom main menu. */
 public final class MotionTitleScreen extends Screen {
@@ -26,12 +38,18 @@ public final class MotionTitleScreen extends Screen {
     private boolean entering;
     private long openedAt = System.currentTimeMillis();
     private long enterStartedAt;
+    private volatile Supplier<PlayerSkin> skinLookup;
+    private PlayerModel avatarModel;
+    private PlayerModelType avatarModelType;
+    private Identifier avatarTexture;
+    private boolean skinLookupStarted;
 
     public MotionTitleScreen() { super(Component.literal("MOTION Client")); }
 
     @Override
     protected void init() {
         clearWidgets();
+        startSkinLookup();
     }
 
     private void enterMenu() {
@@ -101,11 +119,9 @@ public final class MotionTitleScreen extends Screen {
         float t = easeOutCubic(reveal);
         float targetX = width * 0.79f;
         float x = entering ? width + 100f + (targetX - width - 100f) * t : targetX;
-        float scale = Math.max(1.85f, Math.min(3.0f, height / 330f));
         float stride = entering ? (1f - walkIn) * (float) Math.sin(now * 0.016f) : (float) Math.sin(now * 0.0015f) * 0.025f;
         float y = height * 0.22f + (entering ? (1f - t) * 36f : 0f);
-        drawCharacter(g, x, y, scale, stride);
-        g.drawString(font, "READY WHEN YOU ARE", Math.round(x - 62), Math.round(y + 159 * scale), 0x99E2E7E4, false);
+        drawUserAvatar(g, x, y, walkIn, stride, now);
     }
 
     /** Full-resolution charcoal and satin-curtain artwork; small stars drift over it. */
@@ -158,82 +174,68 @@ public final class MotionTitleScreen extends Screen {
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
     }
 
-    /** A softly shaded, rounded avatar with a restrained walk cycle. */
-    private void drawCharacter(GuiGraphics g, float centerX, float top, float scale, float stride) {
-        float bob = Math.abs(stride) * 2.2f;
-        int x = Math.round(centerX), y = Math.round(top + bob);
-        int shadow = Math.round(45 * scale);
-        g.fill(x - shadow, y + Math.round(157 * scale), x + shadow, y + Math.round(160 * scale), 0x50323E36);
-
-        drawLimb(g, x - Math.round(10 * scale), y + Math.round(96 * scale), scale, stride * 18f, 0xFF182039, 0xFF101729);
-        drawLimb(g, x + Math.round(10 * scale), y + Math.round(96 * scale), scale, -stride * 18f, 0xFF202A48, 0xFF101729);
-        drawArm(g, x - Math.round(25 * scale), y + Math.round(46 * scale), scale, -stride * 14f);
-        drawArm(g, x + Math.round(25 * scale), y + Math.round(46 * scale), scale, stride * 14f);
-
-        int torsoW = Math.round(48 * scale), torsoH = Math.round(58 * scale);
-        int torsoX = x - torsoW / 2, torsoY = y + Math.round(43 * scale);
-        fillSoftRect(g, torsoX, torsoY, torsoW, torsoH, Math.round(10 * scale), 0xFF293558, 0xFF121A30);
-        fillSoftRect(g, x - Math.max(1, Math.round(scale)), torsoY + Math.round(7 * scale), Math.max(2, Math.round(2 * scale)),
-                torsoH - Math.round(14 * scale), Math.max(1, Math.round(scale)), 0x6655D995, 0x0055D995);
-
-        int headW = Math.round(38 * scale), headH = Math.round(39 * scale);
-        int headX = x - headW / 2, headY = y + Math.round(2 * scale);
-        fillSoftRect(g, headX, headY, headW, headH, Math.round(11 * scale), 0xFF252832, 0xFF171A22);
-        fillSoftRect(g, headX - Math.round(scale), headY, headW + Math.round(2 * scale), Math.round(14 * scale), Math.round(10 * scale), 0xFF252C28, 0xFF141916);
-        fillSoftRect(g, headX + Math.round(2 * scale), headY + Math.round(8 * scale), Math.round(5 * scale), Math.round(20 * scale), Math.round(2 * scale), 0xFF12151B, 0xFF12151B);
-        fillSoftRect(g, headX + headW - Math.round(7 * scale), headY + Math.round(8 * scale), Math.round(5 * scale), Math.round(20 * scale), Math.round(2 * scale), 0xFF12151B, 0xFF12151B);
-        int maskW = Math.round(27 * scale), maskH = Math.round(11 * scale);
-        fillSoftRect(g, x - maskW / 2, headY + Math.round(21 * scale), maskW, maskH, Math.round(3 * scale), 0xFFEDECE6, 0xFFC9CBC8);
-        int eyeW = Math.max(2, Math.round(3 * scale)), eyeH = Math.max(1, Math.round(scale));
-        fillSoftRect(g, x - Math.round(8 * scale), headY + Math.round(24 * scale), eyeW, eyeH, eyeH, 0xFF252832, 0xFF252832);
-        fillSoftRect(g, x + Math.round(5 * scale), headY + Math.round(24 * scale), eyeW, eyeH, eyeH, 0xFF252832, 0xFF252832);
-        fillSoftRect(g, x - Math.round(4 * scale), headY + Math.round(29 * scale), Math.round(8 * scale), Math.max(1, Math.round(scale)), Math.max(1, Math.round(scale)), 0xFF42454A, 0xFF42454A);
+    /** Fetch the skin for Minecraft's active account off-thread; the default skin is shown meanwhile. */
+    private void startSkinLookup() {
+        if (skinLookupStarted) return;
+        skinLookupStarted = true;
+        Minecraft minecraft = Minecraft.getInstance();
+        GameProfile profile = new GameProfile(minecraft.getUser().getProfileId(), minecraft.getUser().getName());
+        CompletableFuture.supplyAsync(() -> minecraft.getSkinManager().createLookup(profile, false))
+                .thenAccept(lookup -> minecraft.execute(() -> skinLookup = lookup))
+                .exceptionally(error -> null);
     }
 
-    private void fillSoftRect(GuiGraphics g, int x, int y, int w, int h, int radius, int top, int bottom) {
-        if (w <= 0 || h <= 0) return;
-        int r = Math.max(0, Math.min(radius, Math.min(w, h) / 2));
-        for (int row = 0; row < h; row++) {
-            float inset = 0f;
-            if (r > 0 && row < r) inset = r - (float) Math.sqrt(Math.max(0, r * r - (r - row) * (r - row)));
-            else if (r > 0 && row >= h - r) {
-                int fromBottom = h - 1 - row;
-                inset = r - (float) Math.sqrt(Math.max(0, r * r - (r - fromBottom) * (r - fromBottom)));
-            }
-            int left = (int) Math.ceil(inset), right = (int) Math.floor(w - inset);
-            if (right <= left) continue;
-            float t = h <= 1 ? 0f : row / (float) (h - 1);
-            g.fill(x + left, y + row, x + right, y + row + 1, mixColor(top, bottom, t));
+    private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkIn, float stride, long now) {
+        Minecraft minecraft = Minecraft.getInstance();
+        Supplier<PlayerSkin> lookup = skinLookup;
+        PlayerSkin skin = lookup == null ? null : lookup.get();
+        if (skin == null || skin.body() == null) skin = DefaultPlayerSkin.get(minecraft.getUser().getProfileId());
+        if (skin == null || skin.body() == null) return;
+
+        PlayerModelType type = skin.model();
+        if (avatarModel == null || avatarModelType != type) {
+            boolean slim = type == PlayerModelType.SLIM;
+            avatarModel = new PlayerModel(minecraft.getEntityModels().bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim);
+            avatarModelType = type;
         }
-    }
+        avatarTexture = skin.body().texturePath();
 
-    private int mixColor(int a, int b, float t) {
-        int aa = (a >>> 24) & 255, ar = (a >>> 16) & 255, ag = (a >>> 8) & 255, ab = a & 255;
-        int ba = (b >>> 24) & 255, br = (b >>> 16) & 255, bg = (b >>> 8) & 255, bb = b & 255;
-        return (Math.round(aa + (ba - aa) * t) << 24) | (Math.round(ar + (br - ar) * t) << 16)
-                | (Math.round(ag + (bg - ag) * t) << 8) | Math.round(ab + (bb - ab) * t);
-    }
+        AvatarRenderState state = new AvatarRenderState();
+        state.isSpectator = false;
+        state.showHat = true;
+        state.showJacket = true;
+        state.showLeftPants = true;
+        state.showRightPants = true;
+        state.showLeftSleeve = true;
+        state.showRightSleeve = true;
+        state.showCape = false;
+        state.pose = Pose.STANDING;
+        state.attackArm = HumanoidArm.RIGHT;
+        state.leftArmPose = net.minecraft.client.model.HumanoidModel.ArmPose.EMPTY;
+        state.rightArmPose = net.minecraft.client.model.HumanoidModel.ArmPose.EMPTY;
+        state.bodyRot = -8f;
+        state.yRot = -6f;
+        state.xRot = -3f;
+        state.walkAnimationPos = now * 0.018f;
+        state.walkAnimationSpeed = entering ? Math.max(0f, 0.72f * (1f - walkIn)) : Math.abs(stride) * 0.03f;
+        state.ageInTicks = now / 50f;
+        avatarModel.setupAnim(state);
 
-    private void drawLimb(GuiGraphics g, int pivotX, int pivotY, float scale, float angle, int front, int side) {
-        g.pose().pushMatrix();
-        g.pose().translate((float) pivotX, (float) pivotY);
-        g.pose().rotate((float) Math.toRadians(angle));
-        int w = Math.round(21 * scale), h = Math.round(54 * scale);
-        fillSoftRect(g, -w / 2, 0, w, h, Math.round(7 * scale), front, side);
-        fillSoftRect(g, -w / 2 - 1, h - Math.round(8 * scale), w + 2, Math.round(9 * scale), Math.round(5 * scale), 0xFFE9E8E1, 0xFFBFC4C3);
-        g.pose().popMatrix();
-    }
+        int viewHeight = Math.round(Math.min(height * 0.76f, 650f));
+        int viewWidth = Math.round(viewHeight * 0.78f);
+        int x0 = Math.round(centerX - viewWidth / 2f);
+        int y0 = Math.round(Math.max(10f, top - height * 0.07f));
+        int x1 = x0 + viewWidth;
+        int y1 = Math.min(height - 12, y0 + viewHeight);
+        float modelScale = (y1 - y0) / 1.9f;
+        g.submitSkinRenderState(avatarModel, avatarTexture, 4f, -18f, 0.9f, x0, y0, x1, y1, modelScale);
 
-    private void drawArm(GuiGraphics g, int pivotX, int pivotY, float scale, float angle) {
-        g.pose().pushMatrix();
-        g.pose().translate((float) pivotX, (float) pivotY);
-        g.pose().rotate((float) Math.toRadians(angle));
-        int w = Math.round(17 * scale), h = Math.round(50 * scale), cuff = Math.round(9 * scale);
-        fillSoftRect(g, -w / 2, 0, w, h, Math.round(7 * scale), 0xFF242B4B, 0xFF151B32);
-        fillSoftRect(g, -w / 2, h - cuff, w, cuff + 1, Math.round(5 * scale), 0xFFE9E8E1, 0xFFBFC4C3);
-        g.pose().popMatrix();
+        String name = minecraft.getUser().getName();
+        int nameY = Math.max(12, y0 - 14);
+        int nameX = Math.round(centerX - font.width(name) / 2f);
+        g.drawString(font, name, nameX, nameY, 0xFFE8EAE9, false);
+        g.fill(nameX, nameY + 10, nameX + font.width(name), nameY + 11, 0xAAE8EAE9);
     }
-
     private static float easeOutCubic(float value) {
         float inverse = 1f - value;
         return 1f - inverse * inverse * inverse;
