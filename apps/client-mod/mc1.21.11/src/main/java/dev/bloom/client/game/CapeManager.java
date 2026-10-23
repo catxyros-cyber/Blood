@@ -252,6 +252,7 @@ public final class CapeManager {
     /** Leaving a world, or capes turned off: forget lookups and free the textures (render thread). */
     public static void clear() {
         DIRECTORY.clear();
+        SkinCompat.clearCache();
         for (Anim a : new java.util.ArrayList<>(TEXTURES.values())) for (Identifier rl : a.frames()) Minecraft.getInstance().getTextureManager().release(rl);
         TEXTURES.clear();
         FAILED.clear();
