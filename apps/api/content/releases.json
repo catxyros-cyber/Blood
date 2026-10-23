@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.18",
+    "date": "2026-10-23",
+    "notes": "Armor HUD, free look, and custom menu\n\nBLOOD Client 0.2.13."
+  },
+  {
     "version": "1.0.17",
     "date": "2026-10-23",
     "notes": "Add Discord Rich Presence"
