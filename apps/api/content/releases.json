@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.17",
+    "date": "2026-10-23",
+    "notes": "Add Discord Rich Presence"
+  },
+  {
     "version": "1.0.16",
     "date": "2026-10-23",
     "notes": "Ship 1.21.11 cape fix and improve balanced FPS settings\n\nBLOOD Client 0.2.12."
