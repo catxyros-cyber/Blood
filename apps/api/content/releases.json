@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.14",
+    "date": "2026-10-23",
+    "notes": "Cape fix"
+  },
+  {
     "version": "1.0.13",
     "date": "2026-10-22",
     "notes": "MOTION MOTION: new black and green look, My Skin (3D preview, editor, apply skins to your account), wings and auras, smoother capes, and custom in-game menu backgrounds.\n\nBLOOD Client 0.2.10."
