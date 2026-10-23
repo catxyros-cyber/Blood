@@ -135,6 +135,7 @@ pub async fn launch_game(app: AppHandle, state: State<'_, AppState>, req: Launch
         .map_err(|e| AppError::new("launch_failed", format!("Could not start Java: {e}")))?;
     let pid = child.id().unwrap_or(0);
     log::info!("launched instance {} (pid {pid})", req.instance_id);
+    crate::discord::game_started(&app, &req.instance_id, game_version(&req.args));
 
     let (tx, mut rx) = mpsc::unbounded_channel::<LogLine>();
     if let Some(out) = child.stdout.take() {
@@ -224,6 +225,7 @@ pub async fn launch_game(app: AppHandle, state: State<'_, AppState>, req: Launch
             if let Ok(mut games) = app.state::<AppState>().games.lock() {
                 games.remove(&instance_id);
             }
+            crate::discord::game_stopped(&app, &instance_id);
             let code = status.and_then(|s| s.code());
             log::info!("instance {instance_id} exited with {code:?}");
             let _ = app.emit(
@@ -237,6 +239,13 @@ pub async fn launch_game(app: AppHandle, state: State<'_, AppState>, req: Launch
         });
     }
     Ok(pid)
+}
+
+fn game_version(args: &[String]) -> String {
+    args.windows(2)
+        .find(|pair| pair[0] == "--version")
+        .map(|pair| pair[1].clone())
+        .unwrap_or_else(|| "Java Edition".to_string())
 }
 
 #[derive(Deserialize)]

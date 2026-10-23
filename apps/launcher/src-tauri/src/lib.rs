@@ -9,6 +9,7 @@
 
 mod authwin;
 mod bloomclient;
+mod discord;
 mod error;
 mod fsops;
 mod launch;
@@ -61,6 +62,8 @@ pub fn run() {
                 data_dir.display()
             );
             app.manage(state::AppState::new(data_dir));
+            app.manage(discord::DiscordState::default());
+            discord::start(app.handle().clone());
             // Started by Windows at login: stay out of the way.
             if std::env::args().any(|a| a == "--minimized") {
                 if let Some(w) = app.get_webview_window("main") {

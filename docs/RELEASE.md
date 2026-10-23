@@ -41,6 +41,7 @@ the bundled version is newer.
    - `VITE_MS_CLIENT_ID` (see [MICROSOFT_AUTH.md](MICROSOFT_AUTH.md))
    - `VITE_BLOOM_API_URL`
    - `BLOOM_CONTACT` (see [MODRINTH.md](MODRINTH.md))
+   - `MOTION_DISCORD_CLIENT_ID` (the Discord Application ID from Developer Portal → General Information; this enables in-game Rich Presence)
 5. **Make the repository's releases public.** Launchers download `latest.json` and the installer
    anonymously. If the code must stay private, publish releases from a separate public repository
    instead.

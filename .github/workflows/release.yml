@@ -150,6 +150,7 @@ jobs:
           VITE_MS_CLIENT_ID: ${{ vars.VITE_MS_CLIENT_ID }}
           VITE_BLOOM_API_URL: ${{ vars.VITE_BLOOM_API_URL }}
           BLOOM_CONTACT: ${{ vars.BLOOM_CONTACT }}
+          MOTION_DISCORD_CLIENT_ID: ${{ vars.MOTION_DISCORD_CLIENT_ID }}
         with:
           projectPath: apps/launcher
           tauriScript: npm run tauri
