@@ -89,15 +89,7 @@ public final class MotionTitleScreen extends Screen {
         int menuY = height / 2 - 36;
         float reveal = entering ? easeOutCubic(walkIn) : 1f;
 
-        // A slim, translucent backing keeps the menu readable without covering the background.
-        int panelX = menuX - 22;
-        int panelW = Math.min(270, width / 3);
-        int panelY = logoY - 14;
-        int panelH = Math.min(height - panelY - 22, 330);
-        g.fillGradient(panelX, panelY, panelX + panelW, panelY + panelH, 0x24101418, 0x52101317);
-        g.fill(panelX, panelY, panelX + 1, panelY + panelH, 0x9955D995);
-        g.fill(panelX + 8, panelY + 1, panelX + panelW - 8, panelY + 2, 0x3355D995);
-
+        // Keep the menu open against the artwork, like the reference, without a box around it.
         drawLogoMark(g, menuX + 86, logoY + 27, 24, 0xFFEEF1EF);
         centerText(g, "MOTION Client", menuX + 86, logoY + 63, 0xFFF2F3F2);
         centerText(g, "JAVA EDITION", menuX + 86, logoY + 80, 0xFF9FA6A2);
@@ -105,15 +97,14 @@ public final class MotionTitleScreen extends Screen {
         for (int i = 0; i < MENU_ITEMS.length; i++) {
             int rowY = menuY + i * 34;
             int alpha = Math.round(255 * reveal);
-            int rowX = menuX - 6;
-            int rowW = 184;
+            int rowX = menuX - 10;
+            int rowW = 192;
             boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 3 && mouseY < rowY + 24;
             if (hovered) {
-                g.fillGradient(rowX, rowY - 3, rowX + rowW, rowY + 24, (alpha / 3 << 24) | 0x26332C, (alpha / 5 << 24) | 0x121915);
-                g.fill(rowX, rowY - 3, rowX + 2, rowY + 24, (alpha << 24) | 0x55D995);
+                g.fillGradient(rowX, rowY - 3, rowX + rowW, rowY + 24, (alpha / 5 << 24) | 0xDDE3DF, (alpha / 8 << 24) | 0x9CA59F);
             }
-            int color = hovered ? 0xFFF2F4F2 : (alpha << 24) | (i == 0 ? 0xDCE3DF : 0xB8C0BB);
-            g.drawString(font, MENU_ITEMS[i], menuX + 10, rowY + 4, color, false);
+            int color = hovered ? 0xFFF9FAF9 : (alpha << 24) | (i == 0 ? 0xE4E8E5 : 0xC5CBC7);
+            centerText(g, MENU_ITEMS[i], menuX + 86, rowY + 4, color);
         }
 
         float t = easeOutCubic(reveal);
@@ -246,7 +237,7 @@ public final class MotionTitleScreen extends Screen {
         int menuY = height / 2 - 36;
         for (int i = 0; i < MENU_ITEMS.length; i++) {
             int y = menuY + i * 34;
-            if (mouseX >= menuX - 6 && mouseX < menuX + 178 && mouseY >= y - 3 && mouseY < y + 24) return i;
+            if (mouseX >= menuX - 10 && mouseX < menuX + 182 && mouseY >= y - 3 && mouseY < y + 24) return i;
         }
         return -1;
     }
