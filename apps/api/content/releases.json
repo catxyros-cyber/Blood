@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.23",
+    "date": "2026-10-24",
+    "notes": "Fix Minecraft avatars\n\nBLOOD Client 0.2.18."
+  },
+  {
     "version": "1.0.22",
     "date": "2026-10-23",
     "notes": "Minecraft skin menu\n\nBLOOD Client 0.2.17."

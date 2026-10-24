@@ -1,6 +1,6 @@
 [package]
 name = "bloom"
-version = "1.0.22"
+version = "1.0.23"
 description = "BLOOD — a performance-focused Minecraft launcher"
 authors = ["BLOOD"]
 edition = "2021"
