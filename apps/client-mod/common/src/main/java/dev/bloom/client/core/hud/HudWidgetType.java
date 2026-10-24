@@ -46,7 +46,16 @@ public enum HudWidgetType {
             List.of(new Option("ping", "Ping", true), new Option("server", "Server address", false),
                     new Option("day", "World day", true), new Option("time", "In-game time", false))),
     MUSIC("music", "Now playing", "Current Windows media track, artist, album artwork and synced lyrics from Music/Lyrics .lrc files.", Anchor.BOTTOM_LEFT, 4, -42, false,
-            List.of(new Option("album", "Show album", true), new Option("lyrics", "Show synced lyrics", true)));
+            List.of(new Option("album", "Show album", true), new Option("lyrics", "Show synced lyrics", true))),
+    TARGET_INFO("target", "Target player", "Crosshair target's name, health, armor and durability values received from the server.", Anchor.TOP_CENTER, 0, 28, false,
+            List.of(new Option("name", "Show player name", true), new Option("health", "Show health", true),
+                    new Option("armor", "Show armor items", true), new Option("durability", "Show durability", true),
+                    new Option("percent", "Durability as %", false), new Option("bars", "Durability bars", true),
+                    new Option("distance", "Show distance", false))),
+    LOW_HEALTH("low_health", "Low health warning", "A compact warning when your health is low (30% by default).", Anchor.TOP_CENTER, 0, 84, true,
+            List.of(new Option("value", "Show health value", true), new Option("bar", "Show health bar", true),
+                    new Option("pulse", "Pulse while critical", true), new Option("early", "Warn at 50% health", false),
+                    new Option("critical", "Warn only below 20%", false)));
 
     public record Option(String id, String label, boolean defaultValue) {
     }

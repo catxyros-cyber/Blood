@@ -72,6 +72,10 @@ export const HUD_WIDGETS: HudWidgetInfo[] = [
     options: [o("ping", "Ping", true), o("server", "Server address", false), o("day", "World day", true), o("time", "In-game time", false)] },
   { id: "music", name: "Now playing", description: "Current Windows media track, artist, album artwork and synced local lyrics.", anchor: "bottom_left", x: 4, y: -42, visibleByDefault: false,
     options: [o("album", "Show album", true), o("lyrics", "Show synced lyrics", true)] },
+  { id: "target", name: "Target player", description: "Crosshair target's name, health, armor, and durability values received from the server.", anchor: "top_center", x: 0, y: 28, visibleByDefault: false,
+    options: [o("name", "Show player name", true), o("health", "Show health", true), o("armor", "Show armor items", true), o("durability", "Show durability", true), o("percent", "Durability as %", false), o("bars", "Durability bars", true), o("distance", "Show distance", false)] },
+  { id: "low_health", name: "Low health warning", description: "A compact warning when your health is low (30% by default).", anchor: "top_center", x: 0, y: 84, visibleByDefault: true,
+    options: [o("value", "Show health value", true), o("bar", "Show health bar", true), o("pulse", "Pulse while critical", true), o("early", "Warn at 50% health", false), o("critical", "Warn only below 20%", false)] },
 ];
 
 export const CROSSHAIR_STYLES = [
@@ -371,7 +375,7 @@ export const MOD_PRESETS: ModPreset[] = [
   {
     id: "full",
     name: "Full HUD",
-    description: "Every widget, arranged so nothing overlaps: stats on the left, clock, info and frame time on the right, armor, potions, held item and keystrokes around the edges.",
+    description: "Every widget, including now playing, target-player status and low-health alerts, arranged around the screen edges.",
     hud: {
       hideOthers: true,
       widgets: {
@@ -388,6 +392,9 @@ export const MOD_PRESETS: ModPreset[] = [
         armor: { visible: true, anchor: "middle_right", x: -4, y: 0 },
         held: { visible: true, anchor: "bottom_left", x: 4, y: -4 },
         keystrokes: { visible: true, anchor: "bottom_right", x: -4, y: -4 },
+        music: { visible: true, anchor: "bottom_left", x: 4, y: -42 },
+        target: { visible: true, anchor: "top_center", x: 0, y: 28 },
+        low_health: { visible: true, anchor: "top_center", x: 0, y: 84 },
       },
     },
     settings: { "hud.enabled": true },

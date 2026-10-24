@@ -51,6 +51,8 @@ public final class Widgets {
             case HELD -> new Held();
             case STATUS -> new Status();
             case INFO -> new Info();
+            case TARGET_INFO -> new TargetInfo();
+            case LOW_HEALTH -> new LowHealth();
             case MUSIC -> new Music();
         };
     }
@@ -470,6 +472,170 @@ public final class Widgets {
         }
     }
 
+    // ---------------------------------------------------------------- target player information
+
+    static final class TargetInfo extends HudWidget {
+        private static final EquipmentSlot[] ARMOR_SLOTS = {
+                EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET
+        };
+
+        TargetInfo() { super(HudWidgetType.TARGET_INFO); }
+
+        private net.minecraft.world.entity.player.Player target(Ctx c) {
+            if (c.preview || c.mc.hitResult == null) return null;
+            if (c.mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult hit
+                    && hit.getEntity() instanceof net.minecraft.world.entity.player.Player player
+                    && player != c.mc.player) return player;
+            return null;
+        }
+
+        private List<ItemStack> armor(Ctx c, net.minecraft.world.entity.player.Player player) {
+            List<ItemStack> items = new ArrayList<>();
+            if (player != null) {
+                for (EquipmentSlot slot : ARMOR_SLOTS) {
+                    ItemStack stack = player.getItemBySlot(slot);
+                    if (!stack.isEmpty()) items.add(stack);
+                }
+            } else if (c.preview) {
+                ItemStack helmet = new ItemStack(Items.NETHERITE_HELMET);
+                ItemStack chest = new ItemStack(Items.NETHERITE_CHESTPLATE);
+                ItemStack legs = new ItemStack(Items.NETHERITE_LEGGINGS);
+                ItemStack boots = new ItemStack(Items.NETHERITE_BOOTS);
+                helmet.setDamageValue(80);
+                chest.setDamageValue(220);
+                legs.setDamageValue(130);
+                boots.setDamageValue(45);
+                items.addAll(List.of(helmet, chest, legs, boots));
+            }
+            return items;
+        }
+
+        private String name(Ctx c, net.minecraft.world.entity.player.Player player) {
+            String value = player == null ? "SamplePlayer" : player.getName().getString();
+            if (c.state.option("distance") && player != null && c.mc.player != null) {
+                value += String.format(Locale.ROOT, "  %.1fm", c.mc.player.distanceTo(player));
+            }
+            int max = 170;
+            while (!value.isEmpty() && c.font.width(value) > max) value = value.substring(0, value.length() - 1);
+            return value;
+        }
+
+        private String health(Ctx c, net.minecraft.world.entity.player.Player player) {
+            float hp = player == null ? 16f : player.getHealth();
+            float max = player == null ? 20f : player.getMaxHealth();
+            return String.format(Locale.ROOT, "%.1f / %.0f HP", hp, max);
+        }
+
+        private String durability(Ctx c, ItemStack stack) {
+            if (!c.state.option("durability") || !stack.isDamageableItem()) return "";
+            int remaining = Math.max(0, stack.getMaxDamage() - stack.getDamageValue());
+            return c.state.option("percent")
+                    ? (remaining * 100 / Math.max(1, stack.getMaxDamage())) + "%"
+                    : String.valueOf(remaining);
+        }
+
+        @Override
+        public int[] measure(Ctx c) {
+            net.minecraft.world.entity.player.Player player = target(c);
+            if (player == null && !c.preview) return null;
+            int w = 112;
+            if (c.state.option("name")) w = Math.max(w, c.font.width(name(c, player)));
+            if (c.state.option("health")) w = Math.max(w, c.font.width(health(c, player)) + 90);
+            List<ItemStack> stacks = c.state.option("armor") ? armor(c, player) : List.of();
+            if (!stacks.isEmpty()) w = Math.max(w, stacks.size() * 34);
+            if (c.state.option("armor") && stacks.isEmpty()) w = Math.max(w, c.font.width("No armor equipped"));
+            int h = (c.state.option("name") ? 10 : 0)
+                    + (c.state.option("health") ? 13 : 0)
+                    + (c.state.option("armor") ? 19 : 0);
+            return new int[]{w, Math.max(c.font.lineHeight, h)};
+        }
+
+        @Override
+        public void render(GuiGraphics g, Ctx c, int w, int h) {
+            net.minecraft.world.entity.player.Player player = target(c);
+            int y = 0;
+            if (c.state.option("name")) {
+                text(g, c, name(c, player), 0, y, c.accent);
+                y += 10;
+            }
+            if (c.state.option("health")) {
+                float hp = player == null ? 16f : player.getHealth();
+                float max = player == null ? 20f : Math.max(1f, player.getMaxHealth());
+                int barW = Math.min(78, Math.max(36, w - c.font.width(health(c, player)) - 8));
+                g.fill(0, y + 1, barW, y + 7, 0x88202020);
+                float ratio = Math.max(0f, Math.min(1f, hp / max));
+                int color = ratio <= 0.25f ? 0xFFFF5964 : ratio <= 0.5f ? 0xFFF2C65E : 0xFF5DDB9A;
+                g.fill(0, y + 1, Math.round(barW * ratio), y + 7, color);
+                text(g, health(c, player), barW + 5, y, c.text);
+                y += 13;
+            }
+            if (!c.state.option("armor")) return;
+            List<ItemStack> stacks = armor(c, player);
+            if (stacks.isEmpty()) {
+                text(g, "No armor equipped", 0, y, c.text);
+                return;
+            }
+            int x = 0;
+            for (ItemStack stack : stacks) {
+                g.renderItem(stack, x, y);
+                if (c.state.option("bars")) durabilityBar(g, stack, x, y);
+                String value = durability(c, stack);
+                if (!value.isEmpty()) text(g, value, x + 17, y + 4, durabilityColor(c, stack));
+                x += 34;
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- low health warning
+
+    static final class LowHealth extends HudWidget {
+        LowHealth() { super(HudWidgetType.LOW_HEALTH); }
+
+        private float threshold(Ctx c) {
+            if (c.state.option("early")) return 0.5f;
+            if (c.state.option("critical")) return 0.2f;
+            return 0.3f;
+        }
+
+        private float health(Ctx c) {
+            return c.mc.player == null ? (c.preview ? 4.4f : 0f) : c.mc.player.getHealth();
+        }
+
+        private float maxHealth(Ctx c) {
+            return c.mc.player == null ? 20f : Math.max(1f, c.mc.player.getMaxHealth());
+        }
+
+        private boolean active(Ctx c) {
+            return c.preview || (c.mc.player != null && health(c) / maxHealth(c) <= threshold(c));
+        }
+
+        private String label(Ctx c) {
+            String value = "LOW HEALTH";
+            if (c.state.option("value")) {
+                value += String.format(Locale.ROOT, "  %.1f / %.0f HP", health(c), maxHealth(c));
+            }
+            return value;
+        }
+
+        @Override
+        public int[] measure(Ctx c) {
+            return active(c) ? new int[]{Math.max(92, c.font.width(label(c))), c.font.lineHeight - 1 + (c.state.option("bar") ? 5 : 0)} : null;
+        }
+
+        @Override
+        public void render(GuiGraphics g, Ctx c, int w, int h) {
+            if (!active(c)) return;
+            float ratio = c.preview ? 0.22f : Math.max(0f, Math.min(1f, health(c) / maxHealth(c)));
+            float pulse = c.state.option("pulse") ? 0.72f + 0.28f * (0.5f + 0.5f * (float) Math.sin(c.nowMs * 0.012f)) : 1f;
+            int color = c.state.textColor >= 0 ? c.text : withAlpha(0xFFFF5964, pulse);
+            text(g, label(c), 0, 0, color);
+            if (c.state.option("bar")) {
+                int y = c.font.lineHeight + 1;
+                g.fill(0, y, w, y + 3, withAlpha(0xFFFF5964, 0.25f));
+                g.fill(0, y, Math.round(w * ratio), y + 3, withAlpha(0xFFFF5964, pulse));
+            }
+        }
+    }
     // ---------------------------------------------------------------- potions
 
     static final class Potions extends HudWidget {
