@@ -128,6 +128,11 @@ jobs:
               if [[ "$line" == pkg:* ]]; then
                 echo "== package ${line#pkg:}" >> probe.txt
                 unzip -Z1 "$JAR" | grep "^${line#pkg:}/[^/]*\.class$" | sed 's/\.class$//' >> probe.txt
+              elif [[ "$line" == file:* ]]; then
+                echo "== file ${line#file:}" >> probe.txt
+                unzip -p "$JAR" "${line#file:}" >> probe.txt 2>&1
+                CLIENT=$(grep -i 'client' mine.txt | grep -v extracted | head -1)
+                [ -n "$CLIENT" ] && unzip -p "$CLIENT" "${line#file:}" >> probe.txt 2>/dev/null
               elif [[ "$line" == tree:* ]]; then
                 echo "== tree ${line#tree:}" >> probe.txt
                 unzip -Z1 "$JAR" | grep "^${line#tree:}/.*\.class$" | grep -v '\$' | sed 's/\.class$//' >> probe.txt

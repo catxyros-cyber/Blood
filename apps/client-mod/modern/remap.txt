@@ -57,3 +57,6 @@ MC >= 26 | typed\(\(char\) cp, event\.modifiers\(\)\) | typed((char) cp, 0)
 MC >= 26 | \blevel\.getDayTime\(\) | level.getOverworldClockTime()
 # The options screen knew whether it was opened in a world in 26.1 and 26.2.
 MC >= 26 && MC < 26.3 | new OptionsScreen\(this, Minecraft\.getInstance\(\)\.options\) | new OptionsScreen(this, Minecraft.getInstance().options, false)
+
+# ---------------------------------------------------------------- 26.2 and later
+MC >= 26.2 | new Matrix4f\(RenderSystem\.getModelViewMatrix\(\)\) | RenderSystem.getModelViewMatrixCopy()

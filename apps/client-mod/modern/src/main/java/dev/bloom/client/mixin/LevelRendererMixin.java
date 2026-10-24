@@ -35,9 +35,25 @@ public abstract class LevelRendererMixin {
     }
 
     /** End of the sky pass (Minecraft's sky is drawn): MOTION's skyboxes, stars and glow on top. */
+    // The sky pass is a lambda inside addSkyPass; its name, signature and static-ness change
+    // between versions, so each one is spelled out.
+//#if MC >= 26.2
+    @Inject(method = "lambda$addSkyPass$0(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/SkyRenderState;)V",
+            at = @At("TAIL"))
+    private void bloom$sky(CallbackInfo ci) {
+//#elif MC >= 26
+    @Inject(method = "lambda$addSkyPass$0(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/SkyRenderState;Lnet/minecraft/client/renderer/SkyRenderer;)V",
+            at = @At("TAIL"))
+    private static void bloom$sky(CallbackInfo ci) {
+//#elif MC >= 1.21.11
     @Inject(method = "method_62215(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/SkyRenderState;Lnet/minecraft/client/renderer/SkyRenderer;)V",
             at = @At("TAIL"))
     private static void bloom$sky(CallbackInfo ci) {
+//#else
+    @Inject(method = "method_62215(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/SkyRenderState;)V",
+            at = @At("TAIL"))
+    private void bloom$sky(CallbackInfo ci) {
+//#endif
         if (!BloomClient.ready()) return;
         try {
             Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix());
