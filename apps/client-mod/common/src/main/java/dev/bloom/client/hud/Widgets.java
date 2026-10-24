@@ -566,13 +566,13 @@ public final class Widgets {
                 float ratio = Math.max(0f, Math.min(1f, hp / max));
                 int color = ratio <= 0.25f ? 0xFFFF5964 : ratio <= 0.5f ? 0xFFF2C65E : 0xFF5DDB9A;
                 g.fill(0, y + 1, Math.round(barW * ratio), y + 7, color);
-                text(g, health(c, player), barW + 5, y, c.text);
+                text(g, c, health(c, player), barW + 5, y, c.text);
                 y += 13;
             }
             if (!c.state.option("armor")) return;
             List<ItemStack> stacks = armor(c, player);
             if (stacks.isEmpty()) {
-                text(g, "No armor equipped", 0, y, c.text);
+                text(g, c, "No armor equipped", 0, y, c.text);
                 return;
             }
             int x = 0;
@@ -580,7 +580,7 @@ public final class Widgets {
                 g.renderItem(stack, x, y);
                 if (c.state.option("bars")) durabilityBar(g, stack, x, y);
                 String value = durability(c, stack);
-                if (!value.isEmpty()) text(g, value, x + 17, y + 4, durabilityColor(c, stack));
+                if (!value.isEmpty()) text(g, c, value, x + 17, y + 4, durabilityColor(c, stack));
                 x += 34;
             }
         }
@@ -628,7 +628,7 @@ public final class Widgets {
             float ratio = c.preview ? 0.22f : Math.max(0f, Math.min(1f, health(c) / maxHealth(c)));
             float pulse = c.state.option("pulse") ? 0.72f + 0.28f * (0.5f + 0.5f * (float) Math.sin(c.nowMs * 0.012f)) : 1f;
             int color = c.state.textColor >= 0 ? c.text : withAlpha(0xFFFF5964, pulse);
-            text(g, label(c), 0, 0, color);
+            text(g, c, label(c), 0, 0, color);
             if (c.state.option("bar")) {
                 int y = c.font.lineHeight + 1;
                 g.fill(0, y, w, y + 3, withAlpha(0xFFFF5964, 0.25f));
