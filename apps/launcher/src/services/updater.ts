@@ -49,7 +49,8 @@ export function startAutoUpdates() {
   started = true;
   setTimeout(() => void checkForUpdate(false), 4000);
   setInterval(() => {
-    if (auto() && !pending) void checkForUpdate(false);
+    // Also retries an update that was found while automatic updates were off and never downloaded.
+    if (auto() && (!pending || !downloaded)) void checkForUpdate(false);
   }, CHECK_EVERY_MS);
   // When a game closes or tasks finish, a downloaded update can go in (and a postponed one later).
   app.subscribe(() => maybeInstall());
@@ -66,6 +67,11 @@ export async function checkForUpdate(manual = false): Promise<Update | null> {
   if (st === "checking" || st === "downloading" || st === "installing") return pending;
   if (st === "ready" && pending) {
     if (manual) maybeInstall(true);
+    return pending;
+  }
+  if (st === "available" && pending && !downloaded && (manual || auto())) {
+    // Found earlier while automatic updates were off: no need to ask GitHub again.
+    void download(pending, manual);
     return pending;
   }
   updateState.set({ status: "checking", error: undefined });
