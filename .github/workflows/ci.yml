@@ -106,9 +106,11 @@ jobs:
       - name: Publish the build log to a ci-logs branch
         # The Actions log viewer isn't reachable from every tool; a branch is.
         if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set +e
           mkdir -p "$RUNNER_TEMP/logrepo" && cd "$RUNNER_TEMP/logrepo"
           cp "$RUNNER_TEMP/build.log" build.log 2>/dev/null || echo "no build log" > build.log
           grep -nE "error:|warning: \[|FAILURE|What went wrong|Could not|Exception" build.log | head -3000 > errors.txt || true
