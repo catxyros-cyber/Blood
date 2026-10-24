@@ -238,7 +238,13 @@ public final class MotionTitleScreen extends Screen {
         int x1 = x0 + viewWidth;
         int y1 = Math.min(height - 12, y0 + viewHeight);
         float modelScale = (y1 - y0) / 1.9f;
+//#if MC >= 26.2
+        // 26.2 draws GUI skins from a plain model; it shares the posed player model's parts.
+        g.submitSkinRenderState(new net.minecraft.client.model.Model.Simple(avatarModel.root(), net.minecraft.client.renderer.rendertype.RenderTypes::entityTranslucent),
+                avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+//#else
         g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+//#endif
 
         String name = minecraft.getUser().getName();
         int nameY = Math.max(12, y0 - 14);

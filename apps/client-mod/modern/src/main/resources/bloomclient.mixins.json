@@ -26,6 +26,7 @@
     "MultiPlayerGameModeMixin",
     "CameraFreeLookMixin",
     "MinecraftTitleScreenMixin",
+    "MinecraftReloadMixin",
     "WeatherEffectRendererMixin"
   ],
   "server": [],

@@ -9,7 +9,11 @@ import org.spongepowered.asm.mixin.injection.At;
 /** MOTION menu background colour on Minecraft's resource-loading screen (the Mojang logo screen). */
 @Mixin(LoadingOverlay.class)
 public abstract class LoadingOverlayMixin {
+//#if MC >= 26
+    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/util/function/IntSupplier;getAsInt()I"))
+//#else
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Ljava/util/function/IntSupplier;getAsInt()I"))
+//#endif
     private int bloom$backgroundColor(int original) {
         try {
             return MenuBackground.loadingColor(original);

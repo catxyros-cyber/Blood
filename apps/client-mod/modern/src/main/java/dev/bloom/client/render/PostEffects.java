@@ -10,7 +10,9 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
+//#if MC < 26.2
 import com.mojang.blaze3d.textures.TextureFormat;
+//#endif
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -49,9 +51,6 @@ public final class PostEffects {
     private static final long RELEASE_AFTER_NANOS = 10_000_000_000L;
     private static final float SMOOTH_SECONDS = 0.35f;
 
-    private static final RenderPipeline.Snippet PARAMS = RenderPipeline.builder()
-            .withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER)
-            .buildSnippet();
     private static RenderPipeline grade, bright, blur, copy;
 
     private static Target swap, glowA, glowB;
@@ -73,7 +72,11 @@ public final class PostEffects {
         static Target create(String label, int w, int h) {
             GpuDevice device = RenderSystem.getDevice();
             GpuTexture tex = device.createTexture(label, GpuTexture.USAGE_RENDER_ATTACHMENT | GpuTexture.USAGE_TEXTURE_BINDING | GpuTexture.USAGE_COPY_DST,
+//#if MC >= 26.2
+                    com.mojang.blaze3d.GpuFormat.RGBA8_UNORM, w, h, 1, 1);
+//#else
                     TextureFormat.RGBA8, w, h, 1, 1);
+//#endif
             return new Target(tex, device.createTextureView(tex), w, h);
         }
 
@@ -84,13 +87,11 @@ public final class PostEffects {
     }
 
     private static RenderPipeline pipeline(String fragment, boolean twoSamplers) {
-        RenderPipeline.Builder b = RenderPipeline.builder(PARAMS);
+        RenderPipeline.Builder b = Draw.newPipeline(DefaultVertexFormat.POSITION_TEX, false,
+                twoSamplers ? new String[]{"InSampler", "BloomSampler"} : new String[]{"InSampler"});
         b.withLocation(Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "pipeline/post_" + fragment));
         b.withVertexShader(Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "post/bloom_post"));
         b.withFragmentShader(Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "post/" + fragment));
-        b.withSampler("InSampler");
-        if (twoSamplers) b.withSampler("BloomSampler");
-        b.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS);
         Draw.renderState(b, null, false);
         b.withCull(false);
         return b.build();
@@ -133,7 +134,7 @@ public final class PostEffects {
 
     private static void run(Minecraft mc, PostParams.Input in, PostParams.Chain want) {
         ensurePipelines();
-        RenderTarget main = mc.getMainRenderTarget();
+        RenderTarget main = Draw.mainTarget();
         int w = main.width, h = main.height;
         if (w <= 0 || h <= 0) return;
         if (swap == null || swap.width() != w || swap.height() != h) {
@@ -198,24 +199,19 @@ public final class PostEffects {
                                  Matrix4f params, Vector4f extra, Matrix4f sizes) {
         GpuBufferSlice uniforms = Draw.transforms(params, extra, new Vector3f(), sizes);
         try (ByteBufferBuilder memory = new ByteBufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4)) {
-            BufferBuilder b = new BufferBuilder(memory, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            BufferBuilder b = Draw.quadBuilder(memory, DefaultVertexFormat.POSITION_TEX);
             b.addVertex(-1f, -1f, 0f).setUv(0f, 0f);
             b.addVertex(1f, -1f, 0f).setUv(1f, 0f);
             b.addVertex(1f, 1f, 0f).setUv(1f, 1f);
             b.addVertex(-1f, 1f, 0f).setUv(0f, 1f);
-            try (MeshData mesh = b.buildOrThrow()) {
-                GpuBuffer vertices = pipeline.getVertexFormat().uploadImmediateVertexBuffer(mesh.vertexBuffer());
-                RenderSystem.AutoStorageIndexBuffer seq = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-                GpuBuffer indices = seq.getBuffer(6);
-                try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "MOTION post", out, OptionalInt.empty())) {
-                    pass.setPipeline(pipeline);
-                    pass.setVertexBuffer(0, vertices);
-                    pass.setIndexBuffer(indices, seq.type());
-                    pass.setUniform("DynamicTransforms", uniforms);
-                    Draw.bindLinearClamp(pass, "InSampler", in);
-                    if (second != null) Draw.bindLinearClamp(pass, "BloomSampler", second);
-                    pass.drawIndexed(0, 0, 6, 1);
-                }
+            try (MeshData mesh = b.buildOrThrow();
+                 Draw.Quads quads = Draw.Quads.upload(mesh);
+                 RenderPass pass = Draw.openPass("MOTION post", out, null)) {
+                pass.setPipeline(pipeline);
+                pass.setUniform("DynamicTransforms", uniforms);
+                Draw.bindLinearClamp(pass, "InSampler", in);
+                if (second != null) Draw.bindLinearClamp(pass, "BloomSampler", second);
+                quads.draw(pass);
             }
         }
     }

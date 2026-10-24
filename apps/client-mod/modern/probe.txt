@@ -94,3 +94,7 @@ net.minecraft.world.level.Level
 net.minecraft.client.renderer.state.level.CameraRenderState
 net.minecraft.client.renderer.state.level.LevelRenderState
 net.minecraft.client.DeltaTracker
+net.minecraft.client.model.Model
+net.minecraft.client.model.Model$Simple
+net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer
+net.minecraft.client.renderer.state.gui.GuiRenderState

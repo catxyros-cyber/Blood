@@ -17,8 +17,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class FogRendererMixin {
     @Inject(method = "setupFog", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/fog/FogRenderer;updateBuffer(Ljava/nio/ByteBuffer;ILorg/joml/Vector4f;FFFFFF)V"))
-    private void bloom$fog(Camera camera, int renderDistance, net.minecraft.client.DeltaTracker deltaTracker, float darken,
-                           net.minecraft.client.multiplayer.ClientLevel level, CallbackInfoReturnable<Vector4f> cir,
+    private void bloom$fog(Camera camera, int renderDistance,
+//#if MC < 1.21.11
+                           boolean isFoggy,
+//#endif
+                           net.minecraft.client.DeltaTracker deltaTracker, float darken,
+                           net.minecraft.client.multiplayer.ClientLevel level, CallbackInfoReturnable<?> cir,
                            @Local FogData data, @Local Vector4f fogColor) {
         if (!BloomClient.ready()) return;
         try {

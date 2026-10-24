@@ -60,3 +60,17 @@ MC >= 26 && MC < 26.3 | new OptionsScreen\(this, Minecraft\.getInstance\(\)\.opt
 
 # ---------------------------------------------------------------- 26.2 and later
 MC >= 26.2 | new Matrix4f\(RenderSystem\.getModelViewMatrix\(\)\) | RenderSystem.getModelViewMatrixCopy()
+
+# ---------------------------------------------------------------- 26.3 and later
+# Blaze3D's GPU API moved to Renderpearl (com.mojang.renderpearl.api.*).
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.buffers\. | com.mojang.renderpearl.api.buffers.
+MC >= 26.3 | \bcom/mojang/blaze3d/buffers/ | com/mojang/renderpearl/api/buffers/
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.textures\. | com.mojang.renderpearl.api.textures.
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(CommandEncoder|RenderPass|RenderPassDescriptor|GpuQuery|GpuQueryPool)\b | com.mojang.renderpearl.api.commands.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(GpuDevice|GpuBackend|DeviceInfo|GpuSurface)\b | com.mojang.renderpearl.api.device.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.pipeline\.(BlendEquation|BindGroupLayout|BlendFunction|ColorTargetState|CompiledRenderPipeline|DepthStencilState|RenderPipeline)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.platform\.(BlendFactor|BlendOp|CompareOp|PolygonMode)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.shaders\.(UniformType|ShaderType|ShaderSource)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.(PrimitiveTopology|IndexType)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.GpuFormat\b | com.mojang.renderpearl.api.GpuFormat
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.vertex\.(VertexFormat|VertexFormatElement)\b | com.mojang.renderpearl.api.vertex.$1

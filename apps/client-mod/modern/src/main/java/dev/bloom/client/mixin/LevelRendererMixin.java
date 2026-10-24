@@ -21,20 +21,39 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
+    /** Captures the camera's rotation and projection for MOTION's world drawing and HUD labels. */
+//#if MC >= 26.3
+    @Inject(method = "render", at = @At("HEAD"))
+    private void bloom$capture(GraphicsResourceAllocator allocator, boolean renderBlockOutline,
+                               net.minecraft.client.renderer.state.level.CameraRenderState camera, GpuBufferSlice fogBuffer,
+                               Vector4f fogColor, boolean renderSky, boolean extra, CallbackInfo ci) {
+        float partialTick = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, partialTick);
+    }
+//#elif MC >= 26.2
+    @Inject(method = "render", at = @At("HEAD"))
+    private void bloom$capture(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline,
+                               net.minecraft.client.renderer.state.level.CameraRenderState camera, org.joml.Matrix4fc modelView,
+                               GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
+        WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
+    }
+//#elif MC >= 26
+    @Inject(method = "renderLevel", at = @At("HEAD"))
+    private void bloom$capture(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline,
+                               net.minecraft.client.renderer.state.level.CameraRenderState camera, org.joml.Matrix4fc modelView,
+                               GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky,
+                               net.minecraft.client.renderer.chunk.ChunkSectionsToRender sections, CallbackInfo ci) {
+        WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
+    }
+//#else
     @Inject(method = "renderLevel", at = @At("HEAD"))
     private void bloom$capture(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera,
                                Matrix4f viewMatrix, Matrix4f projectionMatrix, Matrix4f cullProjectionMatrix, GpuBufferSlice fogBuffer,
                                Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         WorldMatrices.capture(viewMatrix, projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
+//#endif
 
-    /** F3+T / resource pack changes: drop cached sky textures and shader targets. */
-    @Inject(method = "onResourceManagerReload", at = @At("TAIL"))
-    private void bloom$reload(ResourceManager resourceManager, CallbackInfo ci) {
-        if (BloomClient.ready()) BloomClient.get().onResourcesReloaded();
-    }
-
-    /** End of the sky pass (Minecraft's sky is drawn): MOTION's skyboxes, stars and glow on top. */
     // The sky pass is a lambda inside addSkyPass; its name, signature and static-ness change
     // between versions, so each one is spelled out.
 //#if MC >= 26.2
