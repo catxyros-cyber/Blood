@@ -20,6 +20,7 @@ public final class Pages {
             case PERFORMANCE -> new PerformancePage(screen);
             case PROFILES -> new ProfilesPage(screen);
             case KEYBINDS -> new KeybindsPage(screen);
+            case WAYPOINTS -> new WaypointsPage(screen);
             default -> new GenericPage(screen, c);
         };
     }

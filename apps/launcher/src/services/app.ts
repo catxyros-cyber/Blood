@@ -9,6 +9,7 @@ import type { Platform } from "../core/platform";
 import { toBloomError } from "../core/platform";
 import type { PresetId } from "../core/perf/presets";
 import type { JvmPreset } from "../core/perf/memory";
+import type { CrashDiagnosis } from "../core/mojang/crash";
 import type { GcStats } from "../core/perf/gclog";
 import type { Announcement, Entitlement, PlansResponse, PublicUser } from "@bloom/shared";
 import { join } from "../core/util/path";
@@ -187,6 +188,8 @@ export interface SessionSummary {
   gc?: GcStats;
   maxHeapMb?: number;
   exitCode: number | null;
+  /** Crash Doctor findings when the game exited with an error (most likely cause first). */
+  crash?: CrashDiagnosis[];
 }
 
 export interface PremiumState {

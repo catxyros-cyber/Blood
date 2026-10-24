@@ -20,6 +20,7 @@ import {
   type ModuleInfo,
 } from "../../core/bloomclient/modules";
 import type { SettingsView } from "../../core/bloomclient/settingsFile";
+import { supportedLabels } from "../../core/bloomclient/support";
 import type { Instance } from "../../core/instances/model";
 import { app, errorMessage, navigate, reportError, toast, type ModCategory } from "../../services/app";
 import { createBloomInstallation, enable as enableClient, readSettings, status as clientStatus, type ClientStatus } from "../../services/bloomClient";
@@ -271,7 +272,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 function ClientBanner({ inst, client, running, problems, onChanged }: { inst: Instance; client: ClientStatus | null; running: boolean; problems: number; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   if (!client) return <Skeleton className="h-[74px] rounded-2xl" />;
-  const versions = client.bundle ? client.bundle.minecraft.join(", ") : "—";
+  const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
       <div className={cx("h-11 w-11 rounded-xl grid place-items-center shrink-0", client.enabled ? "bg-accent/15 text-accent glow-accent" : "bg-raised text-muted")}>
@@ -458,7 +459,7 @@ function ModuleCard({
   const labels: string[] = [];
   if (m.kind === "hud" || m.kind === "setting") {
     labels.push("MOTION Client");
-    if (client?.bundle) labels.push(`MC ${client.bundle.minecraft.join(", ")}`);
+    if (client?.bundle) labels.push(`MC ${supportedLabels(client.bundle).join(", ")}`);
     labels.push("Fabric · Quilt · NeoForge");
   } else if (m.kind === "perf") {
     labels.push("Modrinth");

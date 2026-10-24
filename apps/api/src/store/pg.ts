@@ -494,12 +494,17 @@ export class PgStore implements Store {
       "SELECT kind, accessory_id FROM player_accessories WHERE minecraft_uuid = $1",
       [minecraftUuid],
     );
-    return { wings: rows.find((r) => r.kind === "wings")?.accessory_id ?? null, aura: rows.find((r) => r.kind === "aura")?.accessory_id ?? null };
+    return {
+      wings: rows.find((r) => r.kind === "wings")?.accessory_id ?? null,
+      aura: rows.find((r) => r.kind === "aura")?.accessory_id ?? null,
+      avatar: rows.find((r) => r.kind === "avatar")?.accessory_id ?? null,
+    };
   }
   async playerAccessories(uuids: string[]) {
     const wings: Record<string, string> = {};
     const auras: Record<string, { color: string; style: string }> = {};
-    if (!uuids.length) return { wings, auras };
+    const avatars: Record<string, string> = {};
+    if (!uuids.length) return { wings, auras, avatars };
     const { rows } = await this.pool.query<{ minecraft_uuid: string; kind: string; id: string; color: string; style: string | null }>(
       `SELECT p.minecraft_uuid, p.kind, a.id, a.color, a.style FROM player_accessories p JOIN accessories a ON a.id = p.accessory_id
        WHERE a.enabled AND p.minecraft_uuid = ANY($1::text[])`,
@@ -507,9 +512,11 @@ export class PgStore implements Store {
     );
     for (const r of rows) {
       if (r.kind === "wings") wings[r.minecraft_uuid] = r.id;
-      else auras[r.minecraft_uuid] = { color: r.color, style: r.style ?? "glow" };
+      else if (r.kind === "avatar") {
+        if (r.style) avatars[r.minecraft_uuid] = r.style;
+      } else auras[r.minecraft_uuid] = { color: r.color, style: r.style ?? "glow" };
     }
-    return { wings, auras };
+    return { wings, auras, avatars };
   }
 
   async createCommunitySkin(skin: CommunitySkin) {

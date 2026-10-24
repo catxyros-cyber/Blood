@@ -1,0 +1,36 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.bloom.client.mixin",
+//#if MC < 26
+  "refmap": "${mod_id}.refmap.json",
+//#endif
+  "compatibilityLevel": "${mixin_compat}",
+  "mixins": [],
+  "client": [
+    "AbstractClientPlayerMixin",
+    "AvatarRendererMixin",
+    "ScreenBackgroundMixin",
+    "LevelLoadingScreenMixin",
+    "LoadingOverlayMixin",
+    "PlayerDisplayNameMixin",
+    "PlayerTabOverlayMixin",
+    "ClientLevelDataMixin",
+    "CloudRendererMixin",
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "GuiMixin",
+    "LevelRendererMixin",
+    "MouseHandlerMixin",
+    "ItemInHandRendererMixin",
+    "MultiPlayerGameModeMixin",
+    "CameraFreeLookMixin",
+    "MinecraftTitleScreenMixin",
+    "MinecraftReloadMixin",
+    "WeatherEffectRendererMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

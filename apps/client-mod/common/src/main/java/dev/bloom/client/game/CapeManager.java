@@ -153,7 +153,7 @@ public final class CapeManager {
                 int w = img.getWidth(), h = img.getHeight();
                 int fh = w / 2;
                 int count = fh > 0 && h % fh == 0 ? h / fh : 0;
-                if (w < 64 || w > 1024 || w % 2 != 0 || count < 1 || count > MAX_FRAMES) {
+                if (w < 64 || w > 2048 || w % 2 != 0 || count < 1 || count > MAX_FRAMES) {
                     Log.warn("MOTION capes: cape " + capeId + " is " + w + "x" + h + ", not a cape layout");
                     FAILED.add(capeId);
                     LOADING.remove(capeId);

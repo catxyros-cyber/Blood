@@ -85,6 +85,18 @@ public final class BloomSettings {
             "How much the game is dimmed behind the MOTION menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
             "Pause the game while the MOTION menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final NumberSetting ZOOM_LEVEL = num("zoom.level", GENERAL, "Zoom", "Zoom amount",
+            "How far the Zoom key zooms in. 4× is OptiFine's zoom. While zooming you can scroll to change it.", 4f, 1.5f, 30f, 0.5f, MULTIPLIER, "",
+            "zoom", "spyglass", "optifine", "magnify");
+    public static final BoolSetting ZOOM_SMOOTH = bool("zoom.smooth", GENERAL, "Zoom", "Smooth zoom",
+            "Ease in and out of zoom instead of snapping.", true, "zoom", "animation");
+    public static final BoolSetting ZOOM_SCROLL = bool("zoom.scroll", GENERAL, "Zoom", "Scroll to adjust",
+            "While zooming, the mouse wheel zooms further in or out instead of changing the hotbar slot. The amount resets when you let go.",
+            true, "zoom", "scroll", "wheel");
+    public static final BoolSetting ZOOM_CINEMATIC = bool("zoom.cinematic", GENERAL, "Zoom", "Cinematic camera while zoomed",
+            "Smooths mouse movement while zoomed, like OptiFine's zoom, so far-away aiming isn't jittery.", false, "zoom", "smooth", "camera");
+    public static final BoolSetting ZOOM_TOGGLE = bool("zoom.toggle", GENERAL, "Zoom", "Toggle instead of hold",
+            "Press the Zoom key once to zoom in and again to zoom out, instead of holding it.", false, "zoom", "toggle", "hold");
     public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "MOTION capes",
             "Show the capes MOTION players chose (yours too). Only MOTION users see them. Pick yours in the launcher: Visuals → Cape.",
             true, "cape", "cosmetic");
@@ -103,6 +115,9 @@ public final class BloomSettings {
     public static final BoolSetting AURAS = bool("accessories.auras", GENERAL, "Accessories", "Auras",
             "Show the glow and particle auras MOTION players picked in the launcher. Yours is hidden in first person so it never blocks your view.",
             true, "aura", "particles", "cosmetic", "accessory");
+    public static final BoolSetting AVATARS = bool("accessories.avatars", GENERAL, "Accessories", "3D avatars",
+            "Show the 3D avatars MOTION players picked in the launcher (Tung Tung Tung Sahur and friends) instead of their normal player model. Only MOTION users see them; turn off to see everyone as normal.",
+            true, "avatar", "model", "morph", "sahur", "cosmetic", "accessory");
     public static final BoolSetting MACE_VISUALS = bool("visuals.mace", GENERAL, "Accessories", "Mace visuals",
             "Add a subtle colored particle trail around players holding a mace. Visual only; it does not change attacks or damage.",
             true, "mace", "trail", "weapon", "particles");
@@ -485,6 +500,57 @@ public final class BloomSettings {
             "Apply the visual profile you assign to each biome group (set rules below). Off by default.", false, "auto", "biome");
     public static final BoolSetting SMOOTH_TRANSITIONS = bool("profiles.smooth", PROFILES, "Automatic switching", "Smooth transitions",
             "Crossfade to the new skybox over about a second when a profile (or the chosen skybox) changes, instead of switching instantly.", true, "fade", "crossfade");
+
+    // =====================================================================
+    // Combat (all visual: nothing here changes hits, reach, damage or what the server sees)
+    // =====================================================================
+    public static final BoolSetting HITS = bool("hits.enabled", COMBAT, "Hit effects", "Hit effects",
+            "Show an effect on whatever you hit: rings, a slash trail and sparks in your colour. Only you see it; it never changes the hit itself.",
+            true, "hit", "attack", "pvp", "particles");
+    public static final BoolSetting HIT_RINGS = bool("hits.rings", COMBAT, "Hit effects", "Shockwave rings",
+            "A glowing ring that spreads out at the feet of what you hit.", true, "ring", "shockwave").dependsOn(HITS);
+    public static final BoolSetting HIT_SLASH = bool("hits.slash", COMBAT, "Hit effects", "Slash trail",
+            "A curved slash across the target in the direction you swung.", true, "slash", "trail", "arc").dependsOn(HITS);
+    public static final BoolSetting HIT_SPARKS = bool("hits.sparks", COMBAT, "Hit effects", "Sparks",
+            "A short burst of bright sparks where your hit landed.", true, "sparks", "crit").dependsOn(HITS);
+    public static final ColorSetting HIT_COLOR = color("hits.color", COMBAT, "Hit effects", "Effect colour",
+            "Colour of the rings, slash and sparks.", 0x39FF88, "colour", "color").dependsOn(HITS);
+    public static final BoolSetting HIT_RAINBOW = bool("hits.rainbow", COMBAT, "Hit effects", "Rainbow",
+            "Cycle through colours instead of using one.", false, "rainbow", "rgb", "chroma").dependsOn(HITS);
+    public static final NumberSetting HIT_INTENSITY = num("hits.intensity", COMBAT, "Hit effects", "Amount",
+            "How many particles each effect uses. Lower it if hits feel cluttered or slow.", 1f, 0.25f, 2f, 0.05f, MULTIPLIER, "",
+            "particles", "density").dependsOn(HITS);
+    public static final ChoiceSetting SWORD_ANIMATION = choice("hits.swordAnimation", COMBAT, "Sword animation", "Swing animation",
+            "How your sword moves in first person when you swing. Spin twirls it a full turn, Flip somersaults it forward, Whirl spins it flat. Only you see it.",
+            "spin", ChoiceSetting.of("off", "Minecraft's swing", "spin", "Spin", "flip", "Flip", "whirl", "Whirl"),
+            "sword", "spin", "swing", "animation", "1.7", "blockhit");
+    public static final BoolSetting SWORD_ANIMATION_ALL = bool("hits.animateAllWeapons", COMBAT, "Sword animation", "Axes, maces and tridents too",
+            "Use the swing animation for every weapon, not only swords.", false, "axe", "mace", "trident", "weapon");
+    public static final ChoiceSetting HEALTH_INDICATOR = choice("nametags.health", COMBAT, "Name tags", "Health indicators",
+            "Show other players' health above their heads. Only players you can actually see are labelled, never through walls.",
+            "hearts", ChoiceSetting.of("off", "Off", "hearts", "Hearts", "number", "Number", "bar", "Bar"),
+            "health", "hp", "indicator", "hearts", "nametag");
+    public static final BoolSetting OWN_NAMETAG = bool("nametags.self", COMBAT, "Name tags", "Your own name tag",
+            "Show your name above your head in third person (F5), like other players see it.", true, "nametag", "self", "f5", "third person");
+    public static final BoolSetting NAMETAG_SHADOW = bool("nametags.shadow", COMBAT, "Name tags", "Text shadow",
+            "Draw MOTION's name tags and health labels with a shadow for contrast.", true, "shadow", "nametag");
+    public static final NumberSetting NAMETAG_RANGE = num("nametags.range", COMBAT, "Name tags", "Range",
+            "How far away players get a health label.", 32f, 8f, 64f, 1f, INTEGER, " blocks", "distance", "nametag");
+
+    // =====================================================================
+    // Waypoints
+    // =====================================================================
+    public static final BoolSetting WAYPOINTS = bool("waypoints.enabled", Category.WAYPOINTS, "Waypoints", "Show waypoints",
+            "Draw your waypoints on screen with their name and distance. Add one with the Add waypoint key (B by default).",
+            true, "waypoint", "marker", "home", "coords");
+    public static final BoolSetting WAYPOINT_DISTANCE = bool("waypoints.distance", Category.WAYPOINTS, "Waypoints", "Show distance",
+            "Show how many blocks away each waypoint is.", true, "distance", "blocks").dependsOn(WAYPOINTS);
+    public static final BoolSetting WAYPOINT_DEATH = bool("waypoints.death", Category.WAYPOINTS, "Waypoints", "Death waypoint",
+            "Mark where you last died so you can get your items back. It disappears when you reach it.", true, "death", "grave", "items");
+    public static final BoolSetting WAYPOINT_OFFSCREEN = bool("waypoints.edge", Category.WAYPOINTS, "Waypoints", "Arrows at the screen edge",
+            "When a waypoint is behind you or off screen, show an arrow at the edge pointing to it.", true, "arrow", "edge", "offscreen").dependsOn(WAYPOINTS);
+    public static final NumberSetting WAYPOINT_SCALE = num("waypoints.scale", Category.WAYPOINTS, "Waypoints", "Marker size",
+            "Size of waypoint markers and labels.", 1f, 0.5f, 2f, 0.05f, MULTIPLIER, "", "size", "scale").dependsOn(WAYPOINTS);
 
     // =====================================================================
     // Keybinds (the keys themselves are Minecraft key mappings, stored in options.txt)

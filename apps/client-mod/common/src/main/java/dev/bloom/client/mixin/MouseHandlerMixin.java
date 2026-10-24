@@ -2,6 +2,7 @@ package dev.bloom.client.mixin;
 
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.FreeLook;
+import dev.bloom.client.Zoom;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import org.lwjgl.glfw.GLFW;
@@ -27,5 +28,11 @@ public abstract class MouseHandlerMixin {
     @Inject(method = "turnPlayer", at = @At("TAIL"))
     private void motion$freeLookTurn(CallbackInfo ci) {
         if (minecraft.player != null) FreeLook.afterMouseTurn(minecraft.player);
+    }
+
+    /** Zoom: while zoomed, the mouse wheel changes the zoom instead of the hotbar slot. */
+    @Inject(method = "onScroll(JDD)V", at = @At("HEAD"), cancellable = true, require = 0)
+    private void motion$zoomScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
+        if (minecraft.screen == null && minecraft.player != null && Zoom.onScroll(vertical)) ci.cancel();
     }
 }

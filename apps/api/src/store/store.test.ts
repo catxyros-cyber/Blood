@@ -111,17 +111,22 @@ async function contract(name: string, make: () => Promise<{ store: Store; done: 
       const u = "8667ba71b85a4004af54457a9734eed7";
       await store.setPlayerAccessory(u, "wings", wingsId, t);
       await store.setPlayerAccessory(u, "aura", auraId, t);
-      assert.deepEqual(await store.getPlayerAccessories(u), { wings: wingsId, aura: auraId });
+      const avatarId = "33333333-3333-4333-8333-333333333333";
+      await store.createAccessory({ id: avatarId, name: "Sahur", kind: "avatar", access: "everyone", png: null, width: 0, height: 0, color: "#8a5a34", style: "sahur", enabled: true, createdAt: t + 2 });
+      await store.setPlayerAccessory(u, "avatar", avatarId, t);
+      assert.deepEqual(await store.getPlayerAccessories(u), { wings: wingsId, aura: auraId, avatar: avatarId });
       assert.deepEqual(await store.playerAccessories([u, "00000000000000000000000000000001"]), {
         wings: { [u]: wingsId },
         auras: { [u]: { color: "#39ff88", style: "embers" } },
+        avatars: { [u]: "sahur" },
       });
+      await store.setPlayerAccessory(u, "avatar", null, t);
       // Changing one kind replaces it; disabled accessories disappear from lookups.
       await store.setPlayerAccessory(u, "aura", null, t);
       assert.equal((await store.getPlayerAccessories(u)).aura, null);
       assert.ok(await store.updateAccessory(wingsId, { enabled: false }));
       assert.deepEqual((await store.playerAccessories([u])).wings, {});
-      assert.equal((await store.listAccessories(false)).length, 1);
+      assert.equal((await store.listAccessories(false)).length, 2);
       assert.ok(await store.updateAccessory(auraId, { access: "everyone" }));
       assert.equal((await store.getAccessory(auraId))?.access, "everyone");
       // Deleting removes it from players too.
@@ -144,7 +149,7 @@ if (url) {
     // Fresh schema for every test.
     await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
     const applied = await migrate(pool, migrations, () => undefined);
-    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql", "006_accessories.sql", "007_community_skins.sql"]);
+    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql", "006_accessories.sql", "007_community_skins.sql", "008_avatars.sql"]);
     assert.deepEqual(await migrate(pool, migrations, () => undefined), [], "migrations are applied once");
     return { store: new PgStore(pool), done: async () => undefined };
   });

@@ -185,7 +185,14 @@ export function SettingsPage({ section }: { section?: string }) {
                 <Button size="sm" variant="ghost" onClick={() => void checkForUpdate(true)}>
                   Check now
                 </Button>
-                <Toggle checked={s.autoUpdate} onChange={(v) => set({ autoUpdate: v })} />
+                <Toggle
+                  checked={s.autoUpdate}
+                  onChange={(v) => {
+                    set({ autoUpdate: v });
+                    // Turning it back on picks up a waiting update right away.
+                    if (v) void checkForUpdate(false);
+                  }}
+                />
               </div>
             </Row>
             <Row label="Parallel downloads" description="Lower this on slow or unstable connections.">

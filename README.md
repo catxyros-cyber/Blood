@@ -23,6 +23,7 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 
 - **Microsoft sign-in.** Microsoft's own sign-in page opens in a window inside the launcher (a code-in-browser option is the fallback), so MOTION never sees your password. Tokens are kept in Windows Credential Manager. Several accounts are supported.
 - **My Skin.** Upload skins (file picker or drag and drop, 64×64 and old 64×32), keep a library with favourites and recents, preview them on an interactive 3D character (drag to turn, scroll to zoom, classic/slim, outer layer), edit them in a pixel editor (per part and face, brush/eraser/fill/picker, undo/redo, import/export) and **apply one to your real Minecraft account**. Mojang's skin API takes the skin by URL: the MOTION server serves the PNG for ten minutes and the launcher asks Mojang to use it with your own token. A skin only shows as applied once Mojang confirms it.
+- **3D avatars.** Become Tung Tung Tung Sahur, Tralalero Tralala, Bombardiro Crocodilo or Ballerina Cappuccina: a full 3D model at normal player height replaces your player, walking, looking around and swinging like you. Pick one in Visuals → Wings, aura & 3D avatar. Every MOTION player sees it (Minecraft 1.21.11).
 - **Capes, wings and auras.** Pick a cape, wings and an aura (Visuals). The owner publishes them on the admin page; MOTION Client shows them in game to every MOTION player (Minecraft 1.21.11). Capes move smoothly: they hang still when you stand and drift back gently as you move.
 - **In-game background.** Replace the title-screen panorama, pause/option menu backgrounds and loading screens with fully red, fully black, fully white, Motion green or your own image (Visuals → In-game background; Minecraft 1.21.11).
 - **Installations.** Vanilla, Fabric, Quilt, Forge and NeoForge. Each gets its own folder, Java, memory and JVM arguments, and can be duplicated.
@@ -41,6 +42,9 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 - **Premium (optional).**
   - Stripe Checkout runs on the server. Premium is unlocked **only** by verified webhooks, never by the client saying it paid.
   - Adds cloud sync, the Competitive and Extreme FPS presets, advanced analytics (heap, GC pauses, stutter) and any accent colour. Launching, mods, themes and MOTION Client are free.
+- **Crash Doctor.** When Minecraft crashes, MOTION reads the game's output and explains the cause in plain words. It recognises a missing or incompatible mod, a mod built for another Minecraft version, a mixin failure, running out of memory, the wrong Java version, damaged files, the GPU driver, the shader pack, and the mods the crash report suspects. Where it can, it offers a one-click fix: more RAM, turn off the culprit, get the missing mod, repair, use MOTION's Java, or open the shader packs.
+- **Worlds & servers.** Each installation lists your real worlds (name, icon, game mode, last played) and the servers from Minecraft's multiplayer list. **Play** opens a world and **Join** connects to a server straight from the launcher (Quick Play on 1.20+). The Home screen shows the servers and worlds you opened recently under **Jump back in**.
+- **Command palette.** Press **Ctrl+K** anywhere to play any installation, rejoin a server or world, jump to any page, repair, or check for updates.
 - **Automatic updates.** New versions download in the background and install by themselves when nobody is playing (15-second countdown with "Later"). Releases are one command: `npm run release -- x.y.z "notes"` then `git push --follow-tags`. See [docs/RELEASE.md](docs/RELEASE.md).
 
 - **MOTION Mods page.** Every built-in module in one place, per installation:
@@ -59,6 +63,10 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
   - Day/night crossfade.
 - **Decorative weather.** Rain, snow, petals (crimson by default), leaves, fireflies and dust, all moved by wind. Includes presets, distance culling and an adaptive particle budget. Effects are client-side visuals only.
 - **HUD editor.** Thirteen widgets: FPS, frame time, memory, coordinates (with facing, dimension, biome), direction, keystrokes, CPS, armor (numbers, % or bars), potion effects (compact/expanded, hide by type or one by one), clock & session, held item, sprint & sneak, and an info panel. Drag them into place, snap them to guides, scale them and save layouts. A failing widget turns itself off without affecting the others.
+- **Hit effects.** Whatever you hit gets a glowing shockwave ring, a slash trail and sparks in your colour (or rainbow). Swords **spin** when you swing in first person (Spin, Flip or Whirl). It's all visual; hits, reach and damage are unchanged. Settings are on the **Combat** page.
+- **Health indicators and name tags.** Hearts, a number or a bar above players you can see (never through walls), and your own name tag in third person.
+- **Waypoints.** Press **B** to mark where you stand. Markers show the name and distance, with arrows at the screen edge when a waypoint is behind you. A death waypoint is added automatically and clears when you reach it. Waypoints are saved per server and world.
+- **Zoom.** Hold **C** to zoom (4× by default). Scroll while zoomed to zoom further. Smooth easing, an optional cinematic camera, and toggle mode are under General → Zoom.
 - **Custom crosshair.** Cross, cross + dot, T, dot or square; size, gap, thickness, colour, opacity and outline.
 - **Profiles.** Eight built-in looks. You can also make your own, import and export them as files or `BLOOM1:` share codes, and switch profiles automatically by biome.
 - **Accessibility and performance.** Reduced motion and a performance mode. The low-FPS advisor *suggests* changes but never makes them.

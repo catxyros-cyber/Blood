@@ -55,6 +55,8 @@ jobs:
       - name: Build jars and run core tests
         working-directory: apps/client-mod
         run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Check optional hooks resolved
+        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/fabric/build/libs/bloomclient-fabric-*.jar | grep -v sources)
       - uses: actions/upload-artifact@v4
         with:
           name: bloom-client-jars
@@ -64,31 +66,114 @@ jobs:
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
-  client-mod-12111:
-    name: MOTION Client mod (Fabric, MC 1.21.11)
+  mod-targets:
+    name: List MOTION Client build targets
     runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.t.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: t
+        run: echo "list=$(python3 -c 'import json; print(json.dumps([t["id"] for t in json.load(open("apps/client-mod/modern/versions.json"))["targets"]]))')" >> "$GITHUB_OUTPUT"
+
+  client-mod-modern:
+    name: MOTION Client mod (Fabric, MC ${{ matrix.target }})
+    needs: mod-targets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every target in apps/client-mod/modern/versions.json.
+        target: ${{ fromJSON(needs.mod-targets.outputs.list) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          # Loom 1.18 runs on Java 25; the mod itself is still compiled for Java 21.
+          # Loom runs on Java 25; 1.21.x jars are still compiled for Java 21.
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build the Minecraft 1.21.11 jar
-        working-directory: apps/client-mod/mc1.21.11
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Build the Minecraft ${{ matrix.target }} jar
+        working-directory: apps/client-mod/modern
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew build -Ptarget=${{ matrix.target }} --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
+      - name: Check optional hooks resolved
+        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/modern/build/libs/bloomclient-fabric-${{ matrix.target }}-*.jar | grep -v sources)
       - uses: actions/upload-artifact@v4
         with:
-          name: bloom-client-jars-12111
+          name: bloom-client-jars-modern-${{ matrix.target }}
           path: |
-            apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar
+            apps/client-mod/modern/build/libs/bloomclient-fabric-${{ matrix.target }}-*.jar
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
+      - name: Smoke test in the real game
+        # Starts Minecraft with the mod under a virtual display, creates a world, takes screenshots
+        # and audits every mixin. Built with -Psmoke, so it runs after the release jar is uploaded.
+        id: smoke
+        continue-on-error: true
+        timeout-minutes: 30
+        working-directory: apps/client-mod/modern
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils > /dev/null
+          set -o pipefail
+          ./gradlew runProductionClientGameTest -Ptarget=${{ matrix.target }} -Psmoke --stacktrace 2>&1 | tee "$RUNNER_TEMP/smoke.log"
+      - name: Publish the build log to a ci-logs branch
+        # The Actions log viewer isn't reachable from every tool; a branch is.
+        if: always() && github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          mkdir -p "$RUNNER_TEMP/logrepo" && cd "$RUNNER_TEMP/logrepo"
+          cp "$RUNNER_TEMP/build.log" build.log 2>/dev/null || echo "no build log" > build.log
+          grep -nE "error:|warning: \[|FAILURE|What went wrong|Could not|Exception" build.log | head -3000 > errors.txt || true
+          cp "$RUNNER_TEMP/smoke.log" smoke.log 2>/dev/null || echo "smoke test did not run" > smoke.log
+          grep -nE "MOTION smoke|MOTION|Mixin|mixin|[Ii]njection|ERROR|Exception|Caused by|FAILED|GL_|OpenGL|Vulkan|Renderer" smoke.log | grep -v "^\s*$" | head -1500 > smoke-summary.txt || true
+          mkdir -p screens
+          find "$GITHUB_WORKSPACE/apps/client-mod/modern/run" -name '*.png' -path '*screenshot*' -exec cp {} screens/ \; 2>/dev/null || true
+          cp "$GITHUB_WORKSPACE/apps/client-mod/modern/run/logs/latest.log" game.log 2>/dev/null || true
+          if [ -f "$GITHUB_WORKSPACE/apps/client-mod/modern/probe.txt" ]; then
+            # The Minecraft jar with Mojang names: on 1.21.x the mapped one Loom made, on 26.x the game jar itself.
+            find ~/.gradle/caches "$GITHUB_WORKSPACE/apps/client-mod/modern/.gradle" -name 'minecraft-*.jar' ! -name '*sources*' -size +5M 2>/dev/null > jars.txt || true
+            MCV=$(python3 -c "import json; print(next(t['mc'] for t in json.load(open('$GITHUB_WORKSPACE/apps/client-mod/modern/versions.json'))['targets'] if t['id']=='${{ matrix.target }}'))")
+            grep -F -- "$MCV" jars.txt > mine.txt
+            # Mojang-named and merged (client + server classes): Loom's mapped jar on 1.21.x, the merged jar on 26.x.
+            JAR=$(grep -vi intermediary mine.txt | grep -iE 'layered|merged-deobf|minecraft-merged' | grep -v extracted | xargs -r ls -S 2>/dev/null | head -1)
+            [ -z "$JAR" ] && JAR=$(grep -i client mine.txt | head -1)
+            cp jars.txt jars-all.txt
+            echo "jar: $JAR" > probe.txt
+            grep -vE '^\s*(#|$)' "$GITHUB_WORKSPACE/apps/client-mod/modern/probe.txt" | while read -r line; do
+              if [[ "$line" == pkg:* ]]; then
+                echo "== package ${line#pkg:}" >> probe.txt
+                unzip -Z1 "$JAR" | grep "^${line#pkg:}/[^/]*\.class$" | sed 's/\.class$//' >> probe.txt
+              elif [[ "$line" == file:* ]]; then
+                echo "== file ${line#file:}" >> probe.txt
+                unzip -p "$JAR" "${line#file:}" >> probe.txt 2>&1
+                CLIENT=$(grep -i 'client' mine.txt | grep -v extracted | head -1)
+                [ -n "$CLIENT" ] && unzip -p "$CLIENT" "${line#file:}" >> probe.txt 2>/dev/null
+              elif [[ "$line" == tree:* ]]; then
+                echo "== tree ${line#tree:}" >> probe.txt
+                unzip -Z1 "$JAR" | grep "^${line#tree:}/.*\.class$" | grep -v '\$' | sed 's/\.class$//' >> probe.txt
+              else
+                echo "== class $line" >> probe.txt
+                javap -cp "$JAR" -p "$line" >> probe.txt 2>&1
+              fi
+            done
+          fi
+          git init -q && git checkout -q -b log
+          git add -A && git -c user.name=ci -c user.email=ci@localhost commit -qm "Build log for ${{ matrix.target }} (${{ github.event.pull_request.head.sha || github.sha }})"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:refs/heads/ci-logs/${{ matrix.target }}
 
   windows:
     name: Windows build (unsigned)
-    needs: [client-mod, client-mod-12111]
+    needs: [client-mod, client-mod-modern]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,8 +190,9 @@ jobs:
           path: apps/client-mod
       - uses: actions/download-artifact@v4
         with:
-          name: bloom-client-jars-12111
-          path: apps/client-mod/mc1.21.11/build/libs
+          pattern: bloom-client-jars-modern-*
+          merge-multiple: true
+          path: apps/client-mod/modern/build/libs
       - name: Bundle MOTION Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
       - run: npm install --no-audit --no-fund
