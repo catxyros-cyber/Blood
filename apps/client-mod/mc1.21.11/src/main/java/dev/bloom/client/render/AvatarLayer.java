@@ -17,7 +17,8 @@ import net.minecraft.resources.Identifier;
 
 /**
  * Draws a player's 3D MOTION avatar in place of their normal model: coloured geometry from
- * {@link AvatarModels}, animated like a player (walking, looking around, swinging).
+ * {@link AvatarModels}, animated like a player (walking, looking around, swinging). It is opaque and
+ * double-sided (cutout, no culling), so there is no translucency sorting to go wrong.
  */
 public final class AvatarLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
     /** Plain white texture: the avatar's colours come from the vertices. */
@@ -42,7 +43,7 @@ public final class AvatarLayer extends RenderLayer<AvatarRenderState, PlayerMode
         int overlay = OverlayTexture.NO_OVERLAY;
         pose.pushPose();
         if (state.isCrouching) pose.translate(0f, 3.2f / 16f, 0f);
-        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(WHITE), (p, vc) -> emit(p, vc, q, light, overlay));
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(WHITE), (p, vc) -> emit(p, vc, q, light, overlay));
         pose.popPose();
     }
 
@@ -51,9 +52,8 @@ public final class AvatarLayer extends RenderLayer<AvatarRenderState, PlayerMode
         int[] c = posed.colors();
         for (int quad = 0; quad < posed.quads(); quad++) {
             int base = quad * AvatarModel.STRIDE;
-            // Both windings, so faces show whatever the culling and mirroring of this pass.
+            // One winding is enough: this render type draws both sides of every face.
             for (int v = 0; v < 4; v++) vertex(p, vc, g, base + v * 6, c[quad * 4 + v], light, overlay);
-            for (int v = 3; v >= 0; v--) vertex(p, vc, g, base + v * 6, c[quad * 4 + v], light, overlay);
         }
     }
 

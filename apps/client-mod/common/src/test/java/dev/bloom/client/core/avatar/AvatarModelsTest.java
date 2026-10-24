@@ -24,9 +24,10 @@ public class AvatarModelsTest {
             for (int c : posed.colors()) assertEquals(id + " opaque", 0xFF, c >>> 24);
             // Bright colours survive (they used to be lost when packed into floats).
             assertTrue(id + " has light colours", java.util.Arrays.stream(posed.colors()).anyMatch(c -> (c & 0xFF) > 0xD0 && ((c >> 8) & 0xFF) > 0xD0));
-            // Feet on the ground (model space y = 1.5), head about a player's height above.
-            assertEquals(id + " feet", 1.5f, maxY, 0.01f);
-            float height = (maxY - minY) * 16;
+            // Feet on the ground (model space y = 1.5), unless it flies; the top about a player's height up.
+            if (m.hovers()) assertTrue(id + " floats", maxY < 1.5f && maxY > 0.6f);
+            else assertEquals(id + " feet", 1.5f, maxY, 0.01f);
+            float height = (1.5f - minY) * 16;
             assertTrue(id + " height " + height, height > 26 && height < 36);
             assertTrue(id + " width " + maxX, maxX < 1.1f);
         }
@@ -49,7 +50,7 @@ public class AvatarModelsTest {
 
     @Test
     public void headYawTurnsOnlyTheHead() {
-        AvatarModel m = AvatarModels.get("tralalero");
+        AvatarModel m = AvatarModels.get("bombardiro");
         float[] rest = m.pose(AvatarModel.Angles.REST).geometry();
         float[] turned = m.pose(new AvatarModel.Angles(0, (float) Math.toRadians(60), 0, 0, 0, 0, 0)).geometry();
         int changed = 0;

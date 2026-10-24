@@ -1,35 +1,39 @@
-// Renders MOTION's 3D avatars without Minecraft (depth-buffered, smooth-shaded), for checking
-// models and for the launcher's picker images.
-//
-//   C=apps/client-mod/common/src/main/java
-//   javac -d /tmp/av $(find $C/dev/bloom/client/core/avatar -name '*.java') branding/tools/avatar-preview/ZPreview.java
-//   java -Djava.awt.headless=true -cp /tmp/av ZPreview /tmp/avatars.png          # contact sheet
-//   java -Djava.awt.headless=true -cp /tmp/av ZPreview apps/launcher/public/avatars icons
 import dev.bloom.client.core.avatar.AvatarModel;
 import dev.bloom.client.core.avatar.AvatarModels;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 
-/** Depth-buffered, Gouraud-shaded preview (closer to what Minecraft draws than painter's sorting). */
+/**
+ * Depth-buffered, Gouraud-shaded, supersampled preview lit like Minecraft lights entities
+ * (two fixed directional lights, 0.4 ambient). Usage: ZPreview out.png [icons|<id>]
+ */
 public class ZPreview {
   static int W, H; static float[] zb; static int[] px;
+  static final int SS = 2;
+  static final double[] L0 = n(0.2, 1, -0.7), L1 = n(-0.2, 1, 0.7);
+  static double[] n(double x, double y, double z) { double l = Math.sqrt(x*x+y*y+z*z); return new double[]{x/l, y/l, z/l}; }
+
   public static void main(String[] a) throws Exception {
     boolean icons = a.length > 1 && a[1].equals("icons");
-    String[] ids = AvatarModels.ids().toArray(new String[0]);
-    double[] views = icons ? new double[]{28} : new double[]{0, 35, 300};
-    int cw = icons ? 384 : 520, ch = icons ? 512 : 520;
+    String only = a.length > 1 && !icons ? a[1] : null;
+    String[] ids = only != null ? new String[]{only} : AvatarModels.ids().toArray(new String[0]);
+    double[] views = icons ? new double[]{28} : only != null ? new double[]{0, 35, 90, 200} : new double[]{0, 35, 300};
+    int cw = (icons ? 384 : 560) * SS, ch = (icons ? 512 : 560) * SS;
+    boolean grid = !icons;
+    int cols = only != null ? views.length : ids.length, rows = only != null ? 1 : views.length;
+    if (grid) { W = cw * cols; H = ch * rows; alloc(0xFF26292B); }
     for (int c = 0; c < ids.length; c++) {
-      if (icons) { W = cw; H = ch; zb = new float[W*H]; px = new int[W*H]; java.util.Arrays.fill(zb, Float.MAX_VALUE); }
-      else if (c == 0) { W = cw * ids.length; H = ch * views.length; zb = new float[W*H]; px = new int[W*H]; java.util.Arrays.fill(zb, Float.MAX_VALUE); java.util.Arrays.fill(px, 0xFF2A2E2C); }
+      if (icons) { W = cw; H = ch; alloc(0); }
       for (int r = 0; r < views.length; r++) {
         AvatarModel m = AvatarModels.get(ids[c]);
-        AvatarModel.Angles ang = icons ? new AvatarModel.Angles(0.05f, -0.25f, -0.25f, 0.2f, 0.12f, -0.12f, 0)
-            : r == 1 ? AvatarModel.Angles.walking(1.2f, 0.9f, 10, 25, 0, 0) : AvatarModel.Angles.REST;
-        AvatarModel.Posed P = m.pose(ang); float[] q = P.geometry(); int[] cols = P.colors();
+        AvatarModel.Angles ang = icons ? new AvatarModel.Angles(0.05f, -0.25f, -0.25f, 0.2f, 0.12f, -0.12f, 0, 0.15f, 0.4f, 0)
+            : r == 1 ? AvatarModel.Angles.walking(1.2f, 0.9f, 10, 25, 0, 3) : AvatarModel.Angles.REST;
+        AvatarModel.Posed P = m.pose(ang); float[] q = P.geometry(); int[] colsArr = P.colors();
         double yaw = Math.toRadians(views[r]);
-        double scale = icons ? 176 : 236;
-        int ox = icons ? 0 : cw * c, oy = icons ? 0 : ch * r;
+        double scale = (icons ? 168 : 230) * SS;
+        int gx = only != null ? r : c, gy = only != null ? 0 : r;
+        int ox = icons ? 0 : cw * gx, oy = icons ? 0 : ch * gy;
         for (int i = 0, qi = 0; i < q.length; i += 24, qi++) {
           double[][] v = new double[4][];
           for (int k = 0; k < 4; k++) {
@@ -37,23 +41,28 @@ public class ZPreview {
             double nx = q[i+k*6+3], ny = q[i+k*6+4], nz = q[i+k*6+5];
             double rx = x*Math.cos(yaw) + z*Math.sin(yaw), rz = -x*Math.sin(yaw) + z*Math.cos(yaw);
             double rnx = nx*Math.cos(yaw) + nz*Math.sin(yaw), rnz = -nx*Math.sin(yaw) + nz*Math.cos(yaw);
-            // Light from the upper front-left of the camera, plus ambient.
-            double lx = -0.35, ly = -0.6, lz = -0.72; // model space: y down, camera at -z
-            double l = 0.42 + 0.62 * Math.max(0, rnx*lx + ny*ly + rnz*lz) + 0.12 * Math.max(0, -ny);
-            int col = cols[qi*4+k];
-            v[k] = new double[]{ox + cw/2.0 + rx*scale, oy + (icons ? ch - 14 - (1.5-y)*scale : 20 + (y+0.5)*scale), rz, ((col>>16)&255)*l, ((col>>8)&255)*l, (col&255)*l};
+            // Model space → world (the renderer flips x and y, then turns the player 180° to face us).
+            double wx = rnx, wy = -ny, wz = -rnz;
+            double l = Math.min(1, 0.4 + 0.6 * (Math.max(0, wx*L0[0]+wy*L0[1]+wz*L0[2]) + Math.max(0, wx*L1[0]+wy*L1[1]+wz*L1[2])));
+            int col = colsArr[qi*4+k];
+            v[k] = new double[]{ox + cw/2.0 + rx*scale, oy + (icons ? ch - 14*SS - (1.5-y)*scale : ch - 30*SS - (1.5-y)*scale), rz, ((col>>16)&255)*l, ((col>>8)&255)*l, (col&255)*l};
           }
           tri(v[0], v[1], v[2], ox, oy, cw, ch); tri(v[0], v[2], v[3], ox, oy, cw, ch);
         }
       }
-      if (icons) {
-        BufferedImage img = new BufferedImage(W, H, BufferedImage.TYPE_INT_ARGB); img.setRGB(0,0,W,H,px,0,W);
-        BufferedImage small = new BufferedImage(W/2, H/2, BufferedImage.TYPE_INT_ARGB);
-        java.awt.Graphics2D g = small.createGraphics(); g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-        g.drawImage(img, 0, 0, W/2, H/2, null); ImageIO.write(small, "png", new File(a[0], ids[c] + ".png"));
-      }
+      if (icons) ImageIO.write(down(W/SS/2, H/SS/2, true), "png", new File(a[0], ids[c] + ".png"));
     }
-    if (!icons) { BufferedImage img = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB); img.setRGB(0,0,W,H,px,0,W); ImageIO.write(img, "png", new File(a[0])); }
+    if (grid) ImageIO.write(down(W/SS, H/SS, false), "png", new File(a[0]));
+  }
+  static void alloc(int bg) { zb = new float[W*H]; px = new int[W*H]; java.util.Arrays.fill(zb, Float.MAX_VALUE); java.util.Arrays.fill(px, bg); }
+  static BufferedImage down(int w, int h, boolean alpha) {
+    BufferedImage img = new BufferedImage(W, H, BufferedImage.TYPE_INT_ARGB); img.setRGB(0,0,W,H,px,0,W);
+    BufferedImage small = new BufferedImage(w, h, alpha ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+    java.awt.Graphics2D g = small.createGraphics();
+    g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+    g.setRenderingHint(java.awt.RenderingHints.KEY_RENDERING, java.awt.RenderingHints.VALUE_RENDER_QUALITY);
+    g.drawImage(img.getScaledInstance(w, h, java.awt.Image.SCALE_AREA_AVERAGING), 0, 0, null); g.dispose();
+    return small;
   }
   static void tri(double[] a, double[] b, double[] c, int ox, int oy, int cw, int ch) {
     int minX = (int)Math.max(ox, Math.floor(Math.min(a[0], Math.min(b[0], c[0])))), maxX = (int)Math.min(ox+cw-1, Math.ceil(Math.max(a[0], Math.max(b[0], c[0]))));
