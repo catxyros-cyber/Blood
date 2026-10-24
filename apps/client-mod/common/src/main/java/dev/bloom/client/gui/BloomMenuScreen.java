@@ -4,6 +4,7 @@ import com.mojang.math.Axis;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.BloomKeys;
 import dev.bloom.client.core.settings.BloomSettings;
+import dev.bloom.client.core.settings.BoolSetting;
 import dev.bloom.client.core.settings.Category;
 import dev.bloom.client.core.settings.ChoiceSetting;
 import dev.bloom.client.core.settings.ColorSetting;
@@ -55,9 +56,12 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private final Screen parent;
     private final boolean visualsMenu;
+    private boolean overview;
     private final List<Nav> nav;
     private int navIndex;
     private final ScrollList list = new ScrollList();
+    private final List<ScrollList> overviewColumns = new ArrayList<>();
+    private final List<int[]> overviewBounds = new ArrayList<>();
     private TextField search;
     private final List<Popup> popups = new ArrayList<>();
     private Element focused;
@@ -74,17 +78,17 @@ public class BloomMenuScreen extends Screen implements Host {
     private String layoutPos;
 
     public BloomMenuScreen(Screen parent) {
-        this(parent, lastCategory);
+        this(parent, false, fullNav(), lastCategory.ordinal(), true);
     }
 
     public BloomMenuScreen(Screen parent, Category start) {
-        this(parent, false, fullNav(), start.ordinal());
+        this(parent, false, fullNav(), start.ordinal(), false);
     }
 
     /** The compact Right Ctrl visuals menu. */
     public static BloomMenuScreen visuals(Screen parent) {
         List<Nav> nav = dev.bloom.client.gui.page.VisualsPages.nav();
-        return new BloomMenuScreen(parent, true, nav, Math.min(lastVisualsIndex, nav.size() - 1));
+        return new BloomMenuScreen(parent, true, nav, Math.min(lastVisualsIndex, nav.size() - 1), false);
     }
 
     private static List<Nav> fullNav() {
@@ -93,10 +97,11 @@ public class BloomMenuScreen extends Screen implements Host {
         return out;
     }
 
-    private BloomMenuScreen(Screen parent, boolean visualsMenu, List<Nav> nav, int start) {
+    private BloomMenuScreen(Screen parent, boolean visualsMenu, List<Nav> nav, int start, boolean overview) {
         super(Component.literal(visualsMenu ? "MOTION Visuals" : "MOTION"));
         this.parent = parent;
         this.visualsMenu = visualsMenu;
+        this.overview = overview;
         this.nav = nav;
         this.navIndex = Math.max(0, Math.min(start, nav.size() - 1));
         this.navHover = new float[nav.size()];
@@ -125,11 +130,11 @@ public class BloomMenuScreen extends Screen implements Host {
             wy = (height - wh) / 2;
             sidebar = ww >= 340 ? 100 : 30;
         } else {
-            ww = Math.min(width - 16, 480);
-            wh = Math.min(height - 16, 320);
+            ww = Math.min(width - 20, 1200);
+            wh = Math.min(height - 20, 720);
             wx = (width - ww) / 2;
             wy = (height - wh) / 2;
-            sidebar = ww >= 400 ? 116 : 30;
+            sidebar = overview ? 0 : ww >= 400 ? 116 : 30;
         }
         if (search == null) {
             search = new TextField(this, "Search settings", 40).icon("search").onChange(s -> needsRebuild = true);
@@ -146,6 +151,13 @@ public class BloomMenuScreen extends Screen implements Host {
     public void rebuild() {
         needsRebuild = false;
         String q = search == null ? "" : search.value().trim();
+        if (overview && q.isEmpty()) {
+            page = null;
+            list.set(List.of());
+            rebuildOverview();
+            lastQuery = q;
+            return;
+        }
         List<Element> rows = new ArrayList<>();
         boolean sameView = q.equals(lastQuery);
         if (!q.isEmpty()) {
@@ -172,7 +184,47 @@ public class BloomMenuScreen extends Screen implements Host {
     }
 
     private void layoutList() {
-        list.setBounds(contentX() + 4, wy + 32, ww - sidebar - 8, wh - 36);
+        if (overview) list.setBounds(wx + 12, wy + 46, ww - 24, wh - 68);
+        else list.setBounds(contentX() + 4, wy + 32, ww - sidebar - 8, wh - 36);
+    }
+
+    /** Build the multi-column click-GUI overview. Each column scrolls independently. */
+    private void rebuildOverview() {
+        overviewColumns.clear();
+        overviewBounds.clear();
+        int count = Math.max(1, Math.min(4, ww / 250));
+        List<List<Category>> groups = new ArrayList<>();
+        for (int i = 0; i < count; i++) groups.add(new ArrayList<>());
+        Category[] categories = Category.values();
+        for (int i = 0; i < categories.length; i++) groups.get(i % count).add(categories[i]);
+
+        int gap = 8;
+        int columnW = (ww - 24 - gap * (count - 1)) / count;
+        int top = wy + 46;
+        int columnH = wh - 68;
+        for (int i = 0; i < count; i++) {
+            List<Element> rows = new ArrayList<>();
+            for (Category category : groups.get(i)) {
+                rows.add(new OverviewHeader(this, category));
+                for (Setting setting : BloomSettings.in(category)) rows.add(new OverviewSetting(this, category, setting));
+                rows.add(new Rows.Spacer(5));
+            }
+            ScrollList column = new ScrollList();
+            column.set(rows);
+            int x = wx + 12 + i * (columnW + gap);
+            column.setBounds(x + 3, top + 3, columnW - 6, columnH - 6);
+            overviewColumns.add(column);
+            overviewBounds.add(new int[]{x, top, columnW, columnH});
+        }
+    }
+
+    private void backToOverview() {
+        if (visualsMenu || overview) return;
+        overview = true;
+        search.setValue("");
+        lastQuery = "\u0000";
+        sidebar = 0;
+        rebuild();
     }
 
     public void switchTo(Category c) {
@@ -187,7 +239,10 @@ public class BloomMenuScreen extends Screen implements Host {
     }
 
     public void switchTo(int index) {
-        if (index == navIndex && search.value().isEmpty()) return;
+        boolean wasOverview = overview;
+        overview = false;
+        sidebar = ww >= 400 ? 116 : 30;
+        if (index == navIndex && search.value().isEmpty() && !wasOverview) return;
         navIndex = Math.max(0, Math.min(index, nav.size() - 1));
         if (visualsMenu) lastVisualsIndex = navIndex;
         else if (nav.get(navIndex).category() != null) lastCategory = nav.get(navIndex).category();
@@ -287,21 +342,53 @@ public class BloomMenuScreen extends Screen implements Host {
             g.pose().translate(-width / 2f, -height / 2f, 0);
         }
         int alphaMul = Math.round(255 * t);
-        Ui.shadow(g, wx, wy, ww, wh, t);
-        Ui.panel(g, wx, wy, ww, wh, Theme.alpha(p.window(), t));
-        // Sidebar
-        Ui.panel(g, wx, wy, sidebar, wh, Theme.alpha(p.sidebar(), t));
-        g.fill(wx + sidebar - 1, wy + 6, wx + sidebar, wy + wh - 6, Theme.alpha(p.border(), t));
-        renderSidebar(g, mx, my, dt, t);
-        // Header
-        String title = search.value().isBlank() ? nav.get(navIndex).label() : "Search";
-        Ui.text(g, title, contentX() + 10, wy + 12, Theme.alpha(p.text(), t));
-        int sw = Math.min(visualsMenu ? 110 : 140, ww - sidebar - 120);
-        if (visualsMenu) renderShaderStatus(g, contentX() + 16 + Ui.font().width(title), wy + 9, wx + ww - sw - 16, t);
-        search.layout(wx + ww - sw - 10, wy + 7, sw);
-        search.render(g, mx, my, dt);
-        g.fill(contentX() + 6, wy + 30, wx + ww - 6, wy + 31, Theme.alpha(p.border(), 0.6f * t));
-        list.render(g, mx, my, dt);
+        if (overview) {
+            int searchW = Math.max(84, Math.min(220, ww / 4));
+            search.layout(wx + ww - searchW - 12, wy + 8, searchW);
+            search.render(g, mx, my, dt);
+            Ui.spriteTinted(g, "logo", wx + 14, wy + 8, 22, 22, 0xFFFFFFFF);
+            Ui.text(g, "MOTION", wx + 43, wy + 8, Theme.alpha(p.text(), t));
+            Ui.text(g, "CLIENT", wx + 43 + Ui.font().width("MOTION "), wy + 8, Theme.alpha(0xFFE6C35E, t));
+            int subtitleX = wx + 44;
+            int subtitleW = Math.max(32, search.x - subtitleX - 12);
+            Ui.text(g, Ui.ellipsize("CLICK GUI  ·  Click a switch to toggle, a section to open details", subtitleW), subtitleX, wy + 21, Theme.alpha(p.textFaint(), t));
+            g.fill(wx + 8, wy + 38, wx + ww - 8, wy + 39, Theme.alpha(p.border(), 0.8f * t));
+            if (search.value().isBlank()) {
+                for (int i = 0; i < overviewColumns.size(); i++) {
+                    int[] b = overviewBounds.get(i);
+                    Ui.shadow(g, b[0], b[1], b[2], b[3], t * 0.8f);
+                    Ui.panel(g, b[0], b[1], b[2], b[3], Theme.alpha(p.window(), t));
+                    Ui.panelBorder(g, b[0], b[1], b[2], b[3], Theme.alpha(p.border(), t));
+                    g.fill(b[0] + 7, b[1], b[0] + b[2] - 7, b[1] + 2, Theme.alpha(0xFFE6C35E, t));
+                    overviewColumns.get(i).render(g, mx, my, dt);
+                }
+            } else {
+                Ui.shadow(g, wx + 12, wy + 46, ww - 24, wh - 68, t * 0.8f);
+                Ui.panel(g, wx + 12, wy + 46, ww - 24, wh - 68, Theme.alpha(p.window(), t));
+                list.render(g, mx, my, dt);
+            }
+            Ui.text(g, "Right Shift / ESC  ·  Scroll each column  ·  Click section headings for full controls", wx + 14, wy + wh - 14, Theme.alpha(p.textFaint(), t));
+        } else {
+            Ui.shadow(g, wx, wy, ww, wh, t);
+            Ui.panel(g, wx, wy, ww, wh, Theme.alpha(p.window(), t));
+            // Sidebar
+            Ui.panel(g, wx, wy, sidebar, wh, Theme.alpha(p.sidebar(), t));
+            g.fill(wx + sidebar - 1, wy + 6, wx + sidebar, wy + wh - 6, Theme.alpha(p.border(), t));
+            renderSidebar(g, mx, my, dt, t);
+            // Header
+            String title = search.value().isBlank() ? nav.get(navIndex).label() : "Search";
+            if (!visualsMenu) {
+                Ui.pill(g, contentX() + 7, wy + 8, 43, 15, Theme.alpha(p.surfaceActive(), t));
+                Ui.text(g, "‹ ALL", contentX() + 12, wy + 11, Theme.alpha(0xFFE6C35E, t));
+            }
+            Ui.text(g, title, contentX() + (visualsMenu ? 10 : 58), wy + 12, Theme.alpha(p.text(), t));
+            int sw = Math.min(visualsMenu ? 110 : 180, ww - sidebar - 120);
+            if (visualsMenu) renderShaderStatus(g, contentX() + 16 + Ui.font().width(title), wy + 9, wx + ww - sw - 16, t);
+            search.layout(wx + ww - sw - 10, wy + 7, sw);
+            search.render(g, mx, my, dt);
+            g.fill(contentX() + 6, wy + 30, wx + ww - 6, wy + 31, Theme.alpha(p.border(), 0.6f * t));
+            list.render(g, mx, my, dt);
+        }
         g.pose().popPose();
         if (alphaMul < 8) return;
 
@@ -394,6 +481,11 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private void renderTooltip(GuiGraphics g, int mx, int my) {
         List<String> lines = list.tooltip(mx, my);
+        if (overview && search.value().isBlank()) {
+            for (ScrollList column : overviewColumns) {
+                if (lines == null) lines = column.tooltip(mx, my);
+            }
+        }
         if (lines == null && search.isOver(mx, my)) lines = List.of("Search every MOTION setting", "Tip: try \"petal\", \"fog\" or \"fps\"");
         if (lines == null || lines.isEmpty()) return;
         Theme.Palette p = Theme.palette();
@@ -427,7 +519,19 @@ public class BloomMenuScreen extends Screen implements Host {
         }
         if (focused != null && focused.capturesClicks() && focused.mouseClicked(mx, my, button)) return true;
         focus(null);
+        if (!overview && !visualsMenu && button == 0 && Ui.inside(mx, my, contentX() + 7, wy + 8, 43, 15)) {
+            backToOverview();
+            Ui.click();
+            return true;
+        }
         if (search.mouseClicked(mx, my, button)) return true;
+        if (overview) {
+            if (search.value().isBlank()) {
+                for (ScrollList column : overviewColumns) if (column.mouseClicked(mx, my, button)) return true;
+            } else if (list.mouseClicked(mx, my, button)) return true;
+            if (!Ui.inside(mx, my, wx, wy, ww, wh) && button == 0) onClose();
+            return true;
+        }
         // sidebar
         int y = wy + 34;
         int itemH = itemHeight();
@@ -458,6 +562,10 @@ public class BloomMenuScreen extends Screen implements Host {
     public boolean mouseReleased(double mx, double my, int button) {
         Popup top = topPopup();
         if (top != null && top.mouseReleased(mx, my, button)) return true;
+        if (overview && search.value().isBlank()) {
+            for (ScrollList column : overviewColumns) if (column.mouseReleased(mx, my, button)) return true;
+            return false;
+        }
         return list.mouseReleased(mx, my, button);
     }
 
@@ -465,6 +573,10 @@ public class BloomMenuScreen extends Screen implements Host {
     public boolean mouseDragged(double mx, double my, int button, double dx, double dy) {
         Popup top = topPopup();
         if (top != null && top.mouseDragged(mx, my, button, dx, dy)) return true;
+        if (overview && search.value().isBlank()) {
+            for (ScrollList column : overviewColumns) if (column.mouseDragged(mx, my, button, dx, dy)) return true;
+            return false;
+        }
         return list.mouseDragged(mx, my, button, dx, dy);
     }
 
@@ -475,6 +587,10 @@ public class BloomMenuScreen extends Screen implements Host {
             if (top.isOver(mx, my)) return top.mouseScrolled(mx, my, scrollY);
             if (top.modal()) return true;
             top.close();
+        }
+        if (overview && search.value().isBlank()) {
+            for (ScrollList column : overviewColumns) if (column.mouseScrolled(mx, my, scrollY)) return true;
+            return false;
         }
         return list.mouseScrolled(mx, my, scrollY);
     }
@@ -499,7 +615,7 @@ public class BloomMenuScreen extends Screen implements Host {
             onClose();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_TAB && focused == null) {
+        if (key == GLFW.GLFW_KEY_TAB && focused == null && !overview) {
             // Tab / Shift+Tab: next / previous section.
             int n = nav.size();
             switchTo((navIndex + (hasShiftDown() ? n - 1 : 1)) % n);
@@ -571,4 +687,127 @@ public class BloomMenuScreen extends Screen implements Host {
     public Screen parentScreen() {
         return parent;
     }
+
+    /** Compact category strip used by the multi-column in-game click GUI. */
+    private static final class OverviewHeader extends Element {
+        private final BloomMenuScreen screen;
+        private final Category category;
+        private final int settingCount;
+
+        private OverviewHeader(BloomMenuScreen screen, Category category) {
+            this.screen = screen;
+            this.category = category;
+            this.settingCount = BloomSettings.in(category).size();
+        }
+
+        @Override
+        public int preferredHeight(int width) {
+            return 25;
+        }
+
+        @Override
+        public void render(GuiGraphics g, int mx, int my, float dt) {
+            Theme.Palette p = Theme.palette();
+            boolean over = isOver(mx, my);
+            Ui.smallPanel(g, x, y + 2, w, h - 3,
+                    over ? Theme.alpha(p.surfaceHover(), 0.95f) : Theme.alpha(p.surface(), 0.78f));
+            g.fill(x + 1, y + 6, x + 2, y + h - 5,
+                    Theme.alpha(over ? 0xFFFFD878 : 0xFFE6C35E, 0.92f));
+            Ui.icon(g, category.icon(), x + 7, y + 6, 13,
+                    over ? 0xFFFFD878 : 0xFFE6C35E);
+            int countW = Ui.font().width(Integer.toString(settingCount)) + 10;
+            Ui.pill(g, x + w - countW - 7, y + 7, countW, 13, Theme.alpha(p.surfaceActive(), 0.95f));
+            Ui.text(g, Integer.toString(settingCount), x + w - countW - 2, y + 10, p.textDim());
+            Ui.text(g, Ui.ellipsize(category.label(), Math.max(24, w - countW - 43)),
+                    x + 25, y + 9, over ? p.text() : Theme.alpha(p.text(), 0.94f));
+        }
+
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            if (button != 0 || !isOver(mx, my)) return false;
+            Ui.click();
+            screen.switchTo(category);
+            return true;
+        }
+
+        @Override
+        public List<String> tooltip(int mx, int my) {
+            if (!isOver(mx, my)) return null;
+            return List.of("Open " + category.label(), settingCount + " settings · full controls and descriptions");
+        }
+    }
+
+    /** One-line feature row. Switches toggle in-place; other settings open their full category. */
+    private static final class OverviewSetting extends Element {
+        private final BloomMenuScreen screen;
+        private final Category category;
+        private final Setting setting;
+
+        private OverviewSetting(BloomMenuScreen screen, Category category, Setting setting) {
+            this.screen = screen;
+            this.category = category;
+            this.setting = setting;
+        }
+
+        @Override
+        public int preferredHeight(int width) {
+            return 19;
+        }
+
+        @Override
+        public void render(GuiGraphics g, int mx, int my, float dt) {
+            Theme.Palette p = Theme.palette();
+            boolean over = isOver(mx, my);
+            boolean active = setting.isActive();
+            if (over) Ui.smallPanel(g, x, y, w, h - 1, Theme.alpha(p.surfaceHover(), 0.88f));
+
+            String value = setting.displayValue();
+            int valueW = Math.min(Math.max(28, Ui.font().width(value) + 12), Math.max(28, w / 2));
+            int chipX = x + w - valueW - 2;
+            String label = Ui.ellipsize(setting.label(), Math.max(18, chipX - x - 13));
+            Ui.text(g, label, x + 8, y + 5,
+                    active ? (over ? p.text() : p.textDim()) : p.textFaint());
+
+            if (setting instanceof BoolSetting toggle) {
+                int chipColor = toggle.on() && active
+                        ? Theme.alpha(0xFFE6C35E, 0.26f)
+                        : Theme.alpha(p.surfaceActive(), 0.9f);
+                Ui.pill(g, chipX, y + 3, valueW, 13, chipColor);
+                if (toggle.on() && active) {
+                    Ui.circle(g, chipX + 6, y + 9, 2, 0xFFFFD878);
+                    Ui.text(g, "ON", chipX + 12, y + 6, p.text());
+                } else {
+                    Ui.text(g, active ? "OFF" : "—", chipX + 5, y + 6, p.textFaint());
+                }
+            } else {
+                Ui.pill(g, chipX, y + 3, valueW, 13, Theme.alpha(p.surfaceActive(), 0.88f));
+                Ui.text(g, Ui.ellipsize(value, valueW - 8), chipX + 4, y + 6,
+                        active ? p.textDim() : p.textFaint());
+            }
+        }
+
+        @Override
+        public boolean mouseClicked(double mx, double my, int button) {
+            if (button != 0 || !isOver(mx, my)) return false;
+            if (setting instanceof BoolSetting toggle && setting.isActive()) {
+                toggle.toggle();
+                Ui.click();
+                return true;
+            }
+            Ui.click();
+            screen.switchTo(category);
+            return true;
+        }
+
+        @Override
+        public List<String> tooltip(int mx, int my) {
+            if (!isOver(mx, my)) return null;
+            String detail = setting.description();
+            String unavailable = setting.unavailableReason();
+            if (unavailable != null && !unavailable.isBlank()) detail = unavailable;
+            if (detail == null || detail.isBlank()) return List.of(setting.label() + " · " + setting.displayValue());
+            return List.of(setting.label() + " · " + setting.displayValue(), detail);
+        }
+    }
+
 }
