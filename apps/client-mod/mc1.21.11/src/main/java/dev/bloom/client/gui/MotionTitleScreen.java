@@ -27,11 +27,13 @@ import java.util.function.Supplier;
 
 /** MOTION title screen: restrained entry splash followed by a custom main menu. */
 public final class MotionTitleScreen extends Screen {
-    private static final long WALK_IN_MS = 1_250L;
+    private static final long WALK_IN_MS = 1_500L;
     private static final int BACKGROUND_WIDTH = 3840;
     private static final int BACKGROUND_HEIGHT = 2160;
     private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath(
             "bloomclient", "textures/gui/motion_title_bg.png");
+    private static final Identifier BRAND_MARK = Identifier.fromNamespaceAndPath(
+            "bloomclient", "textures/gui/sprites/logo.png");
     private static final String[] MENU_ITEMS = {"Singleplayer", "Multiplayer", "Minecraft Settings", "MOTION Client", "Quit Game"};
 
     private boolean entered;
@@ -69,18 +71,21 @@ public final class MotionTitleScreen extends Screen {
 
         drawMotionBackdrop(g, now - openedAt);
         if (entered || entering) drawMainPanel(g, mouseX, mouseY, walkIn, now);
-        else drawSplash(g);
+        else drawSplash(g, now);
         super.render(g, mouseX, mouseY, partialTick);
     }
 
     /** Quiet center splash, matching the reference's single logo and invitation. */
-    private void drawSplash(GuiGraphics g) {
+    private void drawSplash(GuiGraphics g, long now) {
         int cx = Math.round(width * 0.34f);
         int cy = Math.round(height * 0.47f);
-        drawLogoMark(g, cx, cy - 38, 34, 0xFFF2F4F2);
+        float breathe = 1f + (float) Math.sin(now * 0.0017f) * 0.025f;
+        int markSize = Math.round(48 * breathe);
+        drawBrandMark(g, cx, cy - 42, markSize, 0xFFFFFFFF);
         centerText(g, "MOTION Client", cx, cy + 18, 0xFFF1F2F1);
-        centerText(g, "Press to enter", cx, cy + 48, 0xFFB8BCBF);
-        g.fill(cx - 33, cy + 66, cx + 33, cy + 67, 0x6655D995);
+        int promptAlpha = 174 + Math.round(58f * (0.5f + 0.5f * (float) Math.sin(now * 0.0022f)));
+        centerText(g, "Press to enter", cx, cy + 48, (promptAlpha << 24) | 0x00D7DDD9);
+        g.fill(cx - 34, cy + 66, cx + 34, cy + 67, 0x7755D995);
     }
 
     private void drawMainPanel(GuiGraphics g, int mouseX, int mouseY, float walkIn, long now) {
@@ -89,14 +94,34 @@ public final class MotionTitleScreen extends Screen {
         int menuY = height / 2 - 36;
         float reveal = entering ? easeOutCubic(walkIn) : 1f;
 
-        // Keep the menu open against the artwork, like the reference, without a box around it.
-        drawLogoMark(g, menuX + 86, logoY + 27, 24, 0xFFEEF1EF);
-        centerText(g, "MOTION Client", menuX + 86, logoY + 63, 0xFFF2F3F2);
-        centerText(g, "JAVA EDITION", menuX + 86, logoY + 80, 0xFF9FA6A2);
+        // The brand mark travels from the entry splash into its menu position as the menu opens.
+        float logoProgress = entered ? 1f : reveal;
+        int splashX = Math.round(width * 0.34f);
+        int splashY = Math.round(height * 0.47f) - 42;
+        int brandX = Math.round(splashX + (menuX + 86 - splashX) * logoProgress);
+        int brandY = Math.round(splashY + (logoY + 26 - splashY) * logoProgress);
+        int brandSize = Math.round(48 + (32 - 48) * logoProgress);
+        drawBrandMark(g, brandX, brandY, brandSize, 0xFFFFFFFF);
+
+        int titleX = Math.round(splashX + (menuX + 86 - splashX) * logoProgress);
+        int titleY = Math.round(height * 0.47f + 18 + (logoY + 63 - (height * 0.47f + 18)) * logoProgress);
+        int titleAlpha = 255;
+        centerText(g, "MOTION Client", titleX, titleY, (titleAlpha << 24) | 0x00F2F3F2);
+        if (!entered) {
+            int promptAlpha = Math.round(255 * (1f - reveal));
+            int promptX = Math.round(splashX + (menuX + 86 - splashX) * reveal);
+            int promptY = Math.round(height * 0.47f + 48 + (logoY + 98 - (height * 0.47f + 48)) * reveal);
+            centerText(g, "Press to enter", promptX, promptY, (promptAlpha << 24) | 0x00D7DDD9);
+        }
+        if (entered || walkIn > 0.2f) {
+            int subtitleAlpha = entered ? 255 : Math.round(255 * Math.min(1f, (walkIn - 0.2f) / 0.5f));
+            centerText(g, "JAVA EDITION", menuX + 86, logoY + 80, (subtitleAlpha << 24) | 0x009FA6A2);
+        }
 
         for (int i = 0; i < MENU_ITEMS.length; i++) {
             int rowY = menuY + i * 34;
-            int alpha = Math.round(255 * reveal);
+            float rowReveal = entered ? 1f : Math.max(0f, Math.min(1f, (walkIn - i * 0.075f) / 0.78f));
+            int alpha = Math.round(255 * easeOutCubic(rowReveal));
             int rowX = menuX - 10;
             int rowW = 192;
             boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 3 && mouseY < rowY + 24;
@@ -128,15 +153,10 @@ public final class MotionTitleScreen extends Screen {
         }
     }
 
-    private void drawLogoMark(GuiGraphics g, int cx, int cy, int r, int color) {
-        float[][] pts = {{0,-1},{.24f,-.24f},{1f,0},{.24f,.24f},{0,1},{-.24f,.24f},{-1f,0},{-.24f,-.24f}};
-        // Crossed angular loops form a sharp, clean mark at the same size as the wordmark.
-        for (int i = 0; i < pts.length; i++) {
-            int a = i, b = (i + 1) % pts.length;
-            drawLine(g, cx + pts[a][0] * r, cy + pts[a][1] * r, cx + pts[b][0] * r, cy + pts[b][1] * r, color, 2);
-        }
-        drawLine(g, cx - r * .66f, cy - r * .66f, cx + r * .66f, cy + r * .66f, color, 2);
-        drawLine(g, cx + r * .66f, cy - r * .66f, cx - r * .66f, cy + r * .66f, color, 2);
+    private void drawBrandMark(GuiGraphics g, int cx, int cy, int size, int color) {
+        int x = cx - size / 2;
+        int y = cy - size / 2;
+        g.blit(RenderPipelines.GUI_TEXTURED, BRAND_MARK, x, y, 0f, 0f, size, size, 32, 32, 32, 32, color);
     }
 
     private void drawStar(GuiGraphics g, int cx, int cy, int r, int color) {
@@ -160,7 +180,6 @@ public final class MotionTitleScreen extends Screen {
             g.fill(x - half, y - half, x + half + 1, y + half + 1, color);
         }
     }
-
     private void centerText(GuiGraphics g, String text, int cx, int y, int color) {
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
     }
