@@ -12,6 +12,8 @@ import sys
 import zipfile
 
 HOOKS = {
+    # Control: Free Look already works in game; if this shows as missing, the check itself is wrong.
+    "Free look (control)": ("MouseHandlerMixin", "turnPlayer"),
     "Zoom (field of view)": ("GameRendererMixin", "getFov"),
     "Zoom (scroll)": ("MouseHandlerMixin", "onScroll"),
     "Swing animation": ("ItemInHandRendererMixin", "applyItemArmAttackTransform"),
