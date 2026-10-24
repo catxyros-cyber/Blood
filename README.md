@@ -62,6 +62,9 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
   - Day/night crossfade.
 - **Decorative weather.** Rain, snow, petals (crimson by default), leaves, fireflies and dust, all moved by wind. Includes presets, distance culling and an adaptive particle budget. Effects are client-side visuals only.
 - **HUD editor.** Thirteen widgets: FPS, frame time, memory, coordinates (with facing, dimension, biome), direction, keystrokes, CPS, armor (numbers, % or bars), potion effects (compact/expanded, hide by type or one by one), clock & session, held item, sprint & sneak, and an info panel. Drag them into place, snap them to guides, scale them and save layouts. A failing widget turns itself off without affecting the others.
+- **Hit effects.** Whatever you hit gets a glowing shockwave ring, a slash trail and sparks in your colour (or rainbow). Swords **spin** when you swing in first person (Spin, Flip or Whirl). It's all visual; hits, reach and damage are unchanged. Settings are on the **Combat** page.
+- **Health indicators and name tags.** Hearts, a number or a bar above players you can see (never through walls), and your own name tag in third person.
+- **Waypoints.** Press **B** to mark where you stand. Markers show the name and distance, with arrows at the screen edge when a waypoint is behind you. A death waypoint is added automatically and clears when you reach it. Waypoints are saved per server and world.
 - **Zoom.** Hold **C** to zoom (4× by default). Scroll while zoomed to zoom further. Smooth easing, an optional cinematic camera, and toggle mode are under General → Zoom.
 - **Custom crosshair.** Cross, cross + dot, T, dot or square; size, gap, thickness, colour, opacity and outline.
 - **Profiles.** Eight built-in looks. You can also make your own, import and export them as files or `BLOOM1:` share codes, and switch profiles automatically by biome.
