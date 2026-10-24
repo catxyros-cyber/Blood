@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.27",
+    "date": "2026-10-24",
+    "notes": "In-game click GUI\n\nMOTION Client 0.2.22."
+  },
+  {
     "version": "1.0.26",
     "date": "2026-10-24",
     "notes": "Add community skins and MOTION branding\n\nMOTION Client 0.2.21."
