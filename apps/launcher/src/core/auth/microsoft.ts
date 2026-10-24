@@ -383,11 +383,20 @@ export async function minecraftSessionFromMs(http: Http, msAccessToken: string):
     uuid: profile.id,
     username: profile.name,
     xuid: xsts.xuid,
-    skinUrl: skin,
+    skinUrl: secureSkinUrl(skin),
   };
 }
 
 /** Is a cached token still usable for at least `marginMs`? */
 export function tokenValid(expiresAt: number | undefined, marginMs = 5 * 60_000): boolean {
   return typeof expiresAt === "number" && expiresAt - marginMs > Date.now();
+}
+
+/**
+ * Mojang hands out skin URLs as http://textures.minecraft.net/…, which the launcher's content policy
+ * (https images only) blocks. The same files are served over https.
+ */
+export function secureSkinUrl(url: string | undefined | null): string | undefined {
+  if (!url) return undefined;
+  return url.replace(/^http:\/\/textures\.minecraft\.net\//i, "https://textures.minecraft.net/");
 }

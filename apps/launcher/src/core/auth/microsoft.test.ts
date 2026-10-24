@@ -127,3 +127,10 @@ test("in-app sign-in: code is exchanged with the verifier", async () => {
   assert.equal(t.accessToken, "ms");
   assert.equal(t.refreshToken, "rt");
 });
+
+test("skin URLs are served over https (the launcher only loads https images)", async () => {
+  const { secureSkinUrl } = await import("./microsoft");
+  assert.equal(secureSkinUrl("http://textures.minecraft.net/texture/abc"), "https://textures.minecraft.net/texture/abc");
+  assert.equal(secureSkinUrl("https://textures.minecraft.net/texture/abc"), "https://textures.minecraft.net/texture/abc");
+  assert.equal(secureSkinUrl(undefined), undefined);
+});

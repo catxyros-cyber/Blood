@@ -46,7 +46,7 @@ public final class MotionTitleScreen extends Screen {
     private long enterStartedAt;
     private volatile Supplier<PlayerSkin> skinLookup;
     private PlayerModel avatarModel;
-    private PlayerModelType avatarModelType;
+    private Boolean avatarModelSlim;
     private Identifier avatarTexture;
     private boolean skinLookupStarted;
 
@@ -180,6 +180,9 @@ public final class MotionTitleScreen extends Screen {
         if (skinLookupStarted) return;
         skinLookupStarted = true;
         Minecraft minecraft = Minecraft.getInstance();
+        // The real skin, straight from Mojang (a bare profile has no textures, so the lookup below
+        // alone only ever gave the default skin).
+        dev.bloom.client.game.ProfileSkin.fetch(minecraft.getUser().getProfileId());
         GameProfile profile = new GameProfile(minecraft.getUser().getProfileId(), minecraft.getUser().getName());
         CompletableFuture.supplyAsync(() -> minecraft.getSkinManager().createLookup(profile, false))
                 .thenAccept(lookup -> minecraft.execute(() -> skinLookup = lookup))
@@ -188,18 +191,23 @@ public final class MotionTitleScreen extends Screen {
 
     private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkIn, float stride, long now) {
         Minecraft minecraft = Minecraft.getInstance();
-        Supplier<PlayerSkin> lookup = skinLookup;
-        PlayerSkin skin = lookup == null ? null : lookup.get();
-        if (skin == null || skin.body() == null) skin = DefaultPlayerSkin.get(minecraft.getUser().getProfileId());
-        if (skin == null || skin.body() == null) return;
-
-        PlayerModelType type = skin.model();
-        if (avatarModel == null || avatarModelType != type) {
-            boolean slim = type == PlayerModelType.SLIM;
-            avatarModel = new PlayerModel(minecraft.getEntityModels().bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim);
-            avatarModelType = type;
+        boolean slim;
+        dev.bloom.client.game.ProfileSkin.Skin own = dev.bloom.client.game.ProfileSkin.get();
+        if (own != null) {
+            slim = own.slim();
+            avatarTexture = own.texture();
+        } else {
+            Supplier<PlayerSkin> lookup = skinLookup;
+            PlayerSkin skin = lookup == null ? null : lookup.get();
+            if (skin == null || skin.body() == null) skin = DefaultPlayerSkin.get(minecraft.getUser().getProfileId());
+            if (skin == null || skin.body() == null) return;
+            slim = skin.model() == PlayerModelType.SLIM;
+            avatarTexture = skin.body().texturePath();
         }
-        avatarTexture = skin.body().texturePath();
+        if (avatarModel == null || avatarModelSlim != slim) {
+            avatarModel = new PlayerModel(minecraft.getEntityModels().bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim);
+            avatarModelSlim = slim;
+        }
 
         AvatarRenderState state = new AvatarRenderState();
         state.isSpectator = false;

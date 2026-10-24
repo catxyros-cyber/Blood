@@ -6,26 +6,46 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A 3D avatar built from coloured boxes and cylinders, with parts that animate like a player's.
- * Pure Java: shapes are authored in "pixels" (16 = one block) with y up, the ground at 0 and the
- * front facing -z; {@link #pose} turns them into Minecraft's player model space (blocks, y down,
- * feet at y = 1.5), ready to draw.
+ * A 3D avatar built from smooth shapes (ellipsoids, tubes, turned profiles) with per-vertex normals
+ * and colours, and parts that animate like a player's. Pure Java: shapes are authored in "pixels"
+ * (16 = one block) with y up, the ground at 0 and the front facing -z; {@link #pose} turns them into
+ * Minecraft's player model space (blocks, y down, feet at y = 1.5), ready to draw.
  */
 public final class AvatarModel {
     public enum Part { BODY, HEAD, RIGHT_ARM, LEFT_ARM, RIGHT_LEG, LEFT_LEG }
 
-    /** One quad: 4 corners (x, y, z), a face normal and an ARGB colour. Triangles repeat the last corner. */
-    record Quad(float[] v, float nx, float ny, float nz, int argb) {
+    /** Floats per quad in {@link Posed#geometry()}: 4 vertices × (x, y, z, nx, ny, nz). */
+    public static final int STRIDE = 24;
+
+    /**
+     * Posed geometry: {@link #STRIDE} floats per quad, and one ARGB colour per vertex (colours are
+     * kept as ints: packed into floats, bright colours would be NaN bit patterns and get mangled).
+     */
+    public record Posed(float[] geometry, int[] colors) {
+        public int quads() {
+            return colors.length / 4;
+        }
+    }
+
+    /** A stored quad: positions and normals, and its four vertex colours. */
+    private record Quad(float[] v, int[] c) {
+    }
+
+    /** Colour of a surface point, given its position and normal (y-up pixel space). */
+    public interface Shader {
+        int color(float x, float y, float z, float nx, float ny, float nz);
+
+        static Shader solid(int argb) {
+            return (x, y, z, nx, ny, nz) -> argb;
+        }
     }
 
     private final String id;
     private final Map<Part, List<Quad>> parts = new EnumMap<>(Part.class);
     private final Map<Part, float[]> pivots = new EnumMap<>(Part.class);
-    private final float height;
 
-    AvatarModel(String id, float height) {
+    AvatarModel(String id) {
         this.id = id;
-        this.height = height;
         for (Part p : Part.values()) {
             parts.put(p, new ArrayList<>());
             pivots.put(p, new float[]{0, 0, 0});
@@ -36,15 +56,37 @@ public final class AvatarModel {
         return id;
     }
 
-    /** Total height in pixels (a player is about 32). */
-    public float height() {
-        return height;
-    }
-
     public int quadCount() {
         int n = 0;
         for (List<Quad> l : parts.values()) n += l.size();
         return n;
+    }
+
+    // ------------------------------------------------------------------ colour helpers
+
+    static int rgb(int hex) {
+        return 0xFF000000 | hex;
+    }
+
+    static int mix(int a, int b, float t) {
+        t = Math.max(0f, Math.min(1f, t));
+        int r = Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * t);
+        int g = Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * t);
+        int bl = Math.round((a & 255) + ((b & 255) - (a & 255)) * t);
+        return 0xFF000000 | (r << 16) | (g << 8) | bl;
+    }
+
+    static int shade(int argb, float f) {
+        int r = Math.min(255, Math.round(((argb >> 16) & 255) * f));
+        int g = Math.min(255, Math.round(((argb >> 8) & 255) * f));
+        int b = Math.min(255, Math.round((argb & 255) * f));
+        return (argb & 0xFF000000) | (r << 16) | (g << 8) | b;
+    }
+
+    /** Cheap smooth pseudo-noise in [0,1] for grain, scales and mottling. */
+    static float noise(float x, float y, float z) {
+        double v = Math.sin(x * 1.7 + y * 0.31) * 0.5 + Math.sin(y * 2.3 + z * 1.1) * 0.3 + Math.sin(z * 1.9 + x * 0.7 + y * 0.2) * 0.2;
+        return (float) (v * 0.5 + 0.5);
     }
 
     // ------------------------------------------------------------------ authoring
@@ -57,105 +99,209 @@ public final class AvatarModel {
             pivots.put(part, new float[]{px, py, pz});
         }
 
-        private void quad(float[] v, float nx, float ny, float nz, int argb) {
-            parts.get(part).add(new Quad(v, nx, ny, nz, argb));
+        private void vtx(float[] q, int i, float x, float y, float z, float nx, float ny, float nz) {
+            int o = i * 6;
+            float l = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+            if (l < 1e-6f) {
+                nx = 0;
+                ny = 1;
+                nz = 0;
+                l = 1;
+            }
+            q[o] = x;
+            q[o + 1] = y;
+            q[o + 2] = z;
+            q[o + 3] = nx / l;
+            q[o + 4] = ny / l;
+            q[o + 5] = nz / l;
         }
 
-        /** Axis-aligned box. {@code side} colours the four sides; top and bottom get {@code cap}. */
-        Builder box(float x0, float y0, float z0, float x1, float y1, float z1, int side, int cap) {
-            quad(new float[]{x0, y1, z0, x1, y1, z0, x1, y1, z1, x0, y1, z1}, 0, 1, 0, cap);      // top
-            quad(new float[]{x0, y0, z1, x1, y0, z1, x1, y0, z0, x0, y0, z0}, 0, -1, 0, shade(cap, 0.7f)); // bottom
-            quad(new float[]{x0, y0, z0, x1, y0, z0, x1, y1, z0, x0, y1, z0}, 0, 0, -1, side);    // front
-            quad(new float[]{x1, y0, z1, x0, y0, z1, x0, y1, z1, x1, y1, z1}, 0, 0, 1, shade(side, 0.85f)); // back
-            quad(new float[]{x0, y0, z1, x0, y0, z0, x0, y1, z0, x0, y1, z1}, -1, 0, 0, shade(side, 0.92f)); // -x
-            quad(new float[]{x1, y0, z0, x1, y0, z1, x1, y1, z1, x1, y1, z0}, 1, 0, 0, shade(side, 0.92f)); // +x
+        /** One quad from 4 points (each x,y,z,nx,ny,nz), coloured by the shader. */
+        private void quad(float[][] p, Shader s) {
+            float[] q = new float[STRIDE];
+            int[] c = new int[4];
+            for (int i = 0; i < 4; i++) {
+                float[] v = p[i];
+                vtx(q, i, v[0], v[1], v[2], v[3], v[4], v[5]);
+                c[i] = s.color(v[0], v[1], v[2], v[3], v[4], v[5]);
+            }
+            parts.get(part).add(new Quad(q, c));
+        }
+
+        /** Axis-aligned box with flat faces (small details: teeth, soles, panels). */
+        Builder box(float x0, float y0, float z0, float x1, float y1, float z1, Shader s) {
+            float[][][] faces = {
+                    {{x0, y1, z0, 0, 1, 0}, {x1, y1, z0, 0, 1, 0}, {x1, y1, z1, 0, 1, 0}, {x0, y1, z1, 0, 1, 0}},
+                    {{x0, y0, z1, 0, -1, 0}, {x1, y0, z1, 0, -1, 0}, {x1, y0, z0, 0, -1, 0}, {x0, y0, z0, 0, -1, 0}},
+                    {{x0, y0, z0, 0, 0, -1}, {x1, y0, z0, 0, 0, -1}, {x1, y1, z0, 0, 0, -1}, {x0, y1, z0, 0, 0, -1}},
+                    {{x1, y0, z1, 0, 0, 1}, {x0, y0, z1, 0, 0, 1}, {x0, y1, z1, 0, 0, 1}, {x1, y1, z1, 0, 0, 1}},
+                    {{x0, y0, z1, -1, 0, 0}, {x0, y0, z0, -1, 0, 0}, {x0, y1, z0, -1, 0, 0}, {x0, y1, z1, -1, 0, 0}},
+                    {{x1, y0, z0, 1, 0, 0}, {x1, y0, z1, 1, 0, 0}, {x1, y1, z1, 1, 0, 0}, {x1, y1, z0, 1, 0, 0}},
+            };
+            for (float[][] f : faces) quad(f, s);
             return this;
         }
 
         Builder box(float x0, float y0, float z0, float x1, float y1, float z1, int argb) {
-            return box(x0, y0, z0, x1, y1, z1, argb, argb);
+            return box(x0, y0, z0, x1, y1, z1, Shader.solid(argb));
+        }
+
+        /** Smooth ellipsoid. */
+        Builder ellipsoid(float cx, float cy, float cz, float rx, float ry, float rz, int stacks, int slices, Shader s) {
+            for (int i = 0; i < stacks; i++) {
+                double t0 = Math.PI * i / stacks - Math.PI / 2, t1 = Math.PI * (i + 1) / stacks - Math.PI / 2;
+                for (int j = 0; j < slices; j++) {
+                    double a0 = 2 * Math.PI * j / slices, a1 = 2 * Math.PI * (j + 1) / slices;
+                    float[][] p = {e(cx, cy, cz, rx, ry, rz, t0, a1), e(cx, cy, cz, rx, ry, rz, t0, a0), e(cx, cy, cz, rx, ry, rz, t1, a0), e(cx, cy, cz, rx, ry, rz, t1, a1)};
+                    quad(p, s);
+                }
+            }
+            return this;
+        }
+
+        Builder ellipsoid(float cx, float cy, float cz, float rx, float ry, float rz, Shader s) {
+            return ellipsoid(cx, cy, cz, rx, ry, rz, 10, 16, s);
+        }
+
+        Builder sphere(float cx, float cy, float cz, float r, int argb) {
+            return ellipsoid(cx, cy, cz, r, r, r, 8, 12, Shader.solid(argb));
+        }
+
+        private float[] e(float cx, float cy, float cz, float rx, float ry, float rz, double lat, double lon) {
+            float ux = (float) (Math.cos(lat) * Math.cos(lon)), uy = (float) Math.sin(lat), uz = (float) (Math.cos(lat) * Math.sin(lon));
+            return new float[]{cx + ux * rx, cy + uy * ry, cz + uz * rz, ux / rx, uy / ry, uz / rz};
         }
 
         /**
-         * Vertical (frustum) cylinder: radius r0 at y0, r1 at y1, split into {@code bands} rings whose
-         * colours come from {@code band.color(i)} (for bark rings, stripes…).
+         * A surface of revolution around the vertical line (cx, cz): the profile is radius {@code rs[i]}
+         * at height {@code ys[i]}. Ends with a non-zero radius are closed with flat caps.
          */
-        Builder cylinder(float cx, float cz, float r0, float r1, float y0, float y1, int segments, int bands, BandColor band, int capTop, int capBottom) {
-            int n = Math.max(5, segments);
-            for (int b = 0; b < bands; b++) {
-                float ya = y0 + (y1 - y0) * b / bands, yb = y0 + (y1 - y0) * (b + 1) / bands;
-                float ra = r0 + (r1 - r0) * b / bands, rb = r0 + (r1 - r0) * (b + 1) / bands;
-                int col = band.color(b);
-                for (int i = 0; i < n; i++) {
-                    double a0 = i * Math.PI * 2 / n, a1 = (i + 1) * Math.PI * 2 / n, am = (a0 + a1) / 2;
+        Builder lathe(float cx, float cz, float[] ys, float[] rs, int slices, Shader s) {
+            int n = ys.length;
+            float[] nr = new float[n], ny = new float[n];
+            for (int i = 0; i < n; i++) {
+                int a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
+                float dy = ys[b] - ys[a], dr = rs[b] - rs[a];
+                float l = (float) Math.sqrt(dy * dy + dr * dr);
+                nr[i] = l < 1e-6f ? 1 : dy / l;
+                ny[i] = l < 1e-6f ? 0 : -dr / l;
+            }
+            for (int i = 0; i < n - 1; i++) {
+                for (int j = 0; j < slices; j++) {
+                    double a0 = 2 * Math.PI * j / slices, a1 = 2 * Math.PI * (j + 1) / slices;
                     float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
-                    quad(new float[]{
-                            cx + c1 * ra, ya, cz + s1 * ra,
-                            cx + c0 * ra, ya, cz + s0 * ra,
-                            cx + c0 * rb, yb, cz + s0 * rb,
-                            cx + c1 * rb, yb, cz + s1 * rb}, (float) Math.cos(am), 0, (float) Math.sin(am), col);
+                    float[][] p = {
+                            {cx + c1 * rs[i], ys[i], cz + s1 * rs[i], c1 * nr[i], ny[i], s1 * nr[i]},
+                            {cx + c0 * rs[i], ys[i], cz + s0 * rs[i], c0 * nr[i], ny[i], s0 * nr[i]},
+                            {cx + c0 * rs[i + 1], ys[i + 1], cz + s0 * rs[i + 1], c0 * nr[i + 1], ny[i + 1], s0 * nr[i + 1]},
+                            {cx + c1 * rs[i + 1], ys[i + 1], cz + s1 * rs[i + 1], c1 * nr[i + 1], ny[i + 1], s1 * nr[i + 1]}};
+                    quad(p, s);
                 }
+            }
+            if (rs[n - 1] > 0) cap(cx, cz, ys[n - 1], rs[n - 1], slices, 1, s);
+            if (rs[0] > 0) cap(cx, cz, ys[0], rs[0], slices, -1, s);
+            return this;
+        }
+
+        private void cap(float cx, float cz, float y, float r, int slices, int dir, Shader s) {
+            int rings = 3;
+            for (int k = 0; k < rings; k++) {
+                float ra = r * k / rings, rb = r * (k + 1) / rings;
+                for (int j = 0; j < slices; j++) {
+                    double a0 = 2 * Math.PI * j / slices, a1 = 2 * Math.PI * (j + 1) / slices;
+                    float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
+                    float[][] p = dir > 0
+                            ? new float[][]{{cx + c0 * ra, y, cz + s0 * ra, 0, 1, 0}, {cx + c1 * ra, y, cz + s1 * ra, 0, 1, 0}, {cx + c1 * rb, y, cz + s1 * rb, 0, 1, 0}, {cx + c0 * rb, y, cz + s0 * rb, 0, 1, 0}}
+                            : new float[][]{{cx + c1 * ra, y, cz + s1 * ra, 0, -1, 0}, {cx + c0 * ra, y, cz + s0 * ra, 0, -1, 0}, {cx + c0 * rb, y, cz + s0 * rb, 0, -1, 0}, {cx + c1 * rb, y, cz + s1 * rb, 0, -1, 0}};
+                    quad(p, s);
+                }
+            }
+        }
+
+        /** A smooth tube through {@code pts} (x,y,z each) with a radius per point and rounded ends. */
+        Builder tube(float[][] pts, float[] radii, int sides, Shader s) {
+            int n = pts.length;
+            float[] prevN = null;
+            float[][] frames = new float[n][];
+            for (int i = 0; i < n; i++) {
+                float[] a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+                float tx = b[0] - a[0], ty = b[1] - a[1], tz = b[2] - a[2];
+                float tl = (float) Math.sqrt(tx * tx + ty * ty + tz * tz);
+                tx /= tl; ty /= tl; tz /= tl;
+                float rx = Math.abs(tz) < 0.9f ? 0 : 1, ry = 0, rz = Math.abs(tz) < 0.9f ? 1 : 0;
+                float nx = ty * rz - tz * ry, ny = tz * rx - tx * rz, nz = tx * ry - ty * rx;
+                float nl = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+                nx /= nl; ny /= nl; nz /= nl;
+                if (prevN != null && nx * prevN[0] + ny * prevN[1] + nz * prevN[2] < 0) {
+                    nx = -nx; ny = -ny; nz = -nz;
+                }
+                float bx = ty * nz - tz * ny, by = tz * nx - tx * nz, bz = tx * ny - ty * nx;
+                prevN = new float[]{nx, ny, nz};
+                frames[i] = new float[]{nx, ny, nz, bx, by, bz};
+            }
+            for (int i = 0; i < n - 1; i++) {
+                for (int j = 0; j < sides; j++) {
+                    float[][] p = new float[4][];
+                    int[][] idx = {{i, j + 1}, {i, j}, {i + 1, j}, {i + 1, j + 1}};
+                    for (int k = 0; k < 4; k++) {
+                        int pi = idx[k][0];
+                        double ang = 2 * Math.PI * idx[k][1] / sides;
+                        float[] f = frames[pi];
+                        float c = (float) Math.cos(ang), sn = (float) Math.sin(ang);
+                        float ox = f[0] * c + f[3] * sn, oy = f[1] * c + f[4] * sn, oz = f[2] * c + f[5] * sn;
+                        float r = radii[pi];
+                        p[k] = new float[]{pts[pi][0] + ox * r, pts[pi][1] + oy * r, pts[pi][2] + oz * r, ox, oy, oz};
+                    }
+                    quad(p, s);
+                }
+            }
+            ellipsoid(pts[0][0], pts[0][1], pts[0][2], radii[0], radii[0], radii[0], 6, sides, s);
+            ellipsoid(pts[n - 1][0], pts[n - 1][1], pts[n - 1][2], radii[n - 1], radii[n - 1], radii[n - 1], 6, sides, s);
+            return this;
+        }
+
+        /** Straight rounded limb from a to b. */
+        Builder limb(float x0, float y0, float z0, float x1, float y1, float z1, float r0, float r1, Shader s) {
+            return tube(new float[][]{{x0, y0, z0}, {(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2}, {x1, y1, z1}}, new float[]{r0, (r0 + r1) / 2, r1}, 10, s);
+        }
+
+        /**
+         * A flat shape (a fan from its first point) extruded by {@code thickness} along the normal of its
+         * plane: fins, wings, teeth.
+         */
+        Builder slab(float[][] poly, float thickness, Shader s) {
+            int n = poly.length;
+            float ax = poly[1][0] - poly[0][0], ay = poly[1][1] - poly[0][1], az = poly[1][2] - poly[0][2];
+            float bx = poly[2][0] - poly[0][0], by = poly[2][1] - poly[0][1], bz = poly[2][2] - poly[0][2];
+            float nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+            float nl = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+            nx /= nl; ny /= nl; nz /= nl;
+            float h = thickness / 2;
+            float[][] top = new float[n][], bot = new float[n][];
+            for (int i = 0; i < n; i++) {
+                top[i] = new float[]{poly[i][0] + nx * h, poly[i][1] + ny * h, poly[i][2] + nz * h};
+                bot[i] = new float[]{poly[i][0] - nx * h, poly[i][1] - ny * h, poly[i][2] - nz * h};
+            }
+            for (int i = 1; i < n - 1; i++) {
+                quad(new float[][]{v(top[0], nx, ny, nz), v(top[i], nx, ny, nz), v(top[i + 1], nx, ny, nz), v(top[i + 1], nx, ny, nz)}, s);
+                quad(new float[][]{v(bot[0], -nx, -ny, -nz), v(bot[i + 1], -nx, -ny, -nz), v(bot[i], -nx, -ny, -nz), v(bot[i], -nx, -ny, -nz)}, s);
             }
             for (int i = 0; i < n; i++) {
-                double a0 = i * Math.PI * 2 / n, a1 = (i + 1) * Math.PI * 2 / n;
-                float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
-                if (capTop != 0) quad(new float[]{cx, y1, cz, cx + c1 * r1, y1, cz + s1 * r1, cx + c0 * r1, y1, cz + s0 * r1, cx + c0 * r1, y1, cz + s0 * r1}, 0, 1, 0, capTop);
-                if (capBottom != 0) quad(new float[]{cx, y0, cz, cx + c0 * r0, y0, cz + s0 * r0, cx + c1 * r0, y0, cz + s1 * r0, cx + c1 * r0, y0, cz + s1 * r0}, 0, -1, 0, capBottom);
+                int j = (i + 1) % n;
+                float ex = poly[j][0] - poly[i][0], ey = poly[j][1] - poly[i][1], ez = poly[j][2] - poly[i][2];
+                float sx = ey * nz - ez * ny, sy = ez * nx - ex * nz, sz = ex * ny - ey * nx;
+                quad(new float[][]{v(bot[i], sx, sy, sz), v(bot[j], sx, sy, sz), v(top[j], sx, sy, sz), v(top[i], sx, sy, sz)}, s);
             }
             return this;
         }
 
-        Builder cylinder(float cx, float cz, float r, float y0, float y1, int segments, int argb) {
-            return cylinder(cx, cz, r, r, y0, y1, segments, 1, i -> argb, argb, argb);
+        private float[] v(float[] p, float nx, float ny, float nz) {
+            return new float[]{p[0], p[1], p[2], nx, ny, nz};
         }
-
-        /** A thin limb between two points (square cross-section of width {@code w}), any direction. */
-        Builder rod(float x0, float y0, float z0, float x1, float y1, float z1, float w, int argb) {
-            float dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
-            float len = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (len < 1e-4f) return this;
-            float ux = dx / len, uy = dy / len, uz = dz / len;
-            // Two vectors perpendicular to the rod.
-            float ax = Math.abs(uy) < 0.9f ? 0 : 1, ay = Math.abs(uy) < 0.9f ? 1 : 0, az = 0;
-            float px = uy * az - uz * ay, py = uz * ax - ux * az, pz = ux * ay - uy * ax;
-            float pl = (float) Math.sqrt(px * px + py * py + pz * pz);
-            px /= pl; py /= pl; pz /= pl;
-            float qx = uy * pz - uz * py, qy = uz * px - ux * pz, qz = ux * py - uy * px;
-            float h = w / 2;
-            float[][] c = new float[8][];
-            int k = 0;
-            for (int end = 0; end < 2; end++) {
-                float bx = end == 0 ? x0 : x1, by = end == 0 ? y0 : y1, bz = end == 0 ? z0 : z1;
-                for (int s = 0; s < 4; s++) {
-                    float sp = (s == 0 || s == 3) ? -h : h, sq = (s < 2) ? -h : h;
-                    c[k++] = new float[]{bx + px * sp + qx * sq, by + py * sp + qy * sq, bz + pz * sp + qz * sq};
-                }
-            }
-            int[][] faces = {{0, 1, 5, 4}, {1, 2, 6, 5}, {2, 3, 7, 6}, {3, 0, 4, 7}, {3, 2, 1, 0}, {4, 5, 6, 7}};
-            for (int[] f : faces) {
-                float[] v = new float[12];
-                for (int i = 0; i < 4; i++) System.arraycopy(c[f[i]], 0, v, i * 3, 3);
-                float ex = v[3] - v[0], ey = v[4] - v[1], ez = v[5] - v[2];
-                float fx = v[9] - v[0], fy = v[10] - v[1], fz = v[11] - v[2];
-                float nx = ey * fz - ez * fy, ny = ez * fx - ex * fz, nz = ex * fy - ey * fx;
-                float nl = (float) Math.max(1e-6, Math.sqrt(nx * nx + ny * ny + nz * nz));
-                quad(v, nx / nl, ny / nl, nz / nl, argb);
-            }
-            return this;
-        }
-    }
-
-    interface BandColor {
-        int color(int band);
     }
 
     Builder part(Part p, float px, float py, float pz) {
         return new Builder(p, px, py, pz);
-    }
-
-    static int shade(int argb, float f) {
-        int a = argb >>> 24, r = (argb >> 16) & 255, g = (argb >> 8) & 255, b = argb & 255;
-        return (a << 24) | (Math.min(255, Math.round(r * f)) << 16) | (Math.min(255, Math.round(g * f)) << 8) | Math.min(255, Math.round(b * f));
     }
 
     // ------------------------------------------------------------------ posing
@@ -179,13 +325,11 @@ public final class AvatarModel {
         }
     }
 
-    /**
-     * Posed geometry in Minecraft's player model space. Each quad is 4 vertices of (x, y, z), then the
-     * normal (x, y, z), then the colour as an int's bits: 16 floats per quad.
-     */
-    public float[] pose(Angles a) {
-        float[] out = new float[quadCount() * 16];
-        int k = 0;
+    /** The model posed in Minecraft's player model space (blocks, y down, feet at y = 1.5). */
+    public Posed pose(Angles a) {
+        float[] out = new float[quadCount() * STRIDE];
+        int[] colors = new int[quadCount() * 4];
+        int k = 0, ci = 0;
         for (Part p : Part.values()) {
             float[] pv = pivots.get(p);
             // Model-space angles → our y-up space: both rotations change sign (the y axis is flipped).
@@ -200,25 +344,27 @@ public final class AvatarModel {
             }
             float bob = (p == Part.RIGHT_LEG || p == Part.LEFT_LEG) ? 0 : a.bob();
             float cx = (float) Math.cos(rx), sx = (float) Math.sin(rx), cy = (float) Math.cos(ry), sy = (float) Math.sin(ry);
-            for (Quad q : parts.get(p)) {
+            for (Quad quad : parts.get(p)) {
+                float[] q = quad.v();
+                System.arraycopy(quad.c(), 0, colors, ci, 4);
+                ci += 4;
                 for (int i = 0; i < 4; i++) {
-                    float x = q.v()[i * 3] - pv[0], y = q.v()[i * 3 + 1] - pv[1], z = q.v()[i * 3 + 2] - pv[2];
+                    int o = i * 6;
+                    float x = q[o] - pv[0], y = q[o + 1] - pv[1], z = q[o + 2] - pv[2];
                     // Pitch (about x), then yaw (about y): like a head nodding, then turning.
                     float y1 = y * cx - z * sx, z1 = y * sx + z * cx;
                     float x2 = x * cy + z1 * sy, z2 = -x * sy + z1 * cy;
-                    float wx = x2 + pv[0], wy = y1 + pv[1] + bob, wz = z2 + pv[2];
-                    out[k++] = wx / 16f;
-                    out[k++] = 1.5f - wy / 16f;
-                    out[k++] = wz / 16f;
+                    out[k++] = (x2 + pv[0]) / 16f;
+                    out[k++] = 1.5f - (y1 + pv[1] + bob) / 16f;
+                    out[k++] = (z2 + pv[2]) / 16f;
+                    float nx = q[o + 3], ny = q[o + 4], nz = q[o + 5];
+                    float ny1 = ny * cx - nz * sx, nz1 = ny * sx + nz * cx;
+                    out[k++] = nx * cy + nz1 * sy;
+                    out[k++] = -ny1;
+                    out[k++] = -nx * sy + nz1 * cy;
                 }
-                float ny1 = q.ny() * cx - q.nz() * sx, nz1 = q.ny() * sx + q.nz() * cx;
-                float nx2 = q.nx() * cy + nz1 * sy, nz2 = -q.nx() * sy + nz1 * cy;
-                out[k++] = nx2;
-                out[k++] = -ny1;
-                out[k++] = nz2;
-                out[k++] = Float.intBitsToFloat(q.argb());
             }
         }
-        return out;
+        return new Posed(out, colors);
     }
 }

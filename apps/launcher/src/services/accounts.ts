@@ -17,6 +17,7 @@ import {
   type DeviceCode,
   type MinecraftSession,
   type MsTokens,
+  secureSkinUrl,
 } from "../core/auth/microsoft";
 import { BloomError, toBloomError } from "../core/platform";
 import { app, msClientId, P, saveAccounts, updateSettings, type Account } from "./app";
@@ -115,7 +116,7 @@ export async function refreshAccountSkin(account: Account): Promise<void> {
       const cached = JSON.parse(cachedRaw) as { accessToken: string; expiresAt: number };
       if (tokenValid(cached.expiresAt)) {
         const profile = await minecraftProfile(http, cached.accessToken);
-        skinUrl = profile.skins?.find((skin) => skin.state === "ACTIVE")?.url;
+        skinUrl = secureSkinUrl(profile.skins?.find((skin) => skin.state === "ACTIVE")?.url);
       }
     } catch {
       // A missing/expired cache is repaired through the stored Microsoft refresh token below.

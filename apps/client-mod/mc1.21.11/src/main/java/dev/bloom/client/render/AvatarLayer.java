@@ -32,7 +32,7 @@ public final class AvatarLayer extends RenderLayer<AvatarRenderState, PlayerMode
         if (state.isSpectator) return;
         AvatarModel model = AvatarModels.get(AvatarStatePatch.modelFor(state));
         if (model == null) return;
-        final float[] q;
+        final AvatarModel.Posed q;
         try {
             q = model.pose(AvatarModel.Angles.walking(state.walkAnimationPos, state.walkAnimationSpeed, xRot, yRot, state.attackTime, state.ageInTicks));
         } catch (RuntimeException e) {
@@ -46,17 +46,19 @@ public final class AvatarLayer extends RenderLayer<AvatarRenderState, PlayerMode
         pose.popPose();
     }
 
-    private static void emit(PoseStack.Pose p, VertexConsumer vc, float[] q, int light, int overlay) {
-        for (int i = 0; i < q.length; i += 16) {
-            float nx = q[i + 12], ny = q[i + 13], nz = q[i + 14];
-            int color = Float.floatToRawIntBits(q[i + 15]);
+    private static void emit(PoseStack.Pose p, VertexConsumer vc, AvatarModel.Posed posed, int light, int overlay) {
+        float[] g = posed.geometry();
+        int[] c = posed.colors();
+        for (int quad = 0; quad < posed.quads(); quad++) {
+            int base = quad * AvatarModel.STRIDE;
             // Both windings, so faces show whatever the culling and mirroring of this pass.
-            for (int v = 0; v < 4; v++) vertex(p, vc, q, i + v * 3, color, light, overlay, nx, ny, nz);
-            for (int v = 3; v >= 0; v--) vertex(p, vc, q, i + v * 3, color, light, overlay, nx, ny, nz);
+            for (int v = 0; v < 4; v++) vertex(p, vc, g, base + v * 6, c[quad * 4 + v], light, overlay);
+            for (int v = 3; v >= 0; v--) vertex(p, vc, g, base + v * 6, c[quad * 4 + v], light, overlay);
         }
     }
 
-    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float[] q, int at, int color, int light, int overlay, float nx, float ny, float nz) {
-        vc.addVertex(p, q[at], q[at + 1], q[at + 2]).setColor(color).setUv(0.5f, 0.5f).setOverlay(overlay).setLight(light).setNormal(p, nx, ny, nz);
+    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float[] g, int at, int color, int light, int overlay) {
+        vc.addVertex(p, g[at], g[at + 1], g[at + 2]).setColor(color).setUv(0.5f, 0.5f).setOverlay(overlay).setLight(light)
+                .setNormal(p, g[at + 3], g[at + 4], g[at + 5]);
     }
 }

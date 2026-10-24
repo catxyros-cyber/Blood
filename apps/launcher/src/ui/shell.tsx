@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { Account } from "../services/app";
 import { app, dismissToast, navigate, type Route } from "../services/app";
 import { activeAccount, refreshAccountSkin } from "../services/accounts";
+import { secureSkinUrl } from "../core/auth/microsoft";
 import { cancelLaunch } from "../services/game";
 import { native } from "../services/native";
 import { useStore } from "../services/store";
@@ -61,9 +62,10 @@ export function TitleBar() {
 /** Minecraft face cropped from the skin texture (8×8 at 8,8 plus the hat layer). */
 export function Avatar({ account, size = 28 }: { account?: Account; size?: number }) {
   const [imageFailed, setImageFailed] = useState(false);
-  useEffect(() => setImageFailed(false), [account?.skinUrl]);
+  const skin = secureSkinUrl(account?.skinUrl);
+  useEffect(() => setImageFailed(false), [skin]);
 
-  if (!account?.skinUrl || imageFailed) {
+  if (!skin || imageFailed) {
     return (
       <div className="rounded-lg bg-raised border border-line grid place-items-center text-muted shrink-0" style={{ width: size, height: size }}>
         <Icon.User size={size * 0.55} />
@@ -74,8 +76,8 @@ export function Avatar({ account, size = 28 }: { account?: Account; size?: numbe
   const image = (left: number) => ({ width: size * 8, height: size * 8, left, top: -size, imageRendering: "pixelated" as const });
   return (
     <div className="relative rounded-lg overflow-hidden shrink-0 border border-white/10" style={{ width: size, height: size }}>
-      <img src={account.skinUrl} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size)} />
-      <img src={account.skinUrl} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size * 5)} />
+      <img src={skin} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size)} />
+      <img src={skin} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size * 5)} />
     </div>
   );
 }
