@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.25",
+    "date": "2026-10-24",
+    "notes": "Smooth title screen logo and menu reveal\n\nBLOOD Client 0.2.20."
+  },
+  {
     "version": "1.0.24",
     "date": "2026-10-24",
     "notes": "Add now playing music HUD\n\nBLOOD Client 0.2.19."
