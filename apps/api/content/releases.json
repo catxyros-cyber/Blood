@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.24",
+    "date": "2026-10-24",
+    "notes": "Add now playing music HUD\n\nBLOOD Client 0.2.19."
+  },
+  {
     "version": "1.0.23",
     "date": "2026-10-24",
     "notes": "Fix Minecraft avatars\n\nBLOOD Client 0.2.18."
