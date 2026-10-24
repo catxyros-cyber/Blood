@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.28",
+    "date": "2026-10-24",
+    "notes": "Crash Doctor, Worlds & servers, Ctrl+K, Zoom, hit effects, waypoints, health indicators"
+  },
+  {
     "version": "1.0.27",
     "date": "2026-10-24",
     "notes": "In-game click GUI\n\nMOTION Client 0.2.22."
