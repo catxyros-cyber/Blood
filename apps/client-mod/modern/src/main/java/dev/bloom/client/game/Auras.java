@@ -1,5 +1,6 @@
 package dev.bloom.client.game;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.core.cape.CapeDirectory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -28,7 +29,7 @@ public final class Auras {
     /** Client tick: spawn this tick's particles. */
     public static void tick(Minecraft mc) {
         if (mc.level == null || mc.isPaused() || mc.player == null) return;
-        Vec3 cam = mc.gameRenderer.getMainCamera().position();
+        Vec3 cam = Mc.camera().position();
         long t = mc.level.getGameTime();
         for (AbstractClientPlayer p : mc.level.players()) {
             if (p.isInvisible() || p.isSpectator()) continue;

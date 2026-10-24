@@ -22,7 +22,7 @@ public final class Zoom {
 
     /** Called every client tick. */
     public static void tick(Minecraft mc) {
-        boolean allowed = mc.player != null && mc.screen == null;
+        boolean allowed = mc.player != null && Mc.screen() == null;
         STATE.key(BloomKeys.ZOOM.isDown(), BloomSettings.ZOOM_TOGGLE.on(), allowed);
 
         boolean cinematic = STATE.wanted() && BloomSettings.ZOOM_CINEMATIC.on();
@@ -37,7 +37,7 @@ public final class Zoom {
 
         if (STATE.wanted() && !hookSeen && !warned && mc.player != null) {
             warned = true;
-            mc.gui.setOverlayMessage(Component.literal("MOTION zoom isn't available on this Minecraft version"), false);
+            Mc.overlayMessage(Component.literal("MOTION zoom isn't available on this Minecraft version"), false);
         }
     }
 
@@ -52,7 +52,7 @@ public final class Zoom {
     public static boolean onScroll(double vertical) {
         if (!STATE.wanted() || !BloomSettings.ZOOM_SCROLL.on() || vertical == 0) return false;
         STATE.scroll(Math.signum(vertical), BloomSettings.ZOOM_LEVEL.value());
-        Minecraft.getInstance().gui.setOverlayMessage(
+        Mc.overlayMessage(
                 Component.literal(String.format(java.util.Locale.ROOT, "Zoom %.1f×", STATE.target(BloomSettings.ZOOM_LEVEL.value()))), false);
         return true;
     }

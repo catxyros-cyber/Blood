@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import dev.bloom.client.Mc;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -239,7 +240,7 @@ public class BloomMenuScreen extends Screen implements Host {
             }
         }
         // Not a section of this menu (e.g. Profiles from the visuals menu): open the full menu there.
-        if (minecraft != null) minecraft.setScreen(new BloomMenuScreen(parent, c));
+        if (minecraft != null) Mc.setScreen(new BloomMenuScreen(parent, c));
     }
 
     public void switchTo(int index) {
@@ -705,7 +706,7 @@ public class BloomMenuScreen extends Screen implements Host {
     }
 
     private void finishClose() {
-        if (minecraft != null) minecraft.setScreen(parent);
+        if (minecraft != null) Mc.setScreen(parent);
     }
 
     public void removed() {

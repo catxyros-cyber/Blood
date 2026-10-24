@@ -1,5 +1,6 @@
 package dev.bloom.client.render;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.core.settings.BloomSettings;
 import dev.bloom.client.core.waypoint.WaypointStore;
 import dev.bloom.client.game.Waypoints;
@@ -43,8 +44,8 @@ public final class WorldLabels {
 
     public static void render(GuiGraphics g, float partialTick) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null || mc.options.hideGui || !BloomSettings.ENABLED.on()) return;
-        Vec3 cam = mc.gameRenderer.getMainCamera().position();
+        if (mc.level == null || mc.player == null || Mc.hudHidden() || !BloomSettings.ENABLED.on()) return;
+        Vec3 cam = Mc.camera().position();
         int w = g.guiWidth(), h = g.guiHeight();
         try {
             if (BloomSettings.WAYPOINTS.on()) waypoints(g, mc, cam, w, h);

@@ -1,5 +1,6 @@
 package dev.bloom.client.gui.page;
 
+import dev.bloom.client.Mc;
 import net.minecraft.client.renderer.RenderPipelines;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.BloomKeys;
@@ -543,7 +544,7 @@ public final class VisualsPages {
                     Theme.palette().textDim()));
             rows.add(new Rows.Buttons(List.of(
                     new Button("Open full MOTION menu", "grid", Button.Style.GHOST,
-                            () -> Minecraft.getInstance().setScreen(new BloomMenuScreen(screen.parentScreen()))),
+                            () -> Mc.setScreen(new BloomMenuScreen(screen.parentScreen()))),
                     resetButton(screen, "General", used))));
             return rows;
         }

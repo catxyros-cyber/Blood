@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import dev.bloom.client.Mc;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.CharacterEvent;
@@ -616,6 +617,6 @@ public class HudEditorScreen extends Screen implements Host {
 
     private void close() {
         BloomClient.get().saveNow();
-        if (minecraft != null) minecraft.setScreen(parent);
+        if (minecraft != null) Mc.setScreen(parent);
     }
 }

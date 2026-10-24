@@ -1,5 +1,6 @@
 package dev.bloom.client.game;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.BloomKeys;
 import dev.bloom.client.core.Log;
@@ -76,7 +77,7 @@ public final class Waypoints {
             return;
         }
         while (BloomKeys.ADD_WAYPOINT.consumeClick()) {
-            if (mc.screen != null) continue;
+            if (Mc.screen() != null) continue;
             WaypointStore.Waypoint w = addHere(mc);
             if (w != null) BloomClient.get().toast("Waypoint added", w.name() + " at " + w.x() + ", " + w.y() + ", " + w.z());
         }

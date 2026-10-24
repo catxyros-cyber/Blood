@@ -1,5 +1,6 @@
 package dev.bloom.client.mixin;
 
+import dev.bloom.client.Mc;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -41,7 +42,7 @@ public abstract class LevelRendererMixin {
         try {
             Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix());
             modelView.setTranslation(0f, 0f, 0f);
-            Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+            Camera camera = Mc.camera();
             SkyRenderer.render(modelView, WorldMatrices.partialTick, camera);
         } catch (RuntimeException e) {
             BloomClient.reportRenderError("sky", e);

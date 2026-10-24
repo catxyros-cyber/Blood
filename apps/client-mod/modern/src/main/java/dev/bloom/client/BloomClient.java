@@ -279,7 +279,7 @@ public final class BloomClient {
                 dev.bloom.client.game.Auras.tick(mc);
             }
             if (mc.level != null && mc.gameRenderer != null) {
-                Vec3 cam = mc.gameRenderer.getMainCamera().position();
+                Vec3 cam = Mc.camera().position();
                 // Performance-friendly mode halves MOTION's particle budget.
                 float factor = budget.factor() * (BloomSettings.LITE_MODE.on() ? 0.5f : 1f);
                 if (!mc.isPaused()) particles.tick(env, cam.x, cam.y, cam.z, factor);
@@ -305,7 +305,7 @@ public final class BloomClient {
             profiles.onBiomeGroup(GameEnv.normalSky(mc.level) ? groupIdAtCamera() : null);
             if (BloomSettings.LOW_FPS_TIP.on()) {
                 List<LowFpsAdvisor.Candidate> tip = advisor.update(now, fps, BloomSettings.LOW_FPS_THRESHOLD.intValue(),
-                        lowFpsCandidates(), mc.screen == null && !mc.isPaused());
+                        lowFpsCandidates(), Mc.screen() == null && !mc.isPaused());
                 if (tip != null) {
                     StringBuilder b = new StringBuilder("Try lowering: ");
                     for (int i = 0; i < tip.size(); i++) b.append(i > 0 ? ", " : "").append(tip.get(i).label());
@@ -339,13 +339,13 @@ public final class BloomClient {
         Zoom.tick(mc);
         dev.bloom.client.game.Waypoints.tick(mc);
         while (BloomKeys.MENU.consumeClick()) {
-            if (mc.screen == null) mc.setScreen(new BloomMenuScreen(null));
+            if (Mc.screen() == null) Mc.setScreen(new BloomMenuScreen(null));
         }
         while (BloomKeys.VISUALS_MENU.consumeClick()) {
-            if (mc.screen == null) mc.setScreen(BloomMenuScreen.visuals(null));
+            if (Mc.screen() == null) Mc.setScreen(BloomMenuScreen.visuals(null));
         }
         while (BloomKeys.HUD_EDITOR.consumeClick()) {
-            if (mc.screen == null) mc.setScreen(new HudEditorScreen(null));
+            if (Mc.screen() == null) Mc.setScreen(new HudEditorScreen(null));
         }
         while (BloomKeys.TOGGLE_VISUALS.consumeClick()) {
             BloomSettings.ENABLED.toggle();
@@ -379,7 +379,7 @@ public final class BloomClient {
         if (!BloomSettings.TOASTS.on()) return;
         Minecraft mc = Minecraft.getInstance();
         try {
-            mc.getToastManager().addToast(new BloomToast(title, message));
+            Mc.toasts().addToast(new BloomToast(title, message));
         } catch (RuntimeException e) {
             Log.warn("Could not show notification", e);
         }

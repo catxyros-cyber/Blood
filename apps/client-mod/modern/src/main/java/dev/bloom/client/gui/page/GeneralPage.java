@@ -1,5 +1,6 @@
 package dev.bloom.client.gui.page;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.BloomKeys;
 import dev.bloom.client.core.compat.CompatReport;
@@ -50,7 +51,7 @@ public class GeneralPage extends GenericPage {
                     n.name() + ": " + n.message(), col));
         }
         rows.add(new Rows.Buttons(List.of(
-                new Button("HUD editor", "hud", Button.Style.PRIMARY, () -> Minecraft.getInstance().setScreen(new HudEditorScreen(screen))),
+                new Button("HUD editor", "hud", Button.Style.PRIMARY, () -> Mc.setScreen(new HudEditorScreen(screen))),
                 new Button("Open config folder", "folder", Button.Style.NORMAL, () -> {
                     try {
                         Files.createDirectories(bc.configDir());

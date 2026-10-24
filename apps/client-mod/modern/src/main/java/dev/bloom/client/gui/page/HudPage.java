@@ -1,5 +1,6 @@
 package dev.bloom.client.gui.page;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.hud.HudLayout;
 import dev.bloom.client.core.hud.HudLayouts;
@@ -30,7 +31,7 @@ public class HudPage extends GenericPage {
         HudLayouts layouts = BloomClient.get().hudLayouts();
         List<Element> rows = new ArrayList<>();
         rows.add(new Rows.Buttons(List.of(
-                new Button("Open HUD editor", "move", Button.Style.PRIMARY, () -> Minecraft.getInstance().setScreen(new HudEditorScreen(screen)))
+                new Button("Open HUD editor", "move", Button.Style.PRIMARY, () -> Mc.setScreen(new HudEditorScreen(screen)))
                         .tooltip("Drag widgets, resize with the corner or mouse wheel, snap to guides"),
                 resetPageButton(screen, category))));
         rows.add(new Rows.Header("Layout"));

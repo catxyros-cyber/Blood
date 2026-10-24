@@ -1,5 +1,6 @@
 package dev.bloom.client.fabric;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.BloomKeys;
 import dev.bloom.client.platform.Platform;
@@ -59,13 +60,13 @@ public final class BloomFabric implements ClientModInitializer {
         WorldRenderEvents.END_MAIN.register(context -> {
             Minecraft mc = Minecraft.getInstance();
             BloomClient.get().renderWorld(WorldMatrices.MODEL_VIEW, WorldMatrices.PROJECTION,
-                    mc.gameRenderer.getMainCamera(), WorldMatrices.partialTick);
+                    Mc.camera(), WorldMatrices.partialTick);
         });
         WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {
             if (!BloomClient.ready()) return true;
             try {
                 // Returning false skips Minecraft's outline because MOTION drew its own.
-                return !OutlineRenderer.render(Minecraft.getInstance().gameRenderer.getMainCamera(), WorldMatrices.MODEL_VIEW);
+                return !OutlineRenderer.render(Mc.camera(), WorldMatrices.MODEL_VIEW);
             } catch (RuntimeException e) {
                 BloomClient.reportRenderError("block outline", e);
                 return true;

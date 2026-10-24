@@ -16,7 +16,7 @@ public final class FreeLook {
     /** Called each client tick so the key works as a hold, not a toggle. */
     public static void tick(Minecraft minecraft) {
         LocalPlayer current = minecraft.player;
-        boolean held = current != null && minecraft.screen == null && BloomKeys.FREE_LOOK.isDown();
+        boolean held = current != null && Mc.screen() == null && BloomKeys.FREE_LOOK.isDown();
         if (!held) {
             stop();
             return;

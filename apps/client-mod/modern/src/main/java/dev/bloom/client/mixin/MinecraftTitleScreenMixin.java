@@ -10,7 +10,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /** Replaces only Minecraft's entry title screen; every other screen remains vanilla. */
+//#if MC >= 26.2
+// 26.2 moved screen management from Minecraft into Gui.
+@Mixin(net.minecraft.client.gui.Gui.class)
+//#else
 @Mixin(Minecraft.class)
+//#endif
 public abstract class MinecraftTitleScreenMixin {
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen motion$replaceTitleScreen(Screen next) {

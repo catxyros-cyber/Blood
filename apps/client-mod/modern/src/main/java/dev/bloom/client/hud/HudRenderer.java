@@ -1,5 +1,6 @@
 package dev.bloom.client.hud;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.Log;
 import dev.bloom.client.core.hud.HudLayout;
@@ -39,9 +40,9 @@ public final class HudRenderer {
 
     public void render(GuiGraphics g, DeltaTracker delta) {
         Minecraft mc = Minecraft.getInstance();
-        if (!BloomSettings.ENABLED.on() || !BloomSettings.HUD_ENABLED.on() || mc.options.hideGui) return;
+        if (!BloomSettings.ENABLED.on() || !BloomSettings.HUD_ENABLED.on() || Mc.hudHidden()) return;
         if (BloomSettings.HUD_HIDE_IN_F3.on() && dev.bloom.client.game.ClientCompat.debugScreenShown()) return;
-        if (mc.screen instanceof dev.bloom.client.gui.HudEditorScreen) return; // the editor draws its own copy
+        if (Mc.screen() instanceof dev.bloom.client.gui.HudEditorScreen) return; // the editor draws its own copy
         HudLayout layout = bloom.hudLayouts().active();
         float partial = delta.getGameTimeDeltaPartialTick(true);
         for (WidgetState s : layout.widgets()) {

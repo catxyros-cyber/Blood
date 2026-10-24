@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import dev.bloom.client.Mc;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -270,10 +271,10 @@ public final class MotionTitleScreen extends Screen {
         int item = hoveredMenuItem(event.x(), event.y());
         if (item < 0) return false;
         switch (item) {
-            case 0 -> Minecraft.getInstance().setScreen(new SelectWorldScreen(this));
-            case 1 -> Minecraft.getInstance().setScreen(new JoinMultiplayerScreen(this));
-            case 2 -> Minecraft.getInstance().setScreen(new OptionsScreen(this, Minecraft.getInstance().options));
-            case 3 -> Minecraft.getInstance().setScreen(new BloomMenuScreen(this));
+            case 0 -> Mc.setScreen(new SelectWorldScreen(this));
+            case 1 -> Mc.setScreen(new JoinMultiplayerScreen(this));
+            case 2 -> Mc.setScreen(new OptionsScreen(this, Minecraft.getInstance().options));
+            case 3 -> Mc.setScreen(new BloomMenuScreen(this));
             case 4 -> Minecraft.getInstance().stop();
             default -> { return false; }
         }
@@ -298,10 +299,10 @@ public final class MotionTitleScreen extends Screen {
 
     private void activateMenuItem(int item) {
         switch (item) {
-            case 0 -> Minecraft.getInstance().setScreen(new SelectWorldScreen(this));
-            case 1 -> Minecraft.getInstance().setScreen(new JoinMultiplayerScreen(this));
-            case 2 -> Minecraft.getInstance().setScreen(new OptionsScreen(this, Minecraft.getInstance().options));
-            case 3 -> Minecraft.getInstance().setScreen(new BloomMenuScreen(this));
+            case 0 -> Mc.setScreen(new SelectWorldScreen(this));
+            case 1 -> Mc.setScreen(new JoinMultiplayerScreen(this));
+            case 2 -> Mc.setScreen(new OptionsScreen(this, Minecraft.getInstance().options));
+            case 3 -> Mc.setScreen(new BloomMenuScreen(this));
             case 4 -> Minecraft.getInstance().stop();
         }
     }

@@ -1,5 +1,6 @@
 package dev.bloom.client.game;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.core.settings.BloomSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -15,7 +16,7 @@ public final class MaceVisuals {
 
     public static void tick(Minecraft mc) {
         if (!BloomSettings.MACE_VISUALS.on() || mc.level == null || mc.isPaused()) return;
-        var camera = mc.gameRenderer.getMainCamera().position();
+        var camera = Mc.camera().position();
         long tick = mc.level.getGameTime();
         for (AbstractClientPlayer player : mc.level.players()) {
             if (player.isInvisible() || player.isSpectator() || player.position().distanceToSqr(camera) > MAX_DIST_SQ) continue;

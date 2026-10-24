@@ -1,5 +1,6 @@
 package dev.bloom.client.game;
 
+import dev.bloom.client.Mc;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.particles.ParticleEnv;
 import net.minecraft.client.Minecraft;
@@ -109,7 +110,7 @@ public final class GameEnv implements ParticleEnv {
     public int groupAtCamera() {
         Minecraft mc = Minecraft.getInstance();
         if (level == null || mc.gameRenderer == null) return -1;
-        BlockPos p = mc.gameRenderer.getMainCamera().blockPosition();
+        BlockPos p = Mc.camera().blockPosition();
         return groups.groupAt(level, p.getX(), p.getY(), p.getZ());
     }
 }
