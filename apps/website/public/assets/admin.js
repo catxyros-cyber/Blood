@@ -165,7 +165,7 @@
 
   // ---------------------------------------------------------------- cape images
 
-  const CAPE_WIDTHS = [64, 128, 256, 512, 1024];
+  const CAPE_WIDTHS = [64, 128, 256, 512, 1024, 2048];
   const MAX_FRAMES = 64;
 
   /**
@@ -215,7 +215,7 @@
     if (n > MAX_FRAMES) throw new Error(`An animated cape can have at most ${MAX_FRAMES} frames. This one has ${n}.`);
     // Not a cape layout (2:1)? Treat it as artwork and wrap it onto an HD cape.
     const artwork = Math.abs(fw / fh - 2) > 0.02;
-    const width = artwork ? artworkWidth(fw, fh, n) : CAPE_WIDTHS.find((w) => w >= Math.min(fw, 1024)) ?? 1024;
+    const width = artwork ? artworkWidth(fw, fh, n) : CAPE_WIDTHS.find((w) => w >= Math.min(fw, 2048)) ?? 2048;
     const height = width / 2;
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -239,7 +239,7 @@
   /** Largest cape width that keeps an artwork animation under the server's size limits. */
   function artworkWidth(fw, fh, n) {
     // Roughly one byte per pixel after PNG compression; the server takes up to 4 MB.
-    for (const w of [1024, 512, 256, 128]) if (w * (w / 2) * n <= 3_400_000 && w <= Math.max(128, fw * 2)) return w;
+    for (const w of [2048, 1024, 512, 256, 128]) if (w * (w / 2) * n <= (n === 1 ? 2_100_000 : 3_400_000) && w <= Math.max(128, fw * 2)) return w;
     return 128;
   }
 

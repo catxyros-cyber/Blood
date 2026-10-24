@@ -40,14 +40,24 @@ async function main() {
     store = new MemoryStore();
   }
 
-  await store.createCommunitySkin({
-    id: "2f2a9c91-ec58-4bde-9dc7-0740b4f6c311",
-    name: "Tung Tung Tung Sahur",
-    model: "classic",
-    png: await readFile(join(config.contentDir, "skins", "tung-tung-tung-sahur.png")),
-    enabled: true,
-    createdAt: Date.UTC(2026, 9, 24),
-  });
+  // Built-in community skins (apps/api/content/skins). Seeding is idempotent: existing ids are kept,
+  // so disabling or deleting one on the admin page sticks… until it's re-added here with a new id.
+  const builtInSkins = [
+    { id: "2f2a9c91-ec58-4bde-9dc7-0740b4f6c311", name: "Tung Tung Tung Sahur", file: "tung-tung-tung-sahur.png", day: 24 },
+    { id: "7b1e4d2a-3c5f-4a8e-9d61-5f0c2b8e7a14", name: "Tralalero Tralala", file: "tralalero-tralala.png", day: 25 },
+    { id: "c4d9a6f3-2b7e-4f15-8a3c-6e1d0b9f4c27", name: "Bombardiro Crocodilo", file: "bombardiro-crocodilo.png", day: 25 },
+    { id: "e8f2b5c1-9a4d-4c6e-b7f3-1d2a8c5e9b36", name: "Ballerina Cappuccina", file: "ballerina-cappuccina.png", day: 25 },
+  ];
+  for (const s of builtInSkins) {
+    await store.createCommunitySkin({
+      id: s.id,
+      name: s.name,
+      model: "classic",
+      png: await readFile(join(config.contentDir, "skins", s.file)),
+      enabled: true,
+      createdAt: Date.UTC(2026, 9, s.day),
+    });
+  }
 
   const stripe = config.stripe ? new Stripe(config.stripe.secretKey, config.stripe.apiVersion) : null;
   if (!stripe) console.warn("Stripe is not configured: Premium purchases are disabled.");

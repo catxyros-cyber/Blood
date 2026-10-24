@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Original HD capes for MOTION (1024x512, Minecraft's 64x32 cape layout at 16x detail).
+"""Original HD capes for MOTION (2048x1024, Minecraft's 64x32 cape layout at 32x detail).
 
 Run: python3 branding/tools/gen_capes.py
 Writes branding/capes/<name>.png (still capes) and <name>-animated.png (vertical frame strips).
@@ -217,6 +217,91 @@ def face_ashfall(w, h, t=0.0):
     return vignette(col, x, y, 0.5)
 
 
+def _seg_dist(dx, dy, p0, p1):
+    v = np.array(p1) - np.array(p0)
+    L = max(1e-6, float(np.linalg.norm(v)))
+    u = v / L
+    px, py = dx - p0[0], dy - p0[1]
+    proj = np.clip(px * u[0] + py * u[1], 0, L)
+    return np.sqrt((px - proj * u[0]) ** 2 + (py - proj * u[1]) ** 2)
+
+
+def face_dollar(w, h, t=0.0):
+    """MOTION money: an electric-green $ with speed lines on black carbon weave."""
+    x, y = grid(w, h)
+    ar = w / h
+    n = value_noise(w, h, 5, 61)
+    col = hexc("#050806")[None, None] + (n[..., None] - 0.5) * 0.05
+    weave = 0.5 + 0.5 * np.sin((x + y * 0.6) * w * 0.55) * np.sin((x - y * 0.6) * w * 0.55)
+    col += (weave[..., None] - 0.5) * 0.03
+    # Faint circuit traces
+    tr = value_noise(w, h, 9, 67)
+    traces = (np.abs(np.sin(tr * 40)) > 0.985).astype(np.float32) * (n > 0.45)
+    col += hexc("#0f5a35")[None, None] * traces[..., None] * 0.6
+    # The $: an S made of two arcs plus a vertical bar, slanted for motion.
+    cx, cy = 0.53, 0.45
+    sk = 0.22
+    dx = (x - cx) * ar + (y - cy) * sk
+    dy = (y - cy)
+    lines = np.zeros_like(dx)
+    rs = 0.1
+    # Screen coordinates (y down): the top loop runs from the middle, round the left and over the top
+    # to the upper right; the bottom loop from the middle, round the right and under to the lower left.
+    for (ox, oy, a0, a1) in [(0.0, -rs, 0.5 * math.pi, 1.86 * math.pi), (0.0, rs, -0.5 * math.pi, 0.86 * math.pi)]:
+        th = np.arctan2(dy - oy, dx - ox)
+        rr = np.sqrt((dx - ox) ** 2 + (dy - oy) ** 2)
+        thn = np.mod(th - a0, 2 * math.pi)
+        inside = thn <= (a1 - a0)
+        lines = np.maximum(lines, np.exp(-((rr - rs) / 0.019) ** 2) * inside)
+    lines = np.maximum(lines, np.exp(-(_seg_dist(dx, dy, (0.0, -0.3), (0.0, 0.3)) / 0.012) ** 2))
+    # Speed lines to the left
+    phase = t * 2 * math.pi
+    for i, (yy, x0, x1) in enumerate([(-0.07, -0.52, -0.2), (0.0, -0.58, -0.17), (0.07, -0.50, -0.21)]):
+        shift = 0.04 * math.sin(phase + i)
+        d = _seg_dist(dx, dy, (x0 + shift, yy), (x1, yy))
+        lines = np.maximum(lines, np.exp(-(d / 0.010) ** 2) * (0.7 + 0.3 * math.cos(phase + i)))
+    pulse = 0.8 + 0.2 * math.sin(phase)
+    glow = np.asarray(Image.fromarray((np.clip(lines, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(w / 30)), np.float32) / 255.0
+    green = hexc("#39ff88")
+    col += green[None, None] * (glow * 2.4 * pulse)[..., None]
+    grad = hexc("#c6ff3d") * (1 - y[..., None]) + hexc("#00c46a") * y[..., None]
+    col = col * (1 - lines[..., None]) + grad * lines[..., None]
+    # Thin green trim
+    edge = np.minimum.reduce([x, 1 - x, y * ar, (1 - y) * ar])
+    trim = np.exp(-((edge - 0.04) / 0.005) ** 2)
+    col = col * (1 - trim[..., None]) + hexc("#39ff88")[None, None] * 0.8 * trim[..., None]
+    return vignette(col, x, y, 0.4)
+
+
+def face_voltage(w, h, t=0.0):
+    """Electric storm: violet clouds split by bright blue lightning."""
+    x, y = grid(w, h)
+    n1 = value_noise(w, h, 2.2, 71)
+    n2 = value_noise(w, h, 6, 73)
+    clouds = smooth((n1 * 0.65 + n2 * 0.35 - 0.25 + 0.04 * math.sin(t * 2 * math.pi)) * 1.7)
+    col = hexc("#05030f")[None, None] * (1 - clouds[..., None]) + hexc("#3b1d9a")[None, None] * clouds[..., None]
+    col += hexc("#1a6dff")[None, None] * (clouds * (1 - y) * 0.25)[..., None]
+    ar = w / h
+    rng = np.random.default_rng(79 + int(t * 12) % 3)
+    bolt = np.zeros_like(x)
+    for b in range(3):
+        px, py = 0.2 + 0.3 * b + rng.uniform(-0.05, 0.05), 0.0
+        while py < 1.0:
+            nx_, ny_ = px + rng.uniform(-0.09, 0.09), py + rng.uniform(0.06, 0.12)
+            d = _seg_dist(x * ar, y, (px * ar, py), (nx_ * ar, ny_))
+            bolt = np.maximum(bolt, np.exp(-(d / 0.004) ** 2) * (1 - py * 0.4))
+            if rng.random() < 0.25:
+                bx, by = nx_ + rng.uniform(-0.12, 0.12), ny_ + rng.uniform(0.05, 0.1)
+                d2 = _seg_dist(x * ar, y, (nx_ * ar, ny_), (bx * ar, by))
+                bolt = np.maximum(bolt, np.exp(-(d2 / 0.0025) ** 2) * 0.7)
+            px, py = nx_, ny_
+    flash = 0.75 + 0.25 * math.sin(t * 2 * math.pi * 2)
+    glow = np.asarray(Image.fromarray((np.clip(bolt, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(w / 35)), np.float32) / 255.0
+    col += hexc("#5ab4ff")[None, None] * (glow * 2.0 * flash)[..., None]
+    col = col * (1 - bolt[..., None]) + hexc("#e8f6ff")[None, None] * bolt[..., None]
+    return vignette(col, x, y, 0.35)
+
+
 # ------------------------------------------------------------------ assembly
 
 def render_face(fn, w, h, t=0.0):
@@ -249,16 +334,19 @@ CAPES = {
     "crimson-sigil": face_sigil,
     "obsidian-ember": face_obsidian,
     "ashfall": face_ashfall,
+    "motion-dollar": face_dollar,
+    "voltage": face_voltage,
 }
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in CAPES.items():
-        cape(fn, 1024).save(os.path.join(OUT, name + ".png"), optimize=True)
+        # 2048x1024: 32x Minecraft's cape layout, the most MOTION Client accepts. Sharp up close.
+        cape(fn, 2048).save(os.path.join(OUT, name + ".png"), optimize=True)
         print("wrote", name)
     # Animated: 12 frames at 512 wide (keeps the file well under the server's 4 MB limit).
-    for name in ["crimson-sigil", "blood-moon"]:
+    for name in ["crimson-sigil", "blood-moon", "motion-dollar", "voltage"]:
         frames = [cape(CAPES[name], 512, i / 12) for i in range(12)]
         strip = Image.new("RGBA", (512, 256 * len(frames)))
         for i, f in enumerate(frames):

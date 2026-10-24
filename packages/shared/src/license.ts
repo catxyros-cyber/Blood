@@ -109,7 +109,7 @@ export interface CapeInfo {
 }
 
 /**
- * Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 1024×512 per frame.
+ * Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 2048×1024 per frame.
  * Animated capes stack their frames vertically (64×32 frames → 64×(32·frames)), up to 64 frames.
  */
 export const CAPE_MAX_BYTES = 4 * 1024 * 1024;
@@ -123,11 +123,11 @@ export function capeFrames(w: number, h: number): number {
 }
 
 export function capeSizeProblem(w: number, h: number): string | null {
-  if (w < 64 || w > 1024 || w % 64 !== 0) return `A cape must be 64, 128, 256, 512 or 1024 pixels wide. This one is ${w}.`;
+  if (w < 64 || w > 2048 || w % 64 !== 0) return `A cape must be 64, 128, 256, 512, 1024 or 2048 pixels wide. This one is ${w}.`;
   const frames = capeFrames(w, h);
   if (frames < 1) return `A cape frame must be twice as wide as it is tall (64×32, 128×64, …). This image is ${w}×${h}.`;
   if (frames > CAPE_MAX_FRAMES) return `An animated cape can have at most ${CAPE_MAX_FRAMES} frames. This one has ${frames}.`;
-  if (w * h > 1024 * 512 * 16) return "That animation is too big. Use fewer frames or a smaller size.";
+  if (w * h > 2048 * 1024 * 4) return "That animation is too big. Use fewer frames or a smaller size.";
   return null;
 }
 
