@@ -1,0 +1,39 @@
+# Plain renames between Minecraft / Fabric API versions, applied to the preprocessed Java sources.
+# Format: <condition> | <java regex> | <replacement>
+# The sources are written against 1.21.11 names; each rule turns them into another version's names.
+# Anything that is more than a rename belongs in an //#if block (or a compat class) instead.
+
+# ---------------------------------------------------------------- before 1.21.11
+# Identifier was ResourceLocation; ResourceKey#identifier() was location().
+MC < 1.21.11 | \bIdentifier\b | ResourceLocation
+MC < 1.21.11 | \.identifier\(\) | .location()
+MC < 1.21.11 | \bnet\.minecraft\.util\.Util\b | net.minecraft.Util
+MC < 1.21.11 | \bnet\.minecraft\.client\.model\.player\.PlayerModel\b | net.minecraft.client.model.PlayerModel
+# RenderTypes (the entity render type factories) lived on RenderType.
+MC < 1.21.11 | \bnet\.minecraft\.client\.renderer\.rendertype\.RenderTypes\b | net.minecraft.client.renderer.RenderType
+MC < 1.21.11 | \bRenderTypes\. | RenderType.
+# Camera getters.
+MC < 1.21.11 | \b(camera|getMainCamera\(\))\.entity\(\) | $1.getEntity()
+MC < 1.21.11 | \b(camera|getMainCamera\(\))\.position\(\) | $1.getPosition()
+MC < 1.21.11 | \b(camera|getMainCamera\(\))\.blockPosition\(\) | $1.getBlockPosition()
+MC < 1.21.11 | \b(camera|getMainCamera\(\))\.yRot\(\) | $1.getYRot()
+MC < 1.21.11 | \b(camera|getMainCamera\(\))\.xRot\(\) | $1.getXRot()
+
+# ---------------------------------------------------------------- 26.1 and later
+# Fabric API took Mojang's names (docs.fabricmc.net/develop/porting/fabric-api).
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.keybinding\.v1\.KeyBindingHelper\b | net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
+MC >= 26 | \bKeyBindingHelper\.registerKeyBinding\b | KeyMappingHelper.registerKeyMapping
+MC >= 26 | \bLivingEntityFeatureRendererRegistrationCallback\b | LivingEntityRenderLayerRegistrationCallback
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.rendering\.v1\.world\.WorldRenderEvents\b | net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.rendering\.v1\.world\.WorldRenderContext\b | net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
+MC >= 26 | \bWorldRenderEvents\b | LevelRenderEvents
+MC >= 26 | \bWorldRenderContext\b | LevelRenderContext
+MC >= 26 | \bClientTickEvents\.(START|END)_WORLD_TICK\b | ClientTickEvents.$1_LEVEL_TICK
+# GuiGraphics became GuiGraphicsExtractor: draw*/render*/submit* prefixes dropped, *String* -> *Text*.
+MC >= 26 | \bGuiGraphics\b | GuiGraphicsExtractor
+MC >= 26 | \bg\.drawString\( | g.text(
+MC >= 26 | \bg\.drawCenteredString\( | g.centeredText(
+MC >= 26 | \bg\.renderItem\( | g.item(
+MC >= 26 | \bg\.renderOutline\( | g.outline(
+MC >= 26 | \bg\.hLine\( | g.horizontalLine(
+MC >= 26 | \bg\.vLine\( | g.verticalLine(

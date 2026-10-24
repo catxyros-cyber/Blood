@@ -18,7 +18,10 @@
 //   //#endif
 //
 // Conditions compare the exact Minecraft version being built against (MC) using < <= > >= == !=,
-// joined with && and ||. They work in Java sources and in resources (the mixin config).
+// joined with && and ||. They work in Java sources and in resources (the mixin config, shaders).
+//
+// Plain renames (a class or method Mojang renamed between versions) don't need blocks: remap.txt
+// lists them as "condition | regex | replacement" and they are applied to the preprocessed Java.
 
 import groovy.json.JsonSlurper
 
@@ -124,6 +127,13 @@ def preprocess = { String text, String name ->
     return out.toString()
 }
 
+// remap.txt: "<condition> | <java regex> | <replacement>"; blank lines and # comments are ignored.
+def remaps = file('remap.txt').readLines('UTF-8').findAll { it.trim() && !it.trim().startsWith('#') }.collect { String l ->
+    def parts = l.split(/ \| /, 3)
+    if (parts.length != 3) throw new GradleException("remap.txt: expected 'condition | regex | replacement': ${l}")
+    [cond: parts[0].trim(), re: java.util.regex.Pattern.compile(parts[1].trim()), to: parts[2].trim()]
+}.findAll { evalCond(it.cond) }
+
 def ppJava = layout.buildDirectory.dir('generated/pp-java')
 def ppRes = layout.buildDirectory.dir('generated/pp-res')
 def sharedCore = layout.buildDirectory.dir('generated/bloom-core')
@@ -134,10 +144,11 @@ def preprocessSources = tasks.register('preprocessSources') {
     inputs.dir(srcJava)
     inputs.dir(srcRes)
     inputs.property('mc', mc)
+    inputs.file('remap.txt')
     outputs.dir(ppJava)
     outputs.dir(ppRes)
     doLast {
-        [[srcJava, ppJava.get().asFile, ~/.*\.java$/], [srcRes, ppRes.get().asFile, ~/.*(mixins|fabric\.mod)\.json$/]].each { src, dst, pattern ->
+        [[srcJava, ppJava.get().asFile, ~/.*\.java$/], [srcRes, ppRes.get().asFile, ~/.*(mixins\.json|fabric\.mod\.json|\.vsh|\.fsh|\.glsl)$/]].each { src, dst, pattern ->
             project.delete(dst)
             src.eachFileRecurse(groovy.io.FileType.FILES) { File f ->
                 def rel = src.toPath().relativize(f.toPath()).toString()
@@ -148,6 +159,7 @@ def preprocessSources = tasks.register('preprocessSources') {
                     // A file whose whole body is switched off compiles to nothing. In JSON, drop the
                     // comma left dangling before a closing bracket by a switched-off entry.
                     if (f.name.endsWith('.json')) text = text.replaceAll(/,(\s*[\]}])/, '$1')
+                    if (f.name.endsWith('.java')) remaps.each { r -> text = r.re.matcher(text).replaceAll(r.to) }
                     outFile.setText(text, 'UTF-8')
                 } else {
                     outFile.bytes = f.bytes
