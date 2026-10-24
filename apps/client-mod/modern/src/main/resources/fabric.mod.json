@@ -13,7 +13,12 @@
   "entrypoints": {
     "client": [
       "dev.bloom.client.fabric.BloomFabric"
-    ]
+    ],
+//#if SMOKE
+    "fabric-client-gametest": [
+      "dev.bloom.client.smoke.SmokeTest"
+    ],
+//#endif
   },
   "mixins": [
     "${mod_id}.mixins.json"

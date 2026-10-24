@@ -162,6 +162,14 @@ public final class BloomClient {
         if (n == 1 || n % 1000 == 0) Log.warn("MOTION " + what + " rendering failed (" + n + "x)", t);
     }
 
+    /** "sky 3x, avatar 1x" (or "none"): what has failed to render so far. */
+    public static String renderErrorSummary() {
+        if (RENDER_ERRORS.isEmpty()) return "none";
+        StringBuilder sb = new StringBuilder();
+        RENDER_ERRORS.forEach((k, v) -> sb.append(sb.length() == 0 ? "" : ", ").append(k).append(' ').append(v).append('x'));
+        return sb.toString();
+    }
+
     public static BloomClient get() {
         return instance;
     }

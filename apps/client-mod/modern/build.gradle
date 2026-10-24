@@ -18,7 +18,8 @@
 //   //#endif
 //
 // Conditions compare the exact Minecraft version being built against (MC) using < <= > >= == !=,
-// joined with && and ||. They work in Java sources and in resources (the mixin config, shaders).
+// joined with && and ||, or SMOKE (true when building the CI smoke test). They work in Java
+// sources and in resources (fabric.mod.json, the mixin config, shaders).
 //
 // Plain renames (a class or method Mojang renamed between versions) don't need blocks: remap.txt
 // lists them as "condition | regex | replacement" and they are applied to the preprocessed Java.
@@ -56,6 +57,8 @@ def cmpVer = { String a, String b ->
     return 0
 }
 def unobfuscated = cmpVer(mc, '26') >= 0
+// -Psmoke builds the CI smoke test into the jar (src/smoke; see runProductionClientGameTest below).
+def smoke = project.hasProperty('smoke')
 
 apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
 
@@ -75,6 +78,7 @@ base {
 def evalCond = { String expr ->
     expr.split(/\|\|/).any { String alt ->
         alt.split(/&&/).every { String term ->
+            if (term.trim() == 'SMOKE') return smoke
             def m = term.trim() =~ /^MC\s*(>=|<=|==|!=|<|>)\s*([0-9][0-9.]*)$/
             if (!m.matches()) throw new GradleException("Bad preprocessor condition: '${term.trim()}'")
             int c = cmpVer(mc, m.group(2))
@@ -135,6 +139,7 @@ def remaps = file('remap.txt').readLines('UTF-8').findAll { it.trim() && !it.tri
 }.findAll { evalCond(it.cond) }
 
 def ppJava = layout.buildDirectory.dir('generated/pp-java')
+def ppSmoke = layout.buildDirectory.dir('generated/pp-smoke')
 def ppRes = layout.buildDirectory.dir('generated/pp-res')
 def sharedCore = layout.buildDirectory.dir('generated/bloom-core')
 def sharedRes = layout.buildDirectory.dir('generated/bloom-res')
@@ -144,11 +149,17 @@ def preprocessSources = tasks.register('preprocessSources') {
     inputs.dir(srcJava)
     inputs.dir(srcRes)
     inputs.property('mc', mc)
+    inputs.property('smoke', smoke)
+    inputs.dir('src/smoke/java')
     inputs.file('remap.txt')
     outputs.dir(ppJava)
     outputs.dir(ppRes)
+    outputs.dir(ppSmoke)
     doLast {
-        [[srcJava, ppJava.get().asFile, ~/.*\.java$/], [srcRes, ppRes.get().asFile, ~/.*(mixins\.json|fabric\.mod\.json|\.vsh|\.fsh|\.glsl)$/]].each { src, dst, pattern ->
+        project.delete(ppSmoke.get().asFile)
+        def jobs = [[srcJava, ppJava.get().asFile, ~/.*\.java$/], [srcRes, ppRes.get().asFile, ~/.*(mixins\.json|fabric\.mod\.json|\.vsh|\.fsh|\.glsl)$/]]
+        if (smoke) jobs << [file('src/smoke/java'), ppSmoke.get().asFile, ~/.*\.java$/]
+        jobs.each { src, dst, pattern ->
             project.delete(dst)
             src.eachFileRecurse(groovy.io.FileType.FILES) { File f ->
                 def rel = src.toPath().relativize(f.toPath()).toString()
@@ -186,7 +197,7 @@ def syncRes = tasks.register('syncSharedResources', Sync) {
 }
 sourceSets {
     main {
-        java.srcDirs = [ppJava, sharedCore]
+        java.srcDirs = smoke ? [ppJava, sharedCore, ppSmoke] : [ppJava, sharedCore]
         resources.srcDirs = [ppRes, sharedRes]
     }
 }
@@ -255,4 +266,21 @@ jar {
     from('../LICENSE') {
         rename { "${it}_MOTION Client" }
     }
+}
+
+// ------------------------------------------------------------------ CI smoke test
+// ./gradlew runProductionClientGameTest -Ptarget=<id> -Psmoke
+// Starts the real game (production-like: the built jar plus Fabric API, under a virtual display)
+// and runs dev.bloom.client.smoke.SmokeTest, which takes screenshots and audits the mixins.
+dependencies {
+    productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${target.fabric_api}"
+}
+
+tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    jvmArgs.add('-Dfabric.client.gametest')
+    jvmArgs.add('-Dfabric.client.gametest.disableNetworkSynchronizer=true')
+    // Log every injector that matched nothing (most MOTION hooks are optional, so they'd fail silently).
+    jvmArgs.add('-Dmixin.debug.countInjections=true')
+    jvmArgs.add('-Dmotion.smoke.avatar=sahur')
+    useXVFB = true
 }
