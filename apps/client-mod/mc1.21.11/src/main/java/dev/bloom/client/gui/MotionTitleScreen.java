@@ -218,8 +218,8 @@ public final class MotionTitleScreen extends Screen {
         int y0 = Math.round(Math.max(10f, top - height * 0.07f));
         int x1 = x0 + viewWidth;
         int y1 = Math.min(height - 12, y0 + viewHeight);
-        int modelScale = Math.max(1, Math.round((y1 - y0) / 1.9f));
-        g.submitSkinRenderState(avatarModel, avatarTexture, 4f, -18f, 0.9f, x0, y0, x1, y1, modelScale);
+        float modelScale = (y1 - y0) / 1.9f;
+        g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
 
         String name = minecraft.getUser().getName();
         int nameY = Math.max(12, y0 - 14);

@@ -4,7 +4,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Account } from "../services/app";
 import { app, dismissToast, navigate, type Route } from "../services/app";
-import { activeAccount } from "../services/accounts";
+import { activeAccount, refreshAccountSkin } from "../services/accounts";
 import { cancelLaunch } from "../services/game";
 import { native } from "../services/native";
 import { useStore } from "../services/store";
@@ -46,26 +46,25 @@ export function TitleBar() {
 
 /** Minecraft face cropped from the skin texture (8×8 at 8,8 plus the hat layer). */
 export function Avatar({ account, size = 28 }: { account?: Account; size?: number }) {
-  if (!account?.skinUrl) {
+  const [imageFailed, setImageFailed] = useState(false);
+  useEffect(() => setImageFailed(false), [account?.skinUrl]);
+
+  if (!account?.skinUrl || imageFailed) {
     return (
-      <div className="rounded-lg bg-raised border border-line grid place-items-center text-muted" style={{ width: size, height: size }}>
+      <div className="rounded-lg bg-raised border border-line grid place-items-center text-muted shrink-0" style={{ width: size, height: size }}>
         <Icon.User size={size * 0.55} />
       </div>
     );
   }
-  const layer = (x: number) => ({
-    backgroundImage: `url("${account.skinUrl}")`,
-    backgroundSize: `${size * 8}px auto`,
-    backgroundPosition: `-${(x / 8) * size}px -${size}px`,
-  });
+
+  const image = (left: number) => ({ width: size * 8, height: size * 8, left, top: -size, imageRendering: "pixelated" as const });
   return (
-    <div className="relative rounded-lg overflow-hidden pixelated shrink-0" style={{ width: size, height: size }}>
-      <div className="absolute inset-0 pixelated" style={layer(8)} />
-      <div className="absolute inset-0 pixelated" style={layer(40)} />
+    <div className="relative rounded-lg overflow-hidden shrink-0 border border-white/10" style={{ width: size, height: size }}>
+      <img src={account.skinUrl} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size)} />
+      <img src={account.skinUrl} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size * 5)} />
     </div>
   );
 }
-
 function NavItem({ icon, label, active, onClick, badge }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; badge?: ReactNode }) {
   return (
     <button
@@ -99,6 +98,9 @@ export function Sidebar() {
   const premium = useStore(app, (s) => s.premium.entitlement?.premium === true || s.premium.license?.status === "active");
   const awaiting = useStore(app, (s) => s.premium.awaitingPayment);
   const account = activeAccount();
+  useEffect(() => {
+    if (account && !account.skinUrl) void refreshAccountSkin(account).catch(() => undefined);
+  }, [account?.id, account?.skinUrl]);
   void accounts;
   void activeId;
   return (

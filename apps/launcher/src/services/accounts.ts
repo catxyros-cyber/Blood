@@ -8,6 +8,7 @@ import {
   codeFromRedirect,
   createAuthRequest,
   exchangeAuthCode,
+  minecraftProfile,
   minecraftSessionFromMs,
   pollDeviceCode,
   refreshMsToken,
@@ -103,6 +104,40 @@ async function storeSession(s: MinecraftSession) {
   await native.secretSet(mcKey(s.uuid), JSON.stringify({ accessToken: s.accessToken, expiresAt: s.expiresAt }));
 }
 
+/** Backfill the active Minecraft skin for accounts saved by older launcher builds. */
+export async function refreshAccountSkin(account: Account): Promise<void> {
+  if (account.skinUrl) return;
+
+  let skinUrl: string | undefined;
+  const cachedRaw = await native.secretGet(mcKey(account.id)).catch(() => null);
+  if (cachedRaw) {
+    try {
+      const cached = JSON.parse(cachedRaw) as { accessToken: string; expiresAt: number };
+      if (tokenValid(cached.expiresAt)) {
+        const profile = await minecraftProfile(http, cached.accessToken);
+        skinUrl = profile.skins?.find((skin) => skin.state === "ACTIVE")?.url;
+      }
+    } catch {
+      // A missing/expired cache is repaired through the stored Microsoft refresh token below.
+    }
+  }
+
+  if (!skinUrl) {
+    const refresh = await native.secretGet(refreshKey(account.id)).catch(() => null);
+    if (!refresh) return;
+    const ms = await refreshMsToken(http, msClientId(), refresh);
+    await native.secretSet(refreshKey(account.id), ms.refreshToken);
+    const session = await minecraftSessionFromMs(http, ms.accessToken);
+    await storeSession(session);
+    skinUrl = session.skinUrl;
+  }
+
+  if (!skinUrl) return;
+  const current = app.get().accounts.find((candidate) => candidate.id === account.id);
+  if (!current || current.skinUrl) return;
+  app.set((state) => ({ accounts: state.accounts.map((candidate) => candidate.id === account.id ? { ...candidate, skinUrl } : candidate) }));
+  await saveAccounts();
+}
 export interface LaunchCredentials {
   username: string;
   uuid: string;
