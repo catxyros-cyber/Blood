@@ -19,3 +19,7 @@ __pycache__/
 .gradle/
 apps/client-mod/**/build/
 apps/client-mod/**/runs/
+
+# Stray nested copies of the repo
+/blood/
+work-ci-logs/
