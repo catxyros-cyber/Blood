@@ -940,7 +940,7 @@ export function createApp(deps: Deps) {
       width: size.w,
       height: size.h,
       color: req.color.toLowerCase(),
-      style: req.kind === "wings" ? null : style,
+      style: req.kind === "wings" ? null : (style ?? null),
       enabled: true,
       createdAt: now(),
     };
