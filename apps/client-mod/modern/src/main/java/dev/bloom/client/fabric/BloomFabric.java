@@ -8,7 +8,7 @@ import dev.bloom.client.render.WorldMatrices;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -17,7 +17,7 @@ import net.minecraft.client.Minecraft;
 
 import java.nio.file.Path;
 
-/** Fabric (and Quilt, through its Fabric compatibility) entry point for Minecraft 1.21.11. */
+/** Fabric (and Quilt, through its Fabric compatibility) entry point for modern Minecraft (1.21.9 and later). */
 public final class BloomFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
@@ -54,7 +54,8 @@ public final class BloomFabric implements ClientModInitializer {
                 helper.register(new dev.bloom.client.render.AvatarLayer(parent));
             }
         });
-        HudRenderCallback.EVENT.register((graphics, delta) -> BloomClient.get().renderHud(graphics, delta));
+        HudElementRegistry.addLast(net.minecraft.resources.Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "hud"),
+                (graphics, delta) -> BloomClient.get().renderHud(graphics, delta));
         WorldRenderEvents.END_MAIN.register(context -> {
             Minecraft mc = Minecraft.getInstance();
             BloomClient.get().renderWorld(WorldMatrices.MODEL_VIEW, WorldMatrices.PROJECTION,

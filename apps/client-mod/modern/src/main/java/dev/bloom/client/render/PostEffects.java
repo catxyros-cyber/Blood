@@ -199,7 +199,7 @@ public final class PostEffects {
 
     private static void passInto(RenderPipeline pipeline, GpuTextureView out, GpuTextureView in, GpuTextureView second,
                                  Matrix4f params, Vector4f extra, Matrix4f sizes) {
-        GpuBufferSlice uniforms = RenderSystem.getDynamicUniforms().writeTransform(params, extra, new Vector3f(), sizes);
+        GpuBufferSlice uniforms = Draw.transforms(params, extra, new Vector3f(), sizes);
         try (ByteBufferBuilder memory = new ByteBufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4)) {
             BufferBuilder b = new BufferBuilder(memory, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
             b.addVertex(-1f, -1f, 0f).setUv(0f, 0f);
@@ -215,8 +215,8 @@ public final class PostEffects {
                     pass.setVertexBuffer(0, vertices);
                     pass.setIndexBuffer(indices, seq.type());
                     pass.setUniform("DynamicTransforms", uniforms);
-                    pass.bindTexture("InSampler", in, Draw.linearClamp());
-                    if (second != null) pass.bindTexture("BloomSampler", second, Draw.linearClamp());
+                    Draw.bindLinearClamp(pass, "InSampler", in);
+                    if (second != null) Draw.bindLinearClamp(pass, "BloomSampler", second);
                     pass.drawIndexed(0, 0, 6, 1);
                 }
             }

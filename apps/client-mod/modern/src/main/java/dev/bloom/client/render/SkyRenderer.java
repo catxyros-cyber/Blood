@@ -185,7 +185,7 @@ public final class SkyRenderer {
             batch.quad();
         }
         // The rotation is baked into the vertices, so the shader's model-view is the identity.
-        Draw.draw(batch, tex.view(), tex.sampler(), new Matrix4f(), additive ? Draw.Blend.ADDITIVE : Draw.Blend.ALPHA, false);
+        Draw.draw(batch, tex.view(), new Matrix4f(), additive ? Draw.Blend.ADDITIVE : Draw.Blend.ALPHA, false);
     }
 
     /** Same rotations as OptiFine/FabricSkyBoxes so imported skies line up (see CubeLayout). */

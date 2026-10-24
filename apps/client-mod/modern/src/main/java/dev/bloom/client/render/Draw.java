@@ -12,7 +12,9 @@ import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
+//#if MC < 1.21.11
+import com.mojang.blaze3d.textures.AddressMode;
+//#endif
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
@@ -131,9 +133,25 @@ public final class Draw {
         });
     }
 
-    /** Linear filtering, clamped at the edges (skyboxes, effect sprites). */
-    public static GpuSampler linearClamp() {
-        return RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
+    /** Binds a texture with linear filtering, clamped at the edges (skyboxes, effect sprites, post effects). */
+    public static void bindLinearClamp(RenderPass pass, String name, GpuTextureView view) {
+//#if MC >= 1.21.11
+        pass.bindTexture(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+//#else
+        // Before 1.21.11 filtering lived on the texture itself.
+        view.texture().setTextureFilter(FilterMode.LINEAR, false);
+        view.texture().setAddressMode(AddressMode.CLAMP_TO_EDGE);
+        pass.bindSampler(name, view);
+//#endif
+    }
+
+    /** Minecraft's per-draw transform uniforms (model-view, colour, offset, texture matrix). */
+    public static GpuBufferSlice transforms(Matrix4f modelView, Vector4f color, Vector3f offset, Matrix4f texture) {
+        return RenderSystem.getDynamicUniforms().writeTransform(modelView, color, offset, texture
+//#if MC < 1.21.11
+                , 1f
+//#endif
+        );
     }
 
     /**
@@ -148,11 +166,11 @@ public final class Draw {
             discard(b);
             throw e;
         }
-        draw(b, tex.getTextureView(), linearClamp(), modelView, blend, depthTest);
+        draw(b, tex.getTextureView(), modelView, blend, depthTest);
     }
 
-    public static void draw(Batch b, GpuTextureView view, GpuSampler sampler, Matrix4f modelView, Blend blend, boolean depthTest) {
-        submit(b, pipeline(true, blend, depthTest), modelView, pass -> pass.bindTexture("Sampler0", view, sampler), depthTest);
+    public static void draw(Batch b, GpuTextureView view, Matrix4f modelView, Blend blend, boolean depthTest) {
+        submit(b, pipeline(true, blend, depthTest), modelView, pass -> bindLinearClamp(pass, "Sampler0", view), depthTest);
     }
 
     /** Draws an untextured (position + colour) batch. */
@@ -167,8 +185,7 @@ public final class Draw {
             return;
         }
         try (MeshData mesh = b.builder.buildOrThrow()) {
-            GpuBufferSlice transforms = RenderSystem.getDynamicUniforms()
-                    .writeTransform(modelView, new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
+            GpuBufferSlice transforms = transforms(modelView, new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
             GpuBuffer vertices = pipeline.getVertexFormat().uploadImmediateVertexBuffer(mesh.vertexBuffer());
             RenderSystem.AutoStorageIndexBuffer seq = RenderSystem.getSequentialBuffer(mesh.drawState().mode());
             GpuBuffer indices = seq.getBuffer(mesh.drawState().indexCount());

@@ -35,8 +35,13 @@ public final class GameEnv implements ParticleEnv {
 
     /** True in dimensions with a normal sky (the Overworld and similar modded ones). */
     public static boolean normalSky(ClientLevel level) {
+//#if MC >= 1.21.11
         return level != null && level.dimensionType().skybox() == DimensionType.Skybox.OVERWORLD
                 && level.dimensionType().hasSkyLight();
+//#else
+        return level != null && level.dimensionType().effectsLocation().equals(net.minecraft.world.level.dimension.BuiltinDimensionTypes.OVERWORLD_EFFECTS)
+                && level.dimensionType().hasSkyLight();
+//#endif
     }
 
     @Override

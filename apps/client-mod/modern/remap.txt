@@ -37,3 +37,19 @@ MC >= 26 | \bg\.renderItem\( | g.item(
 MC >= 26 | \bg\.renderOutline\( | g.outline(
 MC >= 26 | \bg\.hLine\( | g.horizontalLine(
 MC >= 26 | \bg\.vLine\( | g.verticalLine(
+# Screens and toasts: render* overrides became extract*.
+MC >= 26 | \bpublic void render\(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick\) | public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick)
+MC >= 26 | \bpublic void renderBackground\(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick\) | public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick)
+MC >= 26 | \bsuper\.render\(g, mouseX, mouseY, partialTick\) | super.extractRenderState(g, mouseX, mouseY, partialTick)
+MC >= 26 | \bpublic void render\(GuiGraphicsExtractor g, Font font, long fullyVisibleFor\) | public void extractRenderState(GuiGraphicsExtractor g, Font font, long fullyVisibleFor)
+MC >= 26 | \bg\.submitSkinRenderState\( | g.skin(
+# Mixin targets that were renamed the same way.
+MC >= 26 | method = "renderCrosshair" | method = "extractCrosshair"
+MC >= 26 | method = "renderBackground" | method = "extractBackground"
+MC >= 26 | method = "renderPanorama" | method = "extractPanorama"
+MC >= 26 | method = "renderBlurredBackground" | method = "extractBlurredBackground"
+MC >= 26 | method = "renderMenuBackground\( | method = "extractMenuBackground(
+# Entity render types: the no-cull cutout is now just "cutout".
+MC >= 26 | \bRenderTypes\.entityCutoutNoCull\( | RenderTypes.entityCutout(
+# Typed characters no longer carry modifier keys.
+MC >= 26 | typed\(\(char\) cp, event\.modifiers\(\)\) | typed((char) cp, 0)

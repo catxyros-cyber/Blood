@@ -1,7 +1,6 @@
 package dev.bloom.client.render;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.textures.GpuSampler;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import dev.bloom.client.BloomClient;
 import dev.bloom.client.core.Log;
@@ -37,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class SkyTextures {
     /** A texture ready to bind, with the face size its UVs are inset for. */
-    public record Bound(GpuTextureView view, GpuSampler sampler, int faceSize) {
+    public record Bound(GpuTextureView view, int faceSize) {
     }
 
     /** Skyboxes kept on the GPU at once ("Skybox cache"); others are released. */
@@ -140,7 +139,7 @@ public final class SkyTextures {
         AbstractTexture tex = Minecraft.getInstance().getTextureManager().getTexture(id);
         GpuTextureView view = tex.getTextureView();
         if (view == null) return null;
-        return new Bound(view, Draw.linearClamp(), faceSize);
+        return new Bound(view, faceSize);
     }
 
     /**
@@ -166,7 +165,7 @@ public final class SkyTextures {
                 && now - entry.lastRequest >= REPROCESS_INTERVAL_MS) {
             request(entry, look);
         }
-        if (entry.texture != null) return new Bound(entry.texture.getTextureView(), Draw.linearClamp(), entry.faceSize);
+        if (entry.texture != null) return new Bound(entry.texture.getTextureView(), entry.faceSize);
         // Built-ins: show the bundled texture until the processed one is ready, so the sky never blinks
         // (unless it's bigger than the quality cap: an 8K texture isn't uploaded on lower settings).
         return e.builtIn() && SkyboxCatalog.nativeFace(id) <= look.maxFace() ? bindable(builtIn(id), SkyboxCatalog.nativeFace(id)) : null;
