@@ -119,7 +119,7 @@ pub async fn bloom_client_install(
     Ok(target.to_string_lossy().to_string())
 }
 
-/// Read a local image (custom background, skybox preview) as a data: URL.
+/// Read a local image (custom background, skybox preview), or Minecraft's servers.dat / level.dat, as a data: URL.
 /// The path must be inside MOTION's roots or picked by the user this session.
 #[tauri::command]
 pub async fn fs_read_data_url(state: State<'_, AppState>, path: String, max_bytes: u64) -> Result<Option<String>> {
@@ -131,6 +131,9 @@ pub async fn fs_read_data_url(state: State<'_, AppState>, path: String, max_byte
         "image/jpeg"
     } else if lower.ends_with(".webp") {
         "image/webp"
+    } else if lower.ends_with("servers.dat") || lower.ends_with("level.dat") {
+        // Minecraft's server list and world info (NBT), read for "Worlds & servers".
+        "application/octet-stream"
     } else {
         return Err(AppError::new("unsupported", "Only PNG, JPEG and WebP images can be shown"));
     };

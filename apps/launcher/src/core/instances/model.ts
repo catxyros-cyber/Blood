@@ -29,6 +29,8 @@ export interface Instance {
   modpack?: { projectId?: string; versionId?: string; name: string; version?: string };
   /** MOTION Client (the in-game mod) managed by the launcher for this installation. */
   bloomClient?: { enabled: boolean; version?: string; file?: string };
+  /** Servers and worlds recently joined from MOTION, most recent first ("Jump back in"). */
+  recentPlays?: { kind: "server" | "world"; target: string; name: string; at: number }[];
   /** Last measured launch timings, from the game's own log. */
   lastLaunch?: { prepareMs: number; startupMs?: number; at: number };
 }

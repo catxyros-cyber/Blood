@@ -195,6 +195,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             <HeroAction icon={<Icon.Puzzle size={17} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
             <HeroAction icon={<Icon.Gauge size={17} />} label="Optimize" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
           </div>
+          <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
         </div>
         <div className="glass rounded-2xl border border-white/10 p-4 w-[280px] shrink-0 hidden lg:block">
@@ -230,6 +231,31 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** One-click rejoin of the servers and worlds recently opened from MOTION. */
+function JumpBackIn({ inst }: { inst: Instance }) {
+  const busy = useStore(app, (s) => Boolean(s.running[inst.id]) || s.tasks.some((t) => t.id === `launch-${inst.id}`));
+  const recent = (inst.recentPlays ?? []).slice(0, 4);
+  if (!recent.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 mt-4">
+      <span className="text-[12px] uppercase tracking-[0.12em] text-fg/55 mr-1">Jump back in</span>
+      {recent.map((r) => (
+        <button
+          key={`${r.kind}:${r.target}`}
+          type="button"
+          disabled={busy}
+          title={r.kind === "server" ? `Join ${r.target}` : `Open the world ${r.name}`}
+          onClick={() => void play(inst.id, { quickPlay: r.kind === "server" ? { kind: "server", address: r.target } : { kind: "world", folder: r.target }, quickPlayName: r.name })}
+          className="chip rounded-full h-8 pl-2.5 pr-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-accent/60 hover:text-accent transition-colors disabled:opacity-50 disabled:pointer-events-none max-w-[220px]"
+        >
+          {r.kind === "server" ? <Icon.Globe size={14} /> : <Icon.Map size={14} />}
+          <span className="truncate">{r.name}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
