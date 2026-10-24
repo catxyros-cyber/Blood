@@ -53,3 +53,5 @@ MC >= 26 | method = "renderMenuBackground\( | method = "extractMenuBackground(
 MC >= 26 | \bRenderTypes\.entityCutoutNoCull\( | RenderTypes.entityCutout(
 # Typed characters no longer carry modifier keys.
 MC >= 26 | typed\(\(char\) cp, event\.modifiers\(\)\) | typed((char) cp, 0)
+# The day time is now a world clock.
+MC >= 26 | \blevel\.getDayTime\(\) | level.getOverworldClockTime()

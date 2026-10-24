@@ -5,7 +5,13 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+//#if MC >= 26
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.platform.CompareOp;
+//#else
 import com.mojang.blaze3d.platform.DepthTestFunction;
+//#endif
 import com.mojang.blaze3d.platform.DestFactor;
 import com.mojang.blaze3d.platform.SourceFactor;
 import com.mojang.blaze3d.shaders.UniformType;
@@ -125,12 +131,27 @@ public final class Draw {
             p.withFragmentShader(shader);
             if (textured) p.withSampler("Sampler0");
             p.withVertexFormat(textured ? DefaultVertexFormat.POSITION_TEX_COLOR : DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS);
-            p.withBlend(bl == Blend.ADDITIVE ? ADDITIVE_BLEND : ALPHA_BLEND);
-            p.withDepthWrite(false);
+            renderState(p, bl == Blend.ADDITIVE ? ADDITIVE_BLEND : ALPHA_BLEND, depthTest);
             p.withCull(false);
-            if (!depthTest) p.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
             return p.build();
         });
+    }
+
+    /**
+     * The render state every MOTION pipeline uses: optional blending (null for none), an optional
+     * depth test, and never writing depth.
+     */
+    static void renderState(RenderPipeline.Builder p, BlendFunction blend, boolean depthTest) {
+//#if MC >= 26
+        // RGBA write mask: red 1, green 2, blue 4, alpha 8.
+        p.withColorTargetState(new ColorTargetState(java.util.Optional.ofNullable(blend), 15));
+        p.withDepthStencilState(new DepthStencilState(depthTest ? CompareOp.LESS_THAN_OR_EQUAL : CompareOp.ALWAYS_PASS, false, 0f, 0f));
+//#else
+        if (blend != null) p.withBlend(blend);
+        else p.withoutBlend();
+        p.withDepthWrite(false);
+        if (!depthTest) p.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
+//#endif
     }
 
     /** Binds a texture with linear filtering, clamped at the edges (skyboxes, effect sprites, post effects). */

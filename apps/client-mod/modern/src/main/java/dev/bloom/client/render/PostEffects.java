@@ -4,7 +4,6 @@ import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderPass;
@@ -92,10 +91,8 @@ public final class PostEffects {
         b.withSampler("InSampler");
         if (twoSamplers) b.withSampler("BloomSampler");
         b.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS);
-        b.withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST);
-        b.withDepthWrite(false);
+        Draw.renderState(b, null, false);
         b.withCull(false);
-        b.withoutBlend();
         return b.build();
     }
 

@@ -119,8 +119,9 @@ jobs:
             find ~/.gradle/caches "$GITHUB_WORKSPACE/apps/client-mod/modern/.gradle" -name 'minecraft-*.jar' ! -name '*sources*' -size +5M 2>/dev/null > jars.txt || true
             MCV=$(python3 -c "import json; print(next(t['mc'] for t in json.load(open('$GITHUB_WORKSPACE/apps/client-mod/modern/versions.json'))['targets'] if t['id']=='${{ matrix.target }}'))")
             grep -F -- "$MCV" jars.txt > mine.txt
-            JAR=$(grep -iE 'mojang|layered|named' mine.txt | xargs -r ls -S 2>/dev/null | head -1)
-            [ -z "$JAR" ] && JAR=$(xargs -r ls -S < mine.txt 2>/dev/null | head -1)
+            # Mojang-named and merged (client + server classes): Loom's mapped jar on 1.21.x, the merged jar on 26.x.
+            JAR=$(grep -vi intermediary mine.txt | grep -iE 'layered|merged-deobf|minecraft-merged' | grep -v extracted | xargs -r ls -S 2>/dev/null | head -1)
+            [ -z "$JAR" ] && JAR=$(grep -i client mine.txt | head -1)
             cp jars.txt jars-all.txt
             echo "jar: $JAR" > probe.txt
             grep -vE '^\s*(#|$)' "$GITHUB_WORKSPACE/apps/client-mod/modern/probe.txt" | while read -r line; do
@@ -134,7 +135,7 @@ jobs:
             done
           fi
           git init -q && git checkout -q -b log
-          git add -A && git -c user.name=ci -c user.email=ci@localhost commit -qm "Build log for ${{ matrix.target }} (${{ github.sha }})"
+          git add -A && git -c user.name=ci -c user.email=ci@localhost commit -qm "Build log for ${{ matrix.target }} (${{ github.event.pull_request.head.sha || github.sha }})"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:refs/heads/ci-logs/${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
