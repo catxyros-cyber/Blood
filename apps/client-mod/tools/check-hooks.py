@@ -24,15 +24,19 @@ def main():
     for jar in sys.argv[1:]:
         with zipfile.ZipFile(jar) as z:
             refmaps = [n for n in z.namelist() if n.endswith("refmap.json")]
-            if not refmaps:
-                print(f"::warning title=Hook check::{jar}: no refmap found")
-                continue
-            data = json.loads(z.read(refmaps[0]))
-        mappings = data.get("mappings", {})
+            mappings = json.loads(z.read(refmaps[0])).get("mappings", {}) if refmaps else None
+            classes = {n.rsplit("/", 1)[-1][:-6]: z.read(n) for n in z.namelist() if "/mixin/" in n and n.endswith(".class")}
         ok, missing = [], []
         for label, (mixin, method) in HOOKS.items():
-            entries = next((v for k, v in mappings.items() if k.endswith("/" + mixin)), {})
-            (ok if any(key.startswith(method) for key in entries) else missing).append(label)
+            if mappings is not None:
+                entries = next((v for k, v in mappings.items() if k.endswith("/" + mixin)), {})
+                resolved = any(key.startswith(method) for key in entries)
+            else:
+                # No refmap: Loom rewrote the annotation in the class itself. A resolved target is
+                # renamed to its intermediary name, so the Mojang name only survives when unresolved.
+                data = classes.get(mixin, b"")
+                resolved = bool(data) and (method + "(").encode() not in data
+            (ok if resolved else missing).append(label)
         name = jar.rsplit("/", 1)[-1]
         print(f"::notice title=Hooks in {name}::resolved: {', '.join(ok) or 'none'}")
         if missing:
