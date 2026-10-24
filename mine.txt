@@ -1,0 +1,7 @@
+/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-merged.jar
+/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-extracted_server.jar
+/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-server.jar
+/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-client.jar
+/home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged/1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2/minecraft-merged-1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2.jar
+/home/runner/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-intermediary/1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2/minecraft-merged-intermediary-1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2.jar
+/home/runner/work/Blood/Blood/apps/client-mod/modern/.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-1889f2690b/1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2/minecraft-merged-1889f2690b-1.21.10-loom.mappings.1_21_10.layered+hash.187164015-v2.jar
