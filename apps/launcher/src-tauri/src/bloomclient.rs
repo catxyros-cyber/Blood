@@ -24,6 +24,18 @@ pub struct BundleFile {
     /// Minecraft version this jar is for (manifests before 0.3 list one version for every file).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub minecraft: Option<String>,
+    /// Minecraft versions it installs on: min inclusive, below exclusive (e.g. 26.1 up to 26.2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub supports: Option<SupportedRange>,
+    /// How players see that range, e.g. "26.1–26.1.2".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct SupportedRange {
+    pub min: String,
+    pub below: String,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -192,5 +204,17 @@ mod tests {
         .unwrap();
         let b = read_bundle(&dir).unwrap().unwrap();
         assert_eq!(b.files[0].minecraft.as_deref(), Some("1.21.11"));
+        std::fs::write(
+            dir.join("manifest.json"),
+            r#"{"version":"0.4.0","minecraft":["26.1–26.1.2"],"files":[{"loader":"fabric","minecraft":"26.1","supports":{"min":"26.1","below":"26.2"},"label":"26.1–26.1.2","file":"bloomclient-fabric-26.1-0.4.0.jar","sha1":"0","size":1}]}"#,
+        )
+        .unwrap();
+        let b = read_bundle(&dir).unwrap().unwrap();
+        let range = b.files[0].supports.as_ref().unwrap();
+        assert_eq!((range.min.as_str(), range.below.as_str()), ("26.1", "26.2"));
+        assert_eq!(b.files[0].label.as_deref(), Some("26.1–26.1.2"));
+        // The range survives the trip to the UI.
+        let json = serde_json::to_string(&b).unwrap();
+        assert!(json.contains(r#""supports":{"min":"26.1","below":"26.2"}"#));
     }
 }

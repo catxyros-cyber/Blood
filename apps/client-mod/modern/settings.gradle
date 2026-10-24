@@ -1,0 +1,15 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+// MOTION Client for modern Minecraft (Fabric): 1.21.9 and later, including the 26.x releases.
+// One source tree builds every target in versions.json; see build.gradle for how a target is chosen.
+// Shares the pure-Java core with ../common.
+rootProject.name = 'bloomclient-modern'

@@ -3,7 +3,7 @@
 curtain flowing down the right side. Original procedural art.
 
 Run: python3 branding/tools/gen_title_bg.py
-Writes apps/client-mod/mc1.21.11/src/main/resources/assets/bloomclient/textures/gui/motion_title_bg.png
+Writes apps/client-mod/modern/src/main/resources/assets/bloomclient/textures/gui/motion_title_bg.png
 (the .png.mcmeta next to it turns on smooth filtering, so it stays sharp at any screen size).
 """
 import os
@@ -12,7 +12,7 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(ROOT, "apps", "client-mod", "mc1.21.11", "src", "main", "resources", "assets", "bloomclient", "textures", "gui", "motion_title_bg.png")
+OUT = os.path.join(ROOT, "apps", "client-mod", "modern", "src", "main", "resources", "assets", "bloomclient", "textures", "gui", "motion_title_bg.png")
 W, H = 3840, 2160
 
 

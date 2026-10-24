@@ -25,6 +25,12 @@ def main():
     missing_any = False
     for jar in sys.argv[1:]:
         with zipfile.ZipFile(jar) as z:
+            meta = json.loads(z.read("fabric.mod.json")) if "fabric.mod.json" in z.namelist() else {}
+            mc = str(meta.get("depends", {}).get("minecraft", ""))
+            if mc.lstrip(">=~^ ")[:2].isdigit() and int(mc.lstrip(">=~^ ")[:2]) >= 26:
+                # 26.x ships unobfuscated: nothing is remapped, so there is nothing to read here.
+                print(f"::notice title=Hooks in {jar.rsplit('/', 1)[-1]}::not checked statically (unobfuscated Minecraft)")
+                continue
             refmaps = [n for n in z.namelist() if n.endswith("refmap.json")]
             mappings = json.loads(z.read(refmaps[0])).get("mappings", {}) if refmaps else None
             classes = {n.rsplit("/", 1)[-1][:-6]: z.read(n) for n in z.namelist() if "/mixin/" in n and n.endswith(".class")}

@@ -1,0 +1,70 @@
+{
+  "_comment": "Every Minecraft version range (oldest first) MOTION Client's modern Fabric build targets. 'mc' is the exact game version compiled against, 'supports' the range the jar installs on (Fabric checks it too). Versions come from Fabric's example mod for each release (github.com/FabricMC/fabric-example-mod branches). Build one with: python3 ../tools/resolve-target.py <id> then ./gradlew build <printed args>. 'label' is how the launcher names the range to players.",
+  "targets": [
+    {
+      "id": "1.21.10",
+      "label": "1.21.9–1.21.10",
+      "mc": "1.21.10",
+      "supports": {
+        "min": "1.21.9",
+        "below": "1.21.11"
+      },
+      "java": 21,
+      "loader": "0.20.1",
+      "fabric_api": "0.138.4+1.21.10",
+      "loom": "1.19-SNAPSHOT"
+    },
+    {
+      "id": "1.21.11",
+      "label": "1.21.11",
+      "mc": "1.21.11",
+      "supports": {
+        "min": "1.21.11",
+        "below": "1.21.12"
+      },
+      "java": 21,
+      "loader": "0.20.1",
+      "fabric_api": "0.141.6+1.21.11",
+      "loom": "1.19-SNAPSHOT"
+    },
+    {
+      "id": "26.1",
+      "label": "26.1–26.1.2",
+      "mc": "26.1.2",
+      "supports": {
+        "min": "26.1",
+        "below": "26.2"
+      },
+      "java": 25,
+      "loader": "0.20.1",
+      "fabric_api": "0.155.3+26.1.2",
+      "loom": "1.19-SNAPSHOT"
+    },
+    {
+      "id": "26.2",
+      "label": "26.2",
+      "mc": "26.2",
+      "supports": {
+        "min": "26.2",
+        "below": "26.3"
+      },
+      "java": 25,
+      "loader": "0.20.1",
+      "fabric_api": "0.161.0+26.2",
+      "loom": "1.19-SNAPSHOT"
+    },
+    {
+      "id": "26.3",
+      "label": "26.3",
+      "mc": "26.3",
+      "supports": {
+        "min": "26.3",
+        "below": "26.4"
+      },
+      "java": 25,
+      "loader": "0.20.1",
+      "fabric_api": "0.165.0+26.3",
+      "loom": "1.19-SNAPSHOT"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-// Copies the built BLOOD Client jars into the launcher's bundled resources and
+// Copies the built MOTION Client jars into the launcher's bundled resources and
 // writes manifest.json (version, Minecraft versions, file names, sha1, size).
 //
 //   node apps/client-mod/tools/bundle.mjs            (after ./gradlew build)
@@ -22,11 +22,14 @@ const props = Object.fromEntries(
 const { version, minecraft_version: mc, mod_id: modId } = props;
 if (!version || !mc || !modId) throw new Error("gradle.properties is missing version, minecraft_version or mod_id");
 
-// Every supported build must be present. A release cannot publish without the newest Minecraft port.
+// Every supported build must be present. A release cannot publish without every Minecraft port:
+// the 1.21.1 Fabric + NeoForge build, and one modern Fabric jar per target in modern/versions.json.
+const targets = JSON.parse(readFileSync(join(modRoot, "modern", "versions.json"), "utf8")).targets;
+const nextPatch = (v) => v.replace(/^(\d+\.\d+)\.(\d+)$/, (_, a, b) => `${a}.${Number(b) + 1}`);
 const builds = [
-  { loader: "fabric", minecraft: mc, dir: "fabric" },
-  { loader: "neoforge", minecraft: mc, dir: "neoforge" },
-  { loader: "fabric", minecraft: "1.21.11", dir: "mc1.21.11" },
+  { loader: "fabric", minecraft: mc, dir: "fabric", supports: { min: mc, below: nextPatch(mc) }, label: mc },
+  { loader: "neoforge", minecraft: mc, dir: "neoforge", supports: { min: mc, below: nextPatch(mc) }, label: mc },
+  ...targets.map((t) => ({ loader: "fabric", minecraft: t.id, dir: "modern", supports: t.supports, label: t.label })),
 ];
 const files = [];
 mkdirSync(out, { recursive: true });
@@ -53,10 +56,19 @@ for (const b of builds) {
   if (!existsSync(src)) throw new Error(`Missing ${src}. Run ./gradlew build first.`);
   const bytes = readFileSync(src);
   copyFileSync(src, join(out, name));
-  files.push({ loader: b.loader, minecraft: b.minecraft, file: name, sha1: createHash("sha1").update(bytes).digest("hex"), size: statSync(src).size });
+  files.push({
+    loader: b.loader,
+    minecraft: b.minecraft,
+    supports: b.supports,
+    label: b.label,
+    file: name,
+    sha1: createHash("sha1").update(bytes).digest("hex"),
+    size: statSync(src).size,
+  });
   console.log(`bundled ${name} (${bytes.length} bytes)`);
 }
-const minecraft = [...new Set(files.map((f) => f.minecraft))];
+// What players read ("Minecraft 1.21.1, 1.21.9–1.21.10, …"), oldest first.
+const minecraft = [...new Set(files.map((f) => f.label))];
 
 writeFileSync(join(out, "manifest.json"), JSON.stringify({ version, minecraft, files }, null, 2) + "\n");
 console.log(`wrote ${join(out, "manifest.json")}`);

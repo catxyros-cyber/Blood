@@ -19,10 +19,10 @@
     "${mod_id}.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=${fabric_loader_version}",
+    "fabricloader": ">=${min_loader}",
     "fabric-api": "*",
-    "minecraft": "~${minecraft_version}",
-    "java": ">=21"
+    "minecraft": ">=${mc_min} <${mc_below}",
+    "java": ">=${java_release}"
   },
   "breaks": {
     "optifabric": "*"

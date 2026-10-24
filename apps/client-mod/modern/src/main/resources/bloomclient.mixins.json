@@ -2,8 +2,10 @@
   "required": true,
   "minVersion": "0.8",
   "package": "dev.bloom.client.mixin",
+//#if MC < 26
   "refmap": "${mod_id}.refmap.json",
-  "compatibilityLevel": "JAVA_21",
+//#endif
+  "compatibilityLevel": "${mixin_compat}",
   "mixins": [],
   "client": [
     "AbstractClientPlayerMixin",

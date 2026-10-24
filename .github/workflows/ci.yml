@@ -66,33 +66,73 @@ jobs:
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
-  client-mod-12111:
-    name: MOTION Client mod (Fabric, MC 1.21.11)
+  mod-targets:
+    name: List MOTION Client build targets
     runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.t.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: t
+        run: echo "list=$(python3 -c 'import json; print(json.dumps([t["id"] for t in json.load(open("apps/client-mod/modern/versions.json"))["targets"]]))')" >> "$GITHUB_OUTPUT"
+
+  client-mod-modern:
+    name: MOTION Client mod (Fabric, MC ${{ matrix.target }})
+    needs: mod-targets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every target in apps/client-mod/modern/versions.json.
+        target: ${{ fromJSON(needs.mod-targets.outputs.list) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          # Loom 1.18 runs on Java 25; the mod itself is still compiled for Java 21.
+          # Loom runs on Java 25; 1.21.x jars are still compiled for Java 21.
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build the Minecraft 1.21.11 jar
-        working-directory: apps/client-mod/mc1.21.11
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Build the Minecraft ${{ matrix.target }} jar
+        working-directory: apps/client-mod/modern
+        run: |
+          chmod +x gradlew
+          set -o pipefail
+          ./gradlew build -Ptarget=${{ matrix.target }} --stacktrace 2>&1 | tee "$RUNNER_TEMP/build.log"
       - name: Check optional hooks resolved
-        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar | grep -v sources)
+        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/modern/build/libs/bloomclient-fabric-${{ matrix.target }}-*.jar | grep -v sources)
+      - name: Publish the build log to a ci-logs branch
+        # The Actions log viewer isn't reachable from every tool; a branch is.
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/logrepo" && cd "$RUNNER_TEMP/logrepo"
+          cp "$RUNNER_TEMP/build.log" build.log 2>/dev/null || echo "no build log" > build.log
+          grep -nE "error:|warning: \[|FAILURE|What went wrong|Could not|Exception" build.log | head -3000 > errors.txt || true
+          if [ -f "$GITHUB_WORKSPACE/apps/client-mod/modern/probe.txt" ]; then
+            JAR=$(find ~/.gradle/caches "$GITHUB_WORKSPACE/apps/client-mod/modern/.gradle" -name 'minecraft-*.jar' ! -name '*sources*' -size +5M 2>/dev/null | xargs ls -S 2>/dev/null | head -1)
+            echo "jar: $JAR" > probe.txt
+            grep -v '^#' "$GITHUB_WORKSPACE/apps/client-mod/modern/probe.txt" | while read -r cls; do
+              [ -n "$cls" ] && javap -cp "$JAR" -public "$cls" >> probe.txt 2>&1
+            done
+          fi
+          git init -q && git checkout -q -b log
+          git add -A && git -c user.name=ci -c user.email=ci@localhost commit -qm "Build log for ${{ matrix.target }} (${{ github.sha }})"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:refs/heads/ci-logs/${{ matrix.target }}
       - uses: actions/upload-artifact@v4
         with:
-          name: bloom-client-jars-12111
+          name: bloom-client-jars-modern-${{ matrix.target }}
           path: |
-            apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar
+            apps/client-mod/modern/build/libs/bloomclient-fabric-${{ matrix.target }}-*.jar
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
   windows:
     name: Windows build (unsigned)
-    needs: [client-mod, client-mod-12111]
+    needs: [client-mod, client-mod-modern]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,8 +149,9 @@ jobs:
           path: apps/client-mod
       - uses: actions/download-artifact@v4
         with:
-          name: bloom-client-jars-12111
-          path: apps/client-mod/mc1.21.11/build/libs
+          pattern: bloom-client-jars-modern-*
+          merge-multiple: true
+          path: apps/client-mod/modern/build/libs
       - name: Bundle MOTION Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
       - run: npm install --no-audit --no-fund

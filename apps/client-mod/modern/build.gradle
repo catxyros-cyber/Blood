@@ -1,0 +1,246 @@
+// MOTION Client for modern Minecraft (Fabric).
+//
+// One source tree, many Minecraft versions. Pick the target with -Ptarget=<id> (see versions.json;
+// the default is 1.21.11):
+//
+//   ./gradlew build -Ptarget=26.3
+//
+// Version differences live in the sources as preprocessor blocks, which are resolved into
+// build/generated/pp-* before compiling (the lines that don't apply become blank lines, so
+// compiler line numbers still match the real files):
+//
+//   //#if MC >= 26.1
+//   ...code for 26.1 and later...
+//   //#elif MC >= 1.21.11
+//   ...
+//   //#else
+//   ...
+//   //#endif
+//
+// Conditions compare the exact Minecraft version being built against (MC) using < <= > >= == !=,
+// joined with && and ||. They work in Java sources and in resources (the mixin config).
+
+import groovy.json.JsonSlurper
+
+buildscript {
+    repositories {
+        maven { url = 'https://maven.fabricmc.net/' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    def tid = project.findProperty('target') ?: '1.21.11'
+    def t = new groovy.json.JsonSlurper().parse(file('versions.json')).targets.find { it.id == tid }
+    if (t == null) throw new GradleException("Unknown target '${tid}' (see versions.json)")
+    dependencies {
+        classpath "net.fabricmc:fabric-loom:${t.loom}"
+    }
+}
+
+def targetId = (project.findProperty('target') ?: '1.21.11') as String
+def target = new JsonSlurper().parse(file('versions.json')).targets.find { it.id == targetId }
+def mc = target.mc as String
+def javaRelease = target.java as int
+
+// ------------------------------------------------------------------ version comparison
+
+def verParts = { String v -> v.tokenize('.-+').collect { it.isInteger() ? it.toInteger() : 0 } }
+def cmpVer = { String a, String b ->
+    def pa = verParts(a), pb = verParts(b)
+    for (int i = 0; i < Math.max(pa.size(), pb.size()); i++) {
+        int x = i < pa.size() ? pa[i] : 0, y = i < pb.size() ? pb[i] : 0
+        if (x != y) return x <=> y
+    }
+    return 0
+}
+def unobfuscated = cmpVer(mc, '26') >= 0
+
+apply plugin: unobfuscated ? 'net.fabricmc.fabric-loom' : 'net.fabricmc.fabric-loom-remap'
+
+// Shared settings (version, mod id, name…) live in the 1.21.1 build's gradle.properties.
+def shared = new Properties()
+file('../gradle.properties').withInputStream { shared.load(it) }
+def modId = shared.getProperty('mod_id')
+version = shared.getProperty('version')
+group = shared.getProperty('group')
+
+base {
+    archivesName = "${modId}-fabric-${targetId}"
+}
+
+// ------------------------------------------------------------------ preprocessor
+
+def evalCond = { String expr ->
+    expr.split(/\|\|/).any { String alt ->
+        alt.split(/&&/).every { String term ->
+            def m = term.trim() =~ /^MC\s*(>=|<=|==|!=|<|>)\s*([0-9][0-9.]*)$/
+            if (!m.matches()) throw new GradleException("Bad preprocessor condition: '${term.trim()}'")
+            int c = cmpVer(mc, m.group(2))
+            switch (m.group(1)) {
+                case '>=': return c >= 0
+                case '<=': return c <= 0
+                case '>': return c > 0
+                case '<': return c < 0
+                case '==': return c == 0
+                default: return c != 0
+            }
+        }
+    }
+}
+
+def preprocess = { String text, String name ->
+    // Each open //#if: [active outside it, a branch already taken]
+    def stack = []
+    boolean active = true
+    def out = new StringBuilder()
+    text.eachLine { String line, int n ->
+        def t = line.trim()
+        if (t.startsWith('//#if ')) {
+            boolean c = active && evalCond(t.substring(6))
+            stack << [active, c]
+            active = c
+            out << '\n'
+        } else if (t.startsWith('//#elif ')) {
+            if (stack.isEmpty()) throw new GradleException("${name}:${n + 1}: //#elif without //#if")
+            def f = stack[-1]
+            boolean c = f[0] && !f[1] && evalCond(t.substring(8))
+            if (c) f[1] = true
+            active = c
+            out << '\n'
+        } else if (t == '//#else') {
+            if (stack.isEmpty()) throw new GradleException("${name}:${n + 1}: //#else without //#if")
+            def f = stack[-1]
+            active = f[0] && !f[1]
+            f[1] = true
+            out << '\n'
+        } else if (t == '//#endif') {
+            if (stack.isEmpty()) throw new GradleException("${name}:${n + 1}: //#endif without //#if")
+            active = stack.remove(stack.size() - 1)[0]
+            out << '\n'
+        } else {
+            out << (active ? line : '') << '\n'
+        }
+    }
+    if (!stack.isEmpty()) throw new GradleException("${name}: unclosed //#if")
+    return out.toString()
+}
+
+def ppJava = layout.buildDirectory.dir('generated/pp-java')
+def ppRes = layout.buildDirectory.dir('generated/pp-res')
+def sharedCore = layout.buildDirectory.dir('generated/bloom-core')
+def sharedRes = layout.buildDirectory.dir('generated/bloom-res')
+
+def preprocessSources = tasks.register('preprocessSources') {
+    def srcJava = file('src/main/java'), srcRes = file('src/main/resources')
+    inputs.dir(srcJava)
+    inputs.dir(srcRes)
+    inputs.property('mc', mc)
+    outputs.dir(ppJava)
+    outputs.dir(ppRes)
+    doLast {
+        [[srcJava, ppJava.get().asFile, ~/.*\.java$/], [srcRes, ppRes.get().asFile, ~/.*(mixins|fabric\.mod)\.json$/]].each { src, dst, pattern ->
+            project.delete(dst)
+            src.eachFileRecurse(groovy.io.FileType.FILES) { File f ->
+                def rel = src.toPath().relativize(f.toPath()).toString()
+                def outFile = new File(dst, rel)
+                outFile.parentFile.mkdirs()
+                if (f.name ==~ pattern) {
+                    def text = preprocess(f.getText('UTF-8'), rel)
+                    // A file whose whole body is switched off compiles to nothing. In JSON, drop the
+                    // comma left dangling before a closing bracket by a switched-off entry.
+                    if (f.name.endsWith('.json')) text = text.replaceAll(/,(\s*[\]}])/, '$1')
+                    outFile.setText(text, 'UTF-8')
+                } else {
+                    outFile.bytes = f.bytes
+                }
+            }
+        }
+    }
+}
+
+// The pure-Java core (settings, skyboxes, particles, HUD layouts…) is the same for every
+// Minecraft version: compile it straight from ../common.
+def syncCore = tasks.register('syncCore', Sync) {
+    from('../common/src/main/java') { include 'dev/bloom/client/core/**' }
+    into sharedCore
+}
+def syncRes = tasks.register('syncSharedResources', Sync) {
+    from('../common/src/main/resources') {
+        include 'assets/**'
+        // 1.21.1-only shader formats; this build has its own in src/main/resources.
+        exclude 'assets/minecraft/shaders/**'
+        exclude 'assets/bloomclient/shaders/**'
+    }
+    into sharedRes
+}
+sourceSets {
+    main {
+        java.srcDirs = [ppJava, sharedCore]
+        resources.srcDirs = [ppRes, sharedRes]
+    }
+}
+tasks.named('compileJava') { dependsOn preprocessSources, syncCore }
+tasks.named('processResources') { dependsOn preprocessSources, syncRes }
+tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn preprocessSources, syncCore, syncRes }
+
+repositories {
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${mc}"
+    if (unobfuscated) {
+        implementation "net.fabricmc:fabric-loader:${target.loader}"
+        implementation "net.fabricmc.fabric-api:fabric-api:${target.fabric_api}"
+    } else {
+        mappings loom.officialMojangMappings()
+        modImplementation "net.fabricmc:fabric-loader:${target.loader}"
+        modImplementation "net.fabricmc.fabric-api:fabric-api:${target.fabric_api}"
+    }
+}
+
+if (!unobfuscated) {
+    loom {
+        mixin {
+            defaultRefmapName.set("${modId}.refmap.json")
+        }
+    }
+}
+
+processResources {
+    def props = [
+            version          : project.version,
+            mod_id           : modId,
+            mod_name         : shared.getProperty('mod_name'),
+            mod_author       : shared.getProperty('mod_author'),
+            description      : shared.getProperty('description'),
+            license          : shared.getProperty('license'),
+            minecraft_version: mc,
+            mc_min           : target.supports.min,
+            mc_below         : target.supports.below,
+            min_loader       : unobfuscated ? '0.18.0' : '0.16.0',
+            java_release     : javaRelease,
+            mixin_compat     : "JAVA_${javaRelease}",
+    ]
+    inputs.properties(props)
+    filesMatching(['fabric.mod.json', '*.mixins.json']) {
+        expand props
+    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = javaRelease
+    it.options.encoding = 'UTF-8'
+    // Show every error, not just the first 100, so one CI run finds them all.
+    it.options.compilerArgs += ['-Xmaxerrs', '2000']
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion(javaRelease)
+    targetCompatibility = JavaVersion.toVersion(javaRelease)
+}
+
+jar {
+    from('../LICENSE') {
+        rename { "${it}_MOTION Client" }
+    }
+}
