@@ -206,7 +206,7 @@ export class MemoryStore implements Store {
   async listCapes(includeDisabled: boolean) {
     return [...this.capes.values()]
       .filter((c) => includeDisabled || c.enabled)
-      .sort((a, b) => b.createdAt - a.createdAt)
+      .sort((a, b) => a.createdAt - b.createdAt)
       .map((c) => ({ ...c, png: Buffer.alloc(0) }));
   }
   async updateCape(id: string, patch: { enabled?: boolean; access?: Cape["access"]; name?: string }) {
