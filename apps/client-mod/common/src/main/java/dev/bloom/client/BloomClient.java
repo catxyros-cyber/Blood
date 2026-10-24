@@ -339,6 +339,7 @@ public final class BloomClient {
 
     private void handleKeys(Minecraft mc) {
         FreeLook.tick(mc);
+        Zoom.tick(mc);
         while (BloomKeys.MENU.consumeClick()) {
             if (mc.screen == null) mc.setScreen(new BloomMenuScreen(null));
         }

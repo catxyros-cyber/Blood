@@ -85,6 +85,18 @@ public final class BloomSettings {
             "How much the game is dimmed behind the MOTION menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",
             "Pause the game while the MOTION menu is open in singleplayer. Multiplayer never pauses.", false);
+    public static final NumberSetting ZOOM_LEVEL = num("zoom.level", GENERAL, "Zoom", "Zoom amount",
+            "How far the Zoom key zooms in. 4× is OptiFine's zoom. While zooming you can scroll to change it.", 4f, 1.5f, 30f, 0.5f, MULTIPLIER, "",
+            "zoom", "spyglass", "optifine", "magnify");
+    public static final BoolSetting ZOOM_SMOOTH = bool("zoom.smooth", GENERAL, "Zoom", "Smooth zoom",
+            "Ease in and out of zoom instead of snapping.", true, "zoom", "animation");
+    public static final BoolSetting ZOOM_SCROLL = bool("zoom.scroll", GENERAL, "Zoom", "Scroll to adjust",
+            "While zooming, the mouse wheel zooms further in or out instead of changing the hotbar slot. The amount resets when you let go.",
+            true, "zoom", "scroll", "wheel");
+    public static final BoolSetting ZOOM_CINEMATIC = bool("zoom.cinematic", GENERAL, "Zoom", "Cinematic camera while zoomed",
+            "Smooths mouse movement while zoomed, like OptiFine's zoom, so far-away aiming isn't jittery.", false, "zoom", "smooth", "camera");
+    public static final BoolSetting ZOOM_TOGGLE = bool("zoom.toggle", GENERAL, "Zoom", "Toggle instead of hold",
+            "Press the Zoom key once to zoom in and again to zoom out, instead of holding it.", false, "zoom", "toggle", "hold");
     public static final BoolSetting CAPES = bool("capes.enabled", GENERAL, "Capes", "MOTION capes",
             "Show the capes MOTION players chose (yours too). Only MOTION users see them. Pick yours in the launcher: Visuals → Cape.",
             true, "cape", "cosmetic");

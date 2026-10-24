@@ -31,8 +31,10 @@ public class GeneralPage extends GenericPage {
         rows.add(new Rows.Info("info", "MOTION Client " + bc.platform().modVersion() + " on " + bc.platform().loaderName()
                 + " · Minecraft " + "1.21.11"
                 + ". Everything here is visual and client-side: it never changes the world, the server or other players.", Theme.accentArgb()));
-        rows.add(new Rows.Info("freeLookInfo", "FREE LOOK — hold the key below to look around while your player keeps moving. Click the key to rebind it.", Theme.accentArgb()));
+        rows.add(new Rows.Info("eye", "FREE LOOK — hold the key below to look around while your player keeps moving. Click the key to rebind it.", Theme.accentArgb()));
         rows.add(new KeybindsPage.KeyRow(screen, BloomKeys.FREE_LOOK));
+        rows.add(new Rows.Info("search", "ZOOM — hold the key below to zoom in, scroll to zoom further. Zoom amount, smoothing and toggle mode are under Zoom further down.", Theme.accentArgb()));
+        rows.add(new KeybindsPage.KeyRow(screen, BloomKeys.ZOOM));
         if (bc.shaderActive()) {
             rows.add(new Rows.Info("warning", BloomSettings.SKY_WITH_SHADERS.on()
                     ? "A shader pack is active and \"Use with shader packs\" is on. Results depend on the shader pack."
