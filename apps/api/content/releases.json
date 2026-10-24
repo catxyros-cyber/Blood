@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.26",
+    "date": "2026-10-24",
+    "notes": "Add community skins and MOTION branding\n\nMOTION Client 0.2.21."
+  },
+  {
     "version": "1.0.25",
     "date": "2026-10-24",
     "notes": "Smooth title screen logo and menu reveal\n\nBLOOD Client 0.2.20."
