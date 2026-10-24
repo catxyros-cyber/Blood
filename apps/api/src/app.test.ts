@@ -554,11 +554,16 @@ test("accessories: admin publishes wings and auras, players wear one of each, cl
     assert.equal((await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: wings.id } })).status, 404, "kind must match");
     await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "wings", id: wings.id } });
     const both = (await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "aura", id: aura.id } })).body;
-    assert.deepEqual(both, { wings: wings.id, aura: aura.id });
+    assert.deepEqual(both, { wings: wings.id, aura: aura.id, avatar: null });
+    assert.equal((await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "Bad", kind: "avatar", access: "everyone", color: "#ffffff" } })).status, 400, "an avatar needs a model");
+    const sahur = (await h.call("POST", "/v1/admin/accessories", { token: ADMIN, json: { name: "Sahur", kind: "avatar", access: "everyone", color: "#8a5a34", style: "sahur" } })).body;
+    assert.equal(sahur.style, "sahur");
+    assert.equal((await h.call("PUT", "/v1/me/accessories", { token, json: { kind: "avatar", id: sahur.id } })).body.avatar, sahur.id);
 
     const owners = (await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7")).body;
     assert.deepEqual(owners.wings, { "8667ba71b85a4004af54457a9734eed7": wings.id });
     assert.deepEqual(owners.auras, { "8667ba71b85a4004af54457a9734eed7": { color: "#39ff88", style: "embers" } });
+    assert.deepEqual(owners.avatars, { "8667ba71b85a4004af54457a9734eed7": "sahur" });
 
     await h.call("POST", "/v1/admin/accessories/update", { token: ADMIN, json: { id: wings.id, action: "disable" } });
     assert.deepEqual((await h.call("GET", "/v1/cape-owners?uuids=8667ba71b85a4004af54457a9734eed7")).body.wings, {});

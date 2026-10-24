@@ -155,9 +155,12 @@ export type SetCapeRequest = Infer<typeof SetCapeRequest>;
 
 // --- accessories (wings & auras) ----------------------------------------------
 
-export type AccessoryKind = "wings" | "aura";
+export type AccessoryKind = "wings" | "aura" | "avatar";
 export const AURA_STYLES = ["glow", "embers", "sparkles", "orbit"] as const;
 export type AuraStyle = (typeof AURA_STYLES)[number];
+/** Built-in 3D avatar models in MOTION Client (core/avatar/AvatarModels.java). */
+export const AVATAR_MODELS = ["sahur", "tralalero", "bombardiro", "ballerina"] as const;
+export type AvatarModelId = (typeof AVATAR_MODELS)[number];
 export const ACCESSORY_MAX_BYTES = 4 * 1024 * 1024;
 
 /** An accessory the owner published. Wings have an image; auras have a colour and style. */
@@ -170,24 +173,24 @@ export interface AccessoryInfo {
   image?: string;
   /** Auras: particle colour (#rrggbb). Wings: an accent colour for previews. */
   color: string;
-  /** Auras only. */
-  style?: AuraStyle;
+  /** Auras: the particle style. Avatars: the 3D model id. */
+  style?: AuraStyle | AvatarModelId;
 }
 
 export const AdminCreateAccessory = v.object({
   name: v.string({ min: 1, max: 40, trim: true }),
-  kind: v.literal("wings", "aura"),
+  kind: v.literal("wings", "aura", "avatar"),
   access: v.literal("everyone", "premium"),
   /** Wings: base64 PNG of one wing (root on the left edge, tip on the right). */
   png: v.optional(v.string({ min: 16, max: 5_600_000 })),
   color: v.string({ min: 7, max: 7, pattern: /^#[0-9a-fA-F]{6}$/ }),
-  style: v.optional(v.literal("glow", "embers", "sparkles", "orbit")),
+  style: v.optional(v.literal("glow", "embers", "sparkles", "orbit", "sahur", "tralalero", "bombardiro", "ballerina")),
 });
 export type AdminCreateAccessory = Infer<typeof AdminCreateAccessory>;
 
 /** id "" removes the accessory of that kind. */
 export const SetAccessoryRequest = v.object({
-  kind: v.literal("wings", "aura"),
+  kind: v.literal("wings", "aura", "avatar"),
   id: v.string({ min: 0, max: 36, pattern: /^([0-9a-f-]{36})?$/ }),
 });
 export type SetAccessoryRequest = Infer<typeof SetAccessoryRequest>;

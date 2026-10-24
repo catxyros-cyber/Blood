@@ -486,7 +486,7 @@
         name.textContent = a.name;
         const meta = document.createElement("div");
         meta.className = "muted";
-        meta.textContent = `${a.kind === "wings" ? `Wings · ${a.width}×${a.height}` : `Aura · ${a.style} · ${a.color}`} · ${a.access === "premium" ? "Premium only" : "Everyone"}${a.enabled ? "" : " · hidden"}`;
+        meta.textContent = `${a.kind === "wings" ? `Wings · ${a.width}×${a.height}` : a.kind === "avatar" ? `3D avatar · ${a.style}` : `Aura · ${a.style} · ${a.color}`} · ${a.access === "premium" ? "Premium only" : "Everyone"}${a.enabled ? "" : " · hidden"}`;
         const actions = document.createElement("div");
         actions.className = "admin-actions";
         const act = (label, action, danger) => {

@@ -25,5 +25,6 @@ public abstract class AvatarRendererMixin {
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
     private void bloom$capeOnState(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo ci) {
         SkinStatePatch.apply(entity.getUUID(), state);
+        dev.bloom.client.game.AvatarStatePatch.apply(entity, state);
     }
 }

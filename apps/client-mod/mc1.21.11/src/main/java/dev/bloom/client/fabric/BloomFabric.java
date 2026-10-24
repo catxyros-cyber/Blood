@@ -51,6 +51,7 @@ public final class BloomFabric implements ClientModInitializer {
                 @SuppressWarnings("unchecked")
                 var parent = (net.minecraft.client.renderer.entity.RenderLayerParent<net.minecraft.client.renderer.entity.state.AvatarRenderState, net.minecraft.client.model.player.PlayerModel>) (Object) avatar;
                 helper.register(new dev.bloom.client.render.WingsLayer(parent));
+                helper.register(new dev.bloom.client.render.AvatarLayer(parent));
             }
         });
         HudRenderCallback.EVENT.register((graphics, delta) -> BloomClient.get().renderHud(graphics, delta));

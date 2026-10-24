@@ -103,6 +103,12 @@ public final class CapeManager {
         return s == null ? 1f : s[0] / s[1];
     }
 
+    /** The player's 3D avatar model id (see AvatarModels), or null. */
+    public static String avatarFor(UUID uuid) {
+        if (API == null || !BloomSettings.AVATARS.on()) return null;
+        return DIRECTORY.avatarOf(uuid.toString());
+    }
+
     /** The player's aura, or null. */
     public static CapeDirectory.Aura auraFor(UUID uuid) {
         if (API == null || !BloomSettings.AURAS.on()) return null;

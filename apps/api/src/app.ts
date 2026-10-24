@@ -12,6 +12,8 @@ import {
   COMMUNITY_SKIN_MAX_BYTES,
   type CommunitySkinInfo,
   ACCESSORY_MAX_BYTES,
+  AURA_STYLES,
+  AVATAR_MODELS,
   SetAccessoryRequest,
   type AccessoryInfo,
   AdminCreateCape,
@@ -790,7 +792,7 @@ export function createApp(deps: Deps) {
     if (raw.length > 100) throw new HttpError(400, "too_many", "Ask for at most 100 players at a time.");
     const uuids = [...new Set(raw.map((u) => normalizeUuid(u)).filter((u): u is string => typeof u === "string" && /^[0-9a-f]{32}$/.test(u)))];
     const [capes, tags, acc] = await Promise.all([store.playerCapes(uuids), store.playerTags(uuids), store.playerAccessories(uuids)]);
-    return { status: 200, body: { capes, tags, wings: acc.wings, auras: acc.auras }, headers: { "Cache-Control": "public, max-age=30" } };
+    return { status: 200, body: { capes, tags, wings: acc.wings, auras: acc.auras, avatars: acc.avatars }, headers: { "Cache-Control": "public, max-age=30" } };
   });
 
   r.get("/v1/me/cape", async (ctx) => {
@@ -864,7 +866,9 @@ export function createApp(deps: Deps) {
     kind: a.kind,
     access: a.access,
     color: a.color,
-    ...(a.kind === "wings" ? { image: `/v1/accessories/${a.id}.png` } : { style: (a.style ?? "glow") as AccessoryInfo["style"] }),
+    ...(a.kind === "wings"
+      ? { image: `/v1/accessories/${a.id}.png` }
+      : { style: (a.style ?? (a.kind === "avatar" ? "sahur" : "glow")) as AccessoryInfo["style"] }),
   });
 
   r.get("/v1/accessories", async () => {
@@ -910,6 +914,14 @@ export function createApp(deps: Deps) {
     const req = parse(AdminCreateAccessory, await ctx.json(6_000_000));
     let png: Buffer | null = null;
     let size = { w: 0, h: 0 };
+    // Auras take a particle style; avatars one of MOTION Client's 3D models.
+    const style = req.kind === "avatar" ? req.style : req.kind === "aura" ? (req.style ?? "glow") : null;
+    if (req.kind === "avatar" && !(AVATAR_MODELS as readonly string[]).includes(style ?? "")) {
+      throw new HttpError(400, "bad_style", `An avatar needs a model: ${AVATAR_MODELS.join(", ")}.`);
+    }
+    if (req.kind === "aura" && !(AURA_STYLES as readonly string[]).includes(style ?? "")) {
+      throw new HttpError(400, "bad_style", `An aura needs a style: ${AURA_STYLES.join(", ")}.`);
+    }
     if (req.kind === "wings") {
       if (!req.png) throw new HttpError(400, "missing_image", "Wings need an image.");
       png = Buffer.from(req.png.replace(/^data:image\/png;base64,/, ""), "base64");
@@ -928,7 +940,7 @@ export function createApp(deps: Deps) {
       width: size.w,
       height: size.h,
       color: req.color.toLowerCase(),
-      style: req.kind === "aura" ? (req.style ?? "glow") : null,
+      style: req.kind === "wings" ? null : style,
       enabled: true,
       createdAt: now(),
     };

@@ -59,6 +59,31 @@ async function main() {
     });
   }
 
+  // Built-in 3D avatars (rendered by MOTION Client from its own models; no image needed). Like the
+  // skins above they're only added once, so disabling one on the admin page sticks.
+  const builtInAvatars = [
+    { id: "a1b2c3d4-1111-4a5b-9c6d-7e8f9a0b1c21", name: "Tung Tung Tung Sahur", style: "sahur", color: "#8a5a34" },
+    { id: "a1b2c3d4-2222-4a5b-9c6d-7e8f9a0b1c22", name: "Tralalero Tralala", style: "tralalero", color: "#3d7fc4" },
+    { id: "a1b2c3d4-3333-4a5b-9c6d-7e8f9a0b1c23", name: "Bombardiro Crocodilo", style: "bombardiro", color: "#4f8a3a" },
+    { id: "a1b2c3d4-4444-4a5b-9c6d-7e8f9a0b1c24", name: "Ballerina Cappuccina", style: "ballerina", color: "#f4a6c6" },
+  ];
+  for (const [i, a] of builtInAvatars.entries()) {
+    if (await store.getAccessory(a.id)) continue;
+    await store.createAccessory({
+      id: a.id,
+      name: a.name,
+      kind: "avatar",
+      access: "everyone",
+      png: null,
+      width: 0,
+      height: 0,
+      color: a.color,
+      style: a.style,
+      enabled: true,
+      createdAt: Date.UTC(2026, 9, 25) + i,
+    });
+  }
+
   const stripe = config.stripe ? new Stripe(config.stripe.secretKey, config.stripe.apiVersion) : null;
   if (!stripe) console.warn("Stripe is not configured: Premium purchases are disabled.");
 
