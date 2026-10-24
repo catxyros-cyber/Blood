@@ -10,9 +10,11 @@ import { native } from "../services/native";
 import { useStore } from "../services/store";
 import { cx, IconButton, ProgressBar, Spinner } from "./components";
 import { BloodMark, Icon, Wordmark } from "./icons";
+import { openPalette } from "./commandPalette";
 
 export function TitleBar() {
   const win = getCurrentWindow();
+  const ready = useStore(app, (s) => s.ready);
   const [maximized, setMaximized] = useState(false);
   useEffect(() => {
     void win.isMaximized().then(setMaximized);
@@ -28,7 +30,19 @@ export function TitleBar() {
         <BloodMark size={15} />
         <Wordmark height={11} />
       </div>
-      <div className="flex-1 h-full" data-tauri-drag-region />
+      <div className="flex-1 h-full flex items-center justify-center" data-tauri-drag-region>
+        {ready && (
+          <button
+            type="button"
+            onClick={openPalette}
+            className="h-6 w-[280px] max-w-[40vw] flex items-center gap-2 px-2.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-faint hover:text-muted hover:border-white/15 text-[12px] cursor-pointer transition-colors"
+          >
+            <Icon.Search size={13} />
+            <span className="flex-1 text-left truncate">Play, join, or jump to…</span>
+            <kbd className="font-mono text-[10.5px] opacity-80">Ctrl K</kbd>
+          </button>
+        )}
+      </div>
       <div className="flex h-full">
         <button className={btn} aria-label="Minimize" onClick={() => void win.minimize()}>
           <Icon.Minus size={15} />
