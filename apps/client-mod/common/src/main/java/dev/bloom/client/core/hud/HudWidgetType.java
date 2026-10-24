@@ -44,7 +44,9 @@ public enum HudWidgetType {
                     new Option("mode", "Show \"Toggled\" / \"Held\"", true), new Option("flying", "Flying", false))),
     INFO("info", "Info panel", "Ping, server address, world day and in-game time.", Anchor.TOP_RIGHT, -4, 32, false,
             List.of(new Option("ping", "Ping", true), new Option("server", "Server address", false),
-                    new Option("day", "World day", true), new Option("time", "In-game time", false)));
+                    new Option("day", "World day", true), new Option("time", "In-game time", false))),
+    MUSIC("music", "Now playing", "Current Windows media track, artist, album artwork and synced lyrics from Music/Lyrics .lrc files.", Anchor.BOTTOM_LEFT, 4, -42, false,
+            List.of(new Option("album", "Show album", true), new Option("lyrics", "Show synced lyrics", true)));
 
     public record Option(String id, String label, boolean defaultValue) {
     }
@@ -123,3 +125,4 @@ public enum HudWidgetType {
         return id == null ? null : BY_ID.get(id);
     }
 }
+

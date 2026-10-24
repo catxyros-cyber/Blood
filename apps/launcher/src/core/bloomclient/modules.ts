@@ -70,6 +70,8 @@ export const HUD_WIDGETS: HudWidgetInfo[] = [
     options: [o("sprint", "Sprint", true), o("sneak", "Sneak", true), o("mode", 'Show "Toggled" / "Held"', true), o("flying", "Flying", false)] },
   { id: "info", name: "Info panel", description: "Ping, server address, world day and in-game time in one small panel.", anchor: "top_right", x: -4, y: 32, visibleByDefault: false,
     options: [o("ping", "Ping", true), o("server", "Server address", false), o("day", "World day", true), o("time", "In-game time", false)] },
+  { id: "music", name: "Now playing", description: "Current Windows media track, artist, album artwork and synced local lyrics.", anchor: "bottom_left", x: 4, y: -42, visibleByDefault: false,
+    options: [o("album", "Show album", true), o("lyrics", "Show synced lyrics", true)] },
 ];
 
 export const CROSSHAIR_STYLES = [

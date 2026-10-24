@@ -7,6 +7,9 @@ import dev.bloom.client.core.settings.BloomSettings;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import java.io.ByteArrayInputStream;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -22,6 +25,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 import java.time.LocalTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -46,6 +51,7 @@ public final class Widgets {
             case HELD -> new Held();
             case STATUS -> new Status();
             case INFO -> new Info();
+            case MUSIC -> new Music();
         };
     }
 
@@ -790,6 +796,137 @@ public final class Widgets {
             for (String[] s : lines(c)) {
                 text(g, c, s[0], 0, y, c.accent);
                 text(g, c, s[1], w - c.font.width(s[1]), y);
+                y += c.font.lineHeight + 1;
+            }
+        }
+    }
+    // ---------------------------------------------------------------- now playing
+
+    static final class Music extends HudWidget {
+        private String cachedKey = "";
+        private long lyricsStamp = Long.MIN_VALUE;
+        private long nextLyricsCheckMs;
+        private List<LyricLine> lyrics = List.of();
+        private Identifier albumTexture;
+        private String albumTextureKey = "";
+        private int albumW = 1, albumH = 1;
+        private record LyricLine(long atMs, String text) {}
+
+        Music() { super(HudWidgetType.MUSIC); }
+
+        private dev.bloom.client.core.music.MusicSession.Track track(Ctx c) {
+            return c.preview ? null : dev.bloom.client.core.music.MusicSession.current();
+        }
+
+        private void updateArtwork(Ctx c) {
+            var t = track(c);
+            byte[] bytes = t == null ? null : t.artwork();
+            String key = t == null ? "" : t.artist() + " - " + t.title() + " - " + t.album() + (bytes == null ? ":no-art" : ":art");
+            if (key.equals(albumTextureKey)) return;
+            albumTextureKey = key;
+            if (albumTexture != null) c.mc.getTextureManager().release(albumTexture);
+            albumTexture = null;
+            if (bytes == null || bytes.length == 0) return;
+            try {
+                NativeImage image = NativeImage.read(new ByteArrayInputStream(bytes));
+                albumW = image.getWidth(); albumH = image.getHeight();
+                albumTexture = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "music/album_art");
+                c.mc.getTextureManager().register(albumTexture, new DynamicTexture(() -> "MOTION album artwork", image));
+            } catch (Exception ignored) { albumTexture = null; }
+        }
+
+        private List<String> lines(Ctx c) {
+            var t = track(c);
+            String title = c.preview ? "Midnight City" : t == null ? "Nothing playing" : clean(t.title(), "Unknown track");
+            String artist = c.preview ? "M83" : t == null ? "Start music in another app" : clean(t.artist(), "Unknown artist");
+            List<String> out = new ArrayList<>();
+            out.add(title);
+            out.add(artist);
+            if (c.state.option("album") && t != null && !t.album().isBlank()) out.add(clean(t.album(), ""));
+            if (c.state.option("lyrics")) {
+                String lyric = c.preview ? "♪ Waiting for the right moment" : t == null ? "" : currentLyric(t);
+                if (!lyric.isBlank()) out.add(lyric);
+            }
+            return out;
+        }
+
+        private static String clean(String s, String fallback) {
+            String v = s == null ? "" : s.replaceAll("[\\r\\n\\t]", " ").trim();
+            return v.isEmpty() ? fallback : v;
+        }
+
+        private String currentLyric(dev.bloom.client.core.music.MusicSession.Track t) {
+            String key = clean(t.artist(), "") + " - " + clean(t.title(), "");
+            Path file = Path.of(System.getProperty("user.home"), "Music", "Lyrics", safeName(key) + ".lrc");
+            if (!key.equals(cachedKey) || System.currentTimeMillis() >= nextLyricsCheckMs) {
+                nextLyricsCheckMs = System.currentTimeMillis() + 1000;
+                long stamp;
+                try { stamp = Files.getLastModifiedTime(file).toMillis() ^ Files.size(file); }
+                catch (Exception e) { stamp = -1; }
+                if (!key.equals(cachedKey) || stamp != lyricsStamp) {
+                    cachedKey = key;
+                    lyricsStamp = stamp;
+                    lyrics = readLyrics(file);
+                }
+            }
+            String current = "";
+            for (LyricLine line : lyrics) {
+                if (line.atMs() > t.positionMs()) break;
+                if (!line.text().isBlank()) current = line.text();
+            }
+            return current.isBlank() ? (lyrics.isEmpty() ? "Add synced .lrc lyrics" : "♪ …") : current;
+        }
+
+        private static String safeName(String text) { return text.replaceAll("[<>:\"/\\\\|?*]", "_").trim(); }
+
+        private static List<LyricLine> readLyrics(Path file) {
+            if (!Files.isRegularFile(file)) return List.of();
+            List<LyricLine> out = new ArrayList<>();
+            try {
+                for (String raw : Files.readAllLines(file)) {
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\[(\\d{1,2}):(\\d{2})(?:[.:](\\d{1,3}))?\\](.*)").matcher(raw);
+                    while (m.find()) {
+                        long min = Long.parseLong(m.group(1)), sec = Long.parseLong(m.group(2));
+                        String fraction = m.group(3) == null ? "0" : m.group(3);
+                        long millis = fraction.length() == 1 ? Long.parseLong(fraction) * 100 : fraction.length() == 2 ? Long.parseLong(fraction) * 10 : Long.parseLong(fraction);
+                        out.add(new LyricLine((min * 60 + sec) * 1000 + millis, m.group(4).trim()));
+                    }
+                }
+            } catch (Exception ignored) { return List.of(); }
+            out.sort(java.util.Comparator.comparingLong(LyricLine::atMs));
+            return out;
+        }
+
+        private List<String> clipped(Ctx c) {
+            List<String> out = new ArrayList<>();
+            for (String line : lines(c)) {
+                String s = line;
+                while (!s.isEmpty() && c.font.width(s) > 168) s = s.substring(0, s.length() - 1);
+                if (s.length() < line.length() && s.length() > 2) s = s.substring(0, s.length() - 2) + "…";
+                out.add(s);
+            }
+            return out;
+        }
+
+        @Override public int[] measure(Ctx c) {
+            if (!c.preview && track(c) == null) { updateArtwork(c); return null; }
+            updateArtwork(c);
+            List<String> l = clipped(c);
+            int textW = 0;
+            for (String s : l) textW = Math.max(textW, c.font.width(s));
+            return new int[]{34 + Math.max(72, textW), Math.max(28, l.size() * (c.font.lineHeight + 1) - 1)};
+        }
+
+        @Override public void render(GuiGraphics g, Ctx c, int w, int h) {
+            g.fill(0, 2, 27, 27, withAlpha(c.accent, 0.20f));
+            g.fill(1, 3, 26, 26, 0xB8101512);
+            if (albumTexture != null) g.blit(RenderPipelines.GUI_TEXTURED, albumTexture, 1, 3, 0f, 0f, 25, 23, albumW, albumH, albumW, albumH, 0xFFFFFFFF);
+            else text(g, c, "♫", 5, 8, c.accent);
+            List<String> l = clipped(c);
+            int y = 0;
+            for (int i = 0; i < l.size(); i++) {
+                int color = i == 0 ? c.text : i == 1 ? c.accent : dim(c.text, 0.78f);
+                text(g, c, l.get(i), 32, y, color);
                 y += c.font.lineHeight + 1;
             }
         }
