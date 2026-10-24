@@ -146,7 +146,11 @@ public class KeybindsPage extends GenericPage {
             } else if (k == InputConstants.KEY_BACKSPACE || k == InputConstants.KEY_DELETE) {
                 apply(InputConstants.UNKNOWN);
             } else {
+//#if MC >= 26.3
+                apply(InputConstants.Type.KEYBOARD.getOrCreate(k));
+//#else
                 apply(k != -1 ? InputConstants.Type.KEYSYM.getOrCreate(k) : InputConstants.Type.SCANCODE.getOrCreate(scan));
+//#endif
             }
             return true;
         }

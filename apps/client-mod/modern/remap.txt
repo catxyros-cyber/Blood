@@ -76,3 +76,6 @@ MC >= 26.3 | \bcom\.mojang\.blaze3d\.GpuFormat\b | com.mojang.renderpearl.api.Gp
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.vertex\.(VertexFormat|VertexFormatElement)\b | com.mojang.renderpearl.api.vertex.$1
 # Key events: the second code is now SDL's keycode (GLFW's scancode).
 MC >= 26.3 | \bevent\.scancode\(\) | event.keycode()
+# PoseStack rotations by quaternion are rotate(...); the attack swing is swingAnimation.
+MC >= 26.3 | \.mulPose\(Axis\. | .rotate(Axis.
+MC >= 26.3 | \bstate\.attackTime\b | state.swingAnimation

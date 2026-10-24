@@ -220,7 +220,9 @@ public final class MotionTitleScreen extends Screen {
         state.showRightSleeve = true;
         state.showCape = false;
         state.pose = Pose.STANDING;
+//#if MC < 26.3
         state.attackArm = HumanoidArm.RIGHT;
+//#endif
         state.leftArmPose = net.minecraft.client.model.HumanoidModel.ArmPose.EMPTY;
         state.rightArmPose = net.minecraft.client.model.HumanoidModel.ArmPose.EMPTY;
         state.bodyRot = -8f;

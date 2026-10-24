@@ -230,7 +230,11 @@ public final class Draw {
         RenderPipeline.Builder p = RenderPipeline.builder();
         BindGroupLayout.Builder layout = BindGroupLayout.builder().withUniform("DynamicTransforms", UniformType.UNIFORM_BUFFER);
         if (projection) layout.withUniform("Projection", UniformType.UNIFORM_BUFFER);
+//#if MC >= 26.3
+        for (String s : samplers) layout.withUniform(s, UniformType.COMBINED_IMAGE_SAMPLER);
+//#else
         for (String s : samplers) layout.withSampler(s);
+//#endif
         p.withBindGroupLayout(layout.build());
         p.withVertexBinding(0, format);
         p.withPrimitiveTopology(PrimitiveTopology.QUADS);

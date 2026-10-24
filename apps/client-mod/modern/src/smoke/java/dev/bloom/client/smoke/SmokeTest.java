@@ -62,6 +62,9 @@ public class SmokeTest implements FabricClientGameTest {
             // Exercise the hooks that only run on input: hit a pig in front of the player
             // (attack, swing, mouse button), zoom with the scroll wheel, the tab list, the pause
             // menu's background, and a resource reload.
+            // A sword in hand (the swing animation applies to held items) and clouds on.
+            world.getServer().runCommand("give @p minecraft:diamond_sword");
+            context.runOnClient(mc -> mc.options.cloudStatus().set(net.minecraft.client.CloudStatus.FANCY));
             world.getServer().runCommand("execute as @p at @p anchored eyes run summon minecraft:pig ^ ^-0.6 ^2 {NoAI:1b,NoGravity:1b}");
             context.waitTicks(20);
             context.getInput().pressMouse(0);
