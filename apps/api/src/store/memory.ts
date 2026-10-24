@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Accessory, Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, TaggedPlayer, User } from "./types";
+import type { Accessory, Cape, Challenge, CommunitySkin, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, TaggedPlayer, User } from "./types";
 
 const key = (b: Buffer) => b.toString("hex");
 
@@ -18,6 +18,7 @@ export class MemoryStore implements Store {
   capes = new Map<string, Cape>();
   playerCapeMap = new Map<string, string>();
   accessories = new Map<string, Accessory>();
+  communitySkins = new Map<string, CommunitySkin>();
   /** `${uuid}|${kind}` → accessory id */
   playerAccessoryMap = new Map<string, string>();
   tags = new Map<string, { text: string; color: string }>();
@@ -205,7 +206,7 @@ export class MemoryStore implements Store {
   async listCapes(includeDisabled: boolean) {
     return [...this.capes.values()]
       .filter((c) => includeDisabled || c.enabled)
-      .sort((a, b) => a.createdAt - b.createdAt)
+      .sort((a, b) => b.createdAt - a.createdAt)
       .map((c) => ({ ...c, png: Buffer.alloc(0) }));
   }
   async updateCape(id: string, patch: { enabled?: boolean; access?: Cape["access"]; name?: string }) {
@@ -278,6 +279,29 @@ export class MemoryStore implements Store {
     return { wings, auras };
   }
 
+
+  async createCommunitySkin(skin: CommunitySkin) {
+    if (!this.communitySkins.has(skin.id)) this.communitySkins.set(skin.id, { ...skin, png: skin.png ? Buffer.from(skin.png) : null });
+  }
+  async getCommunitySkin(id: string) {
+    const skin = this.communitySkins.get(id);
+    return skin ? { ...skin, png: skin.png ? Buffer.from(skin.png) : null } : null;
+  }
+  async listCommunitySkins(includeDisabled: boolean) {
+    return [...this.communitySkins.values()]
+      .filter((skin) => includeDisabled || skin.enabled)
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map((skin) => ({ ...skin, png: null }));
+  }
+  async updateCommunitySkin(id: string, enabled: boolean) {
+    const skin = this.communitySkins.get(id);
+    if (!skin) return false;
+    skin.enabled = enabled;
+    return true;
+  }
+  async deleteCommunitySkin(id: string) {
+    return this.communitySkins.delete(id);
+  }
 
   async getUserByUsername(username: string) {
     const n = username.toLowerCase();

@@ -49,7 +49,7 @@ function parse<T>(res: HttpResponse): T {
 }
 
 export async function requestDeviceCode(http: Http, clientId: string): Promise<DeviceCode> {
-  if (!clientId) throw new BloomError("auth_not_configured", "Microsoft sign-in is not configured for this build of BLOOD.");
+  if (!clientId) throw new BloomError("auth_not_configured", "Microsoft sign-in is not configured for this build of MOTION.");
   const res = await http({
     method: "POST",
     url: `${MS_AUTHORITY}/devicecode`,
@@ -158,7 +158,7 @@ export async function pkceChallenge(verifier: string): Promise<string> {
 
 /** Builds the authorize URL for the sign-in window, with a fresh PKCE verifier and state. */
 export async function createAuthRequest(clientId: string): Promise<PkceRequest> {
-  if (!clientId) throw new BloomError("auth_not_configured", "Microsoft sign-in is not configured for this build of BLOOD.");
+  if (!clientId) throw new BloomError("auth_not_configured", "Microsoft sign-in is not configured for this build of MOTION.");
   const verifier = randomString(48);
   const state = randomString(18);
   const params = new URLSearchParams({

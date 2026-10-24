@@ -1,7 +1,8 @@
 /** Production entry point: `npm start` (after `npm run build`) or `npm run dev`. */
 
 import { createServer } from "node:http";
-import { dirname, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { dirname, resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createApp } from "./app";
 import { ConfigError, loadConfig, type Config } from "./config";
@@ -38,6 +39,15 @@ async function main() {
     console.warn("DATABASE_URL is not set: using an in-memory store. Data is lost on restart (development only).");
     store = new MemoryStore();
   }
+
+  await store.createCommunitySkin({
+    id: "2f2a9c91-ec58-4bde-9dc7-0740b4f6c311",
+    name: "Tung Tung Tung Sahur",
+    model: "classic",
+    png: await readFile(join(config.contentDir, "skins", "tung-tung-tung-sahur.png")),
+    enabled: true,
+    createdAt: Date.UTC(2026, 9, 24),
+  });
 
   const stripe = config.stripe ? new Stripe(config.stripe.secretKey, config.stripe.apiVersion) : null;
   if (!stripe) console.warn("Stripe is not configured: Premium purchases are disabled.");

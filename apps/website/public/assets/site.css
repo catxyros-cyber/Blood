@@ -200,6 +200,7 @@ section.u-pt8 { padding-top: 8px; }
 .admin-cape.off { opacity: 0.55; }
 .admin-cape img { image-rendering: pixelated; background: #000; border-radius: 6px; width: 128px; height: 64px; }
 .admin-cape img.hd { image-rendering: auto; }
+.admin-skin-image { width: 64px !important; height: 64px !important; image-rendering: pixelated; object-fit: contain; background: #0a0e0b; }
 .admin-cape-name { font-weight: 600; }
 .admin-cape .admin-actions { justify-content: flex-start; flex-wrap: wrap; }
 .admin-tag { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.06); }

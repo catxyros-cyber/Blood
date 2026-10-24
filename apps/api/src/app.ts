@@ -7,6 +7,10 @@ import { join } from "node:path";
 import {
   AdminCapeAction,
   AdminCreateAccessory,
+  AdminCreateSkin,
+  AdminSkinAction,
+  COMMUNITY_SKIN_MAX_BYTES,
+  type CommunitySkinInfo,
   ACCESSORY_MAX_BYTES,
   SetAccessoryRequest,
   type AccessoryInfo,
@@ -54,7 +58,7 @@ import { computeEntitlement, planForPrice } from "./entitlements";
 import { HttpError, makeCtx, RateLimiter, Router, serializeCookie, writeReply, type Ctx, type Reply } from "./http";
 import { hasJoined, MojangUnavailable } from "./mojang";
 import { serveStatic } from "./static";
-import type { Accessory, Cape, LicenseKey, Store, User } from "./store/types";
+import type { Accessory, Cape, CommunitySkin, LicenseKey, Store, User } from "./store/types";
 import {
   periodEnd,
   Stripe,
@@ -948,6 +952,66 @@ export function createApp(deps: Deps) {
     else ok = await store.updateAccessory(req.id, { access: req.action });
     if (!ok) throw new HttpError(404, "not_found", "No such accessory.");
     log({ msg: "accessory updated", accessory: req.id, action: req.action });
+    return { status: 200, body: { ok: true } };
+  });
+
+  // --- public MOTION skin catalog -------------------------------------------------
+
+  const communitySkinInfo = (skin: CommunitySkin): CommunitySkinInfo => ({
+    id: skin.id,
+    name: skin.name,
+    model: skin.model,
+    image: "/v1/community-skins/" + skin.id + ".png",
+  });
+
+  r.get("/v1/community-skins", async (ctx) => {
+    limit(ctx, "general");
+    const skins = (await store.listCommunitySkins(false)).map(communitySkinInfo);
+    return { status: 200, body: { skins }, headers: { "Cache-Control": "public, max-age=60" } };
+  });
+
+  r.get("/v1/community-skins/:file", async (ctx) => {
+    limit(ctx, "capes");
+    const m = /^([0-9a-f-]{36})\.png$/.exec(ctx.params.file ?? "");
+    const skin = m ? await store.getCommunitySkin(m[1]!) : null;
+    if (!skin || !skin.enabled || !skin.png) throw new HttpError(404, "not_found", "No such MOTION skin.");
+    return { status: 200, raw: skin.png, headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400, immutable" } };
+  });
+
+  r.get("/v1/community-skins/:id/texture", async (ctx) => {
+    limit(ctx, "general");
+    const id = ctx.params.id ?? "";
+    const skin = /^[0-9a-f-]{36}$/.test(id) ? await store.getCommunitySkin(id) : null;
+    if (!skin || !skin.enabled || !skin.png) throw new HttpError(404, "not_found", "No such MOTION skin.");
+    return { status: 200, body: { id: skin.id, name: skin.name, model: skin.model, png: "data:image/png;base64," + skin.png.toString("base64") }, headers: { "Cache-Control": "public, max-age=86400, immutable" } };
+  });
+
+  r.post("/v1/admin/community-skins", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminCreateSkin, await ctx.json(120_000));
+    const png = Buffer.from(req.png.replace(/^data:image\/png;base64,/, ""), "base64");
+    if (png.length > COMMUNITY_SKIN_MAX_BYTES) throw new HttpError(400, "too_large", "A Minecraft skin must be at most 64 KB.");
+    const size = pngSize(png);
+    if (!size) throw new HttpError(400, "not_png", "That file isn't a PNG image.");
+    if (size.w !== 64 || size.h !== 64) throw new HttpError(400, "bad_size", "Community skins must be 64×64 PNGs.");
+    const skin: CommunitySkin = { id: randomUUID(), name: req.name, model: req.model, png, enabled: true, createdAt: now() };
+    await store.createCommunitySkin(skin);
+    log({ msg: "community skin published", skin: skin.id, name: skin.name });
+    return { status: 200, body: communitySkinInfo(skin) };
+  });
+
+  r.get("/v1/admin/community-skins", async (ctx) => {
+    requireAdmin(ctx);
+    const skins = (await store.listCommunitySkins(true)).map((skin) => ({ ...communitySkinInfo(skin), enabled: skin.enabled, createdAt: skin.createdAt }));
+    return { status: 200, body: { skins } };
+  });
+
+  r.post("/v1/admin/community-skins/update", async (ctx) => {
+    requireAdmin(ctx);
+    const req = parse(AdminSkinAction, await ctx.json());
+    const ok = req.action === "delete" ? await store.deleteCommunitySkin(req.id) : await store.updateCommunitySkin(req.id, req.action === "enable");
+    if (!ok) throw new HttpError(404, "not_found", "No such MOTION skin.");
+    log({ msg: "community skin updated", skin: req.id, action: req.action });
     return { status: 200, body: { ok: true } };
   });
 

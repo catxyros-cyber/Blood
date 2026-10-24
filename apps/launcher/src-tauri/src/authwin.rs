@@ -66,7 +66,7 @@ pub async fn ms_login_window(app: AppHandle, authorize_url: String) -> Result<Op
     };
 
     let mut builder = WebviewWindowBuilder::new(&app, LABEL, WebviewUrl::External(url))
-        .title("Sign in with Microsoft — BLOOD")
+        .title("Sign in with Microsoft — MOTION")
         .inner_size(500.0, 680.0)
         .min_inner_size(400.0, 520.0)
         .resizable(true)

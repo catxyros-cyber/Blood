@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Cut a BLOOD release in one step:
+ * Cut a MOTION release in one step:
  *
  *   npm run release -- 1.0.1 "Fixed the crosshair on NeoForge. Faster startup."
  *   git push --follow-tags
  *
- * It sets the launcher version everywhere it's stored, bumps BLOOD Client's version when the
+ * It sets the launcher version everywhere it's stored, bumps MOTION Client's version when the
  * mod changed since the last release (so launchers replace the in-game jar too), adds the notes
  * to apps/api/content/releases.json, then commits and tags vX.Y.Z. Pushing the tag runs the
  * Release workflow, which publishes the installer and latest.json; every installed launcher
@@ -63,7 +63,7 @@ setJsonVersion("package.json");
 const cargo = "apps/launcher/src-tauri/Cargo.toml";
 write(cargo, read(cargo).replace(/^version\s*=\s*"[^"]+"/m, `version = "${version}"`));
 
-// ---------------------------------------------------------------- BLOOD Client version
+// ---------------------------------------------------------------- MOTION Client version
 // The launcher only replaces the in-game jar when the bundled version is newer, so bump the
 // mod's patch version whenever its sources changed since the previous release tag.
 const gradleProps = "apps/client-mod/gradle.properties";
@@ -93,7 +93,7 @@ const notes = noteParts.join(" ").trim() || "Bug fixes and improvements.";
 const entry = {
   version,
   date: new Date().toISOString().slice(0, 10),
-  notes: modBumped ? `${notes}\n\nBLOOD Client ${modBumped}.` : notes,
+  notes: modBumped ? `${notes}\n\nMOTION Client ${modBumped}.` : notes,
 };
 write(notesPath, JSON.stringify([entry, ...releases.filter((r) => r.version !== version)], null, 2) + "\n");
 
@@ -101,10 +101,10 @@ write(notesPath, JSON.stringify([entry, ...releases.filter((r) => r.version !== 
 if (useGit && !dry) {
   git("add", "-A");
   git("commit", "-m", `Release v${version}`);
-  git("tag", "-a", `v${version}`, "-m", `BLOOD ${version}`);
+  git("tag", "-a", `v${version}`, "-m", `MOTION ${version}`);
 }
 
-console.log(`\nBLOOD ${current} → ${version}${modBumped ? ` (BLOOD Client → ${modBumped})` : ""}`);
+console.log(`\nMOTION ${current} → ${version}${modBumped ? ` (MOTION Client → ${modBumped})` : ""}`);
 if (dry) console.log("Dry run: nothing was changed.");
 else if (useGit) console.log(`Committed and tagged v${version}. Publish it with:\n\n  git push --follow-tags\n`);
 else console.log(`Files updated. Commit, then tag v${version} and push the tag.`);

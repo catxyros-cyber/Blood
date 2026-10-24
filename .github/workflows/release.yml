@@ -2,7 +2,7 @@ name: Release
 
 # Push a tag like v1.0.1 (made by `npm run release -- 1.0.1`) to build, sign and PUBLISH a
 # GitHub release with the Windows installer and the signed updater manifest (latest.json).
-# Every installed BLOOD launcher checks
+# Every installed MOTION launcher checks
 #   https://github.com/<this repo>/releases/latest/download/latest.json
 # and installs the new version automatically (see docs/RELEASE.md).
 on:
@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build BLOOD Client jars and run core tests
+      - name: Build MOTION Client jars and run core tests
         working-directory: apps/client-mod
         run: chmod +x gradlew && ./gradlew build --stacktrace
       - uses: actions/upload-artifact@v4
@@ -35,7 +35,7 @@ jobs:
           if-no-files-found: error
 
   client-mod-12111:
-    name: BLOOD Client mod (Fabric, MC 1.21.11)
+    name: MOTION Client mod (Fabric, MC 1.21.11)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
         with:
           name: bloom-client-jars-12111
           path: apps/client-mod/mc1.21.11/build/libs
-      - name: Bundle BLOOD Client into the installer
+      - name: Bundle MOTION Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
 
       - run: npm install --no-audit --no-fund
@@ -156,7 +156,7 @@ jobs:
           tauriScript: npm run tauri
           args: --config src-tauri/tauri.release.conf.json
           tagName: ${{ github.ref_name }}
-          releaseName: BLOOD ${{ github.ref_name }}
+          releaseName: MOTION ${{ github.ref_name }}
           releaseBody: ${{ steps.notes.outputs.body }}
           # Built as a draft so every file can be attached (GitHub refuses uploads to a published
           # release when "immutable releases" is on: "The resource id … is invalid"). Published below.

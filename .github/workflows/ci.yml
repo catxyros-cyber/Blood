@@ -43,7 +43,7 @@ jobs:
         run: npm run build -w @bloom/launcher
 
   client-mod:
-    name: BLOOD Client mod (Fabric + NeoForge, MC 1.21.1)
+    name: MOTION Client mod (Fabric + NeoForge, MC 1.21.1)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
           if-no-files-found: error
 
   client-mod-12111:
-    name: BLOOD Client mod (Fabric, MC 1.21.11)
+    name: MOTION Client mod (Fabric, MC 1.21.11)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
         with:
           name: bloom-client-jars-12111
           path: apps/client-mod/mc1.21.11/build/libs
-      - name: Bundle BLOOD Client into the installer
+      - name: Bundle MOTION Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
       - run: npm install --no-audit --no-fund
       - name: Rust tests

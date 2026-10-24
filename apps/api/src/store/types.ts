@@ -80,6 +80,16 @@ export interface Cape {
   createdAt: number;
 }
 
+export interface CommunitySkin {
+  id: string;
+  name: string;
+  model: "classic" | "slim";
+  /** PNG bytes; omitted from catalog listings. */
+  png: Buffer | null;
+  enabled: boolean;
+  createdAt: number;
+}
+
 export interface Accessory {
   id: string;
   name: string;
@@ -174,6 +184,13 @@ export interface Store {
   getPlayerCape(minecraftUuid: string): Promise<string | null>;
   /** Cape id per player, for enabled capes only. */
   playerCapes(minecraftUuids: string[]): Promise<Record<string, string>>;
+
+  createCommunitySkin(skin: CommunitySkin): Promise<void>;
+  getCommunitySkin(id: string): Promise<CommunitySkin | null>;
+  /** Without PNG bytes. */
+  listCommunitySkins(includeDisabled: boolean): Promise<CommunitySkin[]>;
+  updateCommunitySkin(id: string, enabled: boolean): Promise<boolean>;
+  deleteCommunitySkin(id: string): Promise<boolean>;
 
   createAccessory(a: Accessory): Promise<void>;
   getAccessory(id: string): Promise<Accessory | null>;

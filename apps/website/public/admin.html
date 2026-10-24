@@ -132,6 +132,27 @@
           </div>
 
           <div class="card u-mt20">
+            <h3>Community skins</h3>
+            <p class="muted">Publish a 64×64 Minecraft skin to the MOTION community catalog. Every MOTION user can preview it in My Skin and add it to their local library. Applying it changes that player's Minecraft account skin, visible to all Minecraft players.</p>
+            <form class="admin-form u-mt16" data-skin-form>
+              <div class="row">
+                <label class="grow">Skin name
+                  <input type="text" name="name" maxlength="40" required placeholder="e.g. Tung Tung Tung Sahur" />
+                </label>
+                <label>Model
+                  <select name="model"><option value="classic">Classic (4px arms)</option><option value="slim">Slim (3px arms)</option></select>
+                </label>
+                <label>64×64 PNG
+                  <input type="file" name="file" accept="image/png" required />
+                </label>
+                <button class="btn btn-primary" type="submit">Publish skin</button>
+              </div>
+            </form>
+            <p class="admin-msg" data-skin-msg></p>
+            <div class="admin-capes u-mt14" data-skins></div>
+          </div>
+
+          <div class="card u-mt20">
             <h3>Tags</h3>
             <p class="muted">Give a player a tag shown before their name in game, like <b>[OWNER]</b>. Only MOTION players see tags. The player must have signed in to the MOTION launcher once. Leave the tag empty to remove it.</p>
             <form class="admin-form u-mt16" data-tag-form>

@@ -24,7 +24,7 @@ export type OverlayCorner = "TOP_LEFT" | "TOP_RIGHT" | "BOTTOM_LEFT" | "BOTTOM_R
 export type ThemeId = "motion" | "crimson" | "obsidian" | "ash" | "ember" | "mono";
 export const THEMES: { id: ThemeId; name: string; accent: string; description: string }[] = [
   { id: "motion", name: "Motion", accent: "#39ff88", description: "MOTION's signature: electric green on deep black." },
-  { id: "crimson", name: "Crimson", accent: "#e3192f", description: "The original BLOOD look: deep crimson on warm black." },
+  { id: "crimson", name: "Crimson", accent: "#e3192f", description: "The original MOTION look: deep crimson on warm black." },
   { id: "obsidian", name: "Obsidian", accent: "#ff1f3d", description: "Pure black surfaces for OLED screens, with a hotter red." },
   { id: "ash", name: "Ash", accent: "#dc2f3c", description: "Neutral charcoal and grey with crimson highlights." },
   { id: "ember", name: "Ember", accent: "#ff4a1f", description: "Warmer, red-orange accents on smoky black." },

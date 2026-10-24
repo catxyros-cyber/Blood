@@ -10,11 +10,12 @@
  */
 
 import { BloomError } from "../core/platform";
+import type { CommunitySkinInfo } from "@bloom/shared";
 import { guessModel, legacyMirrors, skinSizeProblem, type SkinModel } from "../core/skins/skin";
 import { activeAccount, launchCredentials } from "./accounts";
 import { app, P, path } from "./app";
 import { native } from "./native";
-import { API_URL, premiumRequest } from "./premium";
+import { API_URL, apiCall, premiumRequest } from "./premium";
 import { createStore } from "./store";
 
 export interface SavedSkin {
@@ -28,9 +29,22 @@ export interface SavedSkin {
   lastUsedAt: number | null;
   /** When this skin was last confirmed by Mojang as your account's skin. */
   appliedAt: number | null;
+  /** MOTION catalog id, when this was added from the shared catalog. */
+  communityId?: string;
 }
 
-export const skinState = createStore<{ loaded: boolean; skins: SavedSkin[]; selectedId: string | null }>({ loaded: false, skins: [], selectedId: null });
+export interface CommunitySkinAsset {
+  id: string;
+  name: string;
+  model: SkinModel;
+  png: string;
+}
+
+export interface CommunitySkin extends CommunitySkinInfo {
+  image: string;
+}
+
+export const skinState = createStore<{ loaded: boolean; skins: SavedSkin[]; selectedId: string | null; communityLoaded: boolean; communitySkins: CommunitySkin[]; communityError: string | null }>({ loaded: false, skins: [], selectedId: null, communityLoaded: false, communitySkins: [], communityError: null });
 
 function libraryPath() {
   return path(P().dataDir, "skins.json");
@@ -46,6 +60,26 @@ export async function loadSkins(): Promise<void> {
     skins = [];
   }
   skinState.set({ loaded: true, skins, selectedId: skinState.get().selectedId ?? skins[0]?.id ?? null });
+}
+
+export async function loadCommunitySkins(): Promise<void> {
+  try {
+    const { body } = await apiCall<{ skins: CommunitySkinInfo[] }>("GET", "/v1/community-skins");
+    skinState.set({ communityLoaded: true, communityError: null, communitySkins: body.skins.map((skin) => ({ ...skin, image: API_URL + skin.image })) });
+  } catch (e) {
+    skinState.set({ communityLoaded: true, communityError: e instanceof Error ? e.message : String(e), communitySkins: [] });
+  }
+}
+
+export async function addCommunitySkin(id: string): Promise<SavedSkin> {
+  const existing = skinState.get().skins.find((skin) => skin.communityId === id);
+  if (existing) {
+    selectSkin(existing.id);
+    return existing;
+  }
+  const { body } = await apiCall<CommunitySkinAsset>("GET", "/v1/community-skins/" + encodeURIComponent(id) + "/texture");
+  const saved = await saveSkin({ name: body.name, model: body.model, png: body.png, communityId: body.id });
+  return saved;
 }
 
 async function save(skins: SavedSkin[]) {
@@ -126,7 +160,7 @@ export async function saveSkin(skin: Omit<SavedSkin, "id" | "addedAt" | "lastUse
   const existing = skin.id ? skins.find((s) => s.id === skin.id) : undefined;
   const next: SavedSkin = existing
     ? { ...existing, name: skin.name, model: skin.model, png: skin.png }
-    : { id: newId(), name: skin.name, model: skin.model, png: skin.png, favorite: false, addedAt: Date.now(), lastUsedAt: null, appliedAt: null };
+    : { id: newId(), name: skin.name, model: skin.model, png: skin.png, favorite: false, addedAt: Date.now(), lastUsedAt: null, appliedAt: null, ...(skin.communityId ? { communityId: skin.communityId } : {}) };
   await save(existing ? skins.map((s) => (s.id === next.id ? next : s)) : [next, ...skins]);
   skinState.set({ selectedId: next.id });
   return next;

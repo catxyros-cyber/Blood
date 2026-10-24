@@ -2,7 +2,7 @@
   "name": "bloom",
   "private": true,
   "version": "1.0.25",
-  "description": "BLOOD — a performance-focused Minecraft launcher for Windows. Built for frames.",
+  "description": "MOTION — a performance-focused Minecraft launcher for Windows. Built for frames.",
   "workspaces": [
     "packages/*",
     "apps/*"

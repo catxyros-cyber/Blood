@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "BLOOD",
+  "productName": "MOTION",
   "mainBinaryName": "BLOOD",
   "version": "1.0.25",
   "identifier": "com.bloodlauncher.desktop",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "MOTION MOTION",
+        "title": "MOTION",
         "width": 1280,
         "height": 800,
         "minWidth": 1040,
@@ -43,12 +43,15 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
-    "publisher": "BLOOD",
-    "copyright": "© 2026 MOTION MOTION. Not affiliated with Mojang Studios or Microsoft.",
+    "targets": [
+      "nsis",
+      "msi"
+    ],
+    "publisher": "MOTION",
+    "copyright": "© 2026 MOTION. Not affiliated with Mojang Studios or Microsoft.",
     "category": "Game",
     "shortDescription": "Built for frames.",
-    "longDescription": "MOTION MOTION is a black-and-green, performance-focused Minecraft: Java Edition launcher with built-in HUD mods, Modrinth mod browsing, multiple installations and reversible optimization presets.",
+    "longDescription": "MOTION is a black-and-green, performance-focused Minecraft: Java Edition launcher with built-in HUD mods, Modrinth mod browsing, multiple installations and reversible optimization presets.",
     "homepage": "https://bloodlauncher.example",
     "icon": [
       "icons/32x32.png",
@@ -65,7 +68,9 @@
       "digestAlgorithm": "sha256",
       "certificateThumbprint": null,
       "timestampUrl": "http://timestamp.digicert.com",
-      "webviewInstallMode": { "type": "downloadBootstrapper" },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
       "nsis": {
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico",
@@ -79,7 +84,9 @@
       "endpoints": [
         "https://github.com/OWNER/REPO/releases/latest/download/latest.json"
       ],
-      "windows": { "installMode": "passive" }
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

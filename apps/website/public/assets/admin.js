@@ -378,6 +378,60 @@
     }
   });
 
+  // ---------------------------------------------------------------- community skins
+
+  async function loadCommunitySkins() {
+    const box = $("[data-skins]");
+    try {
+      const { skins } = await api("GET", "/v1/admin/community-skins");
+      box.replaceChildren();
+      if (!skins.length) { box.textContent = "No community skins yet."; return; }
+      for (const skin of skins) {
+        const card = document.createElement("div");
+        card.className = "admin-cape" + (skin.enabled ? "" : " off");
+        const preview = document.createElement("img"); preview.src = skin.image; preview.alt = ""; preview.className = "admin-skin-image";
+        const name = document.createElement("div"); name.className = "admin-cape-name"; name.textContent = skin.name;
+        const meta = document.createElement("div"); meta.className = "muted";
+        meta.textContent = (skin.model === "slim" ? "Slim" : "Classic") + " · 64×64 · " + (skin.enabled ? "Available to MOTION users" : "Hidden");
+        const actions = document.createElement("div"); actions.className = "admin-actions";
+        const actionButton = (label, action, danger = false) => {
+          const b = document.createElement("button"); b.type = "button"; b.className = danger ? "btn btn-danger" : "btn"; b.textContent = label;
+          b.addEventListener("click", async () => {
+            if (action === "delete" && !confirm("Delete " + skin.name + " from the MOTION catalog?")) return;
+            b.disabled = true;
+            try { await api("POST", "/v1/admin/community-skins/update", { id: skin.id, action }); await loadCommunitySkins(); }
+            catch (e) { msg($("[data-skin-msg]"), e.message, true); b.disabled = false; }
+          });
+          return b;
+        };
+        actions.append(actionButton(skin.enabled ? "Hide" : "Show", skin.enabled ? "disable" : "enable"));
+        actions.append(actionButton("Delete", "delete", true));
+        card.append(preview, name, meta, actions); box.append(card);
+      }
+    } catch (e) { msg($("[data-skin-msg]"), e.message, true); }
+  }
+
+  async function skinPng(file) {
+    const bmp = await createImageBitmap(file);
+    if (bmp.width !== 64 || bmp.height !== 64) throw new Error("Community skins must be exactly 64×64 pixels.");
+    const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+    const g = c.getContext("2d"); g.imageSmoothingEnabled = false; g.drawImage(bmp, 0, 0);
+    return c.toDataURL("image/png");
+  }
+
+  $("[data-skin-form]").addEventListener("submit", async (ev) => {
+    ev.preventDefault(); const f = new FormData(ev.target); const skinMsg = $("[data-skin-msg]"); const file = f.get("file");
+    if (!file || !file.size) return msg(skinMsg, "Choose a Minecraft skin PNG.", true);
+    const submit = ev.target.querySelector("button[type=submit]"); submit.disabled = true;
+    try {
+      msg(skinMsg, "Preparing skin…"); const png = await skinPng(file);
+      if (png.length * 0.75 > 64 * 1024) throw new Error("That skin is over 64 KB after conversion.");
+      await api("POST", "/v1/admin/community-skins", { name: String(f.get("name")).trim(), model: f.get("model"), png });
+      msg(skinMsg, "Published. MOTION users can find it in My Skin → Community."); ev.target.reset(); await loadCommunitySkins();
+    } catch (e) { msg(skinMsg, e.message, true); }
+    finally { submit.disabled = false; }
+  });
+
   // ---------------------------------------------------------------- accessories
 
   const kindSelect = $("[data-acc-kind]");
@@ -500,6 +554,7 @@
     await load();
     await loadCapes();
     await loadAccessories();
+    await loadCommunitySkins();
     await loadTags();
   });
 
@@ -545,6 +600,7 @@
     void load();
     void loadCapes();
     void loadAccessories();
+    void loadCommunitySkins();
     void loadTags();
   }
   setInterval(() => { if (token) void loadTags(); }, 30_000);

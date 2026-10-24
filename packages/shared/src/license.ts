@@ -192,6 +192,32 @@ export const SetAccessoryRequest = v.object({
 });
 export type SetAccessoryRequest = Infer<typeof SetAccessoryRequest>;
 
+// --- community skins --------------------------------------------------------
+
+export type SkinModel = "classic" | "slim";
+export interface CommunitySkinInfo {
+  id: string;
+  name: string;
+  model: SkinModel;
+  /** Public PNG URL on the MOTION API. */
+  image: string;
+}
+
+export const COMMUNITY_SKIN_MAX_BYTES = 64 * 1024;
+export const AdminCreateSkin = v.object({
+  name: v.string({ min: 1, max: 40, trim: true }),
+  model: v.literal("classic", "slim"),
+  /** Base64 PNG skin atlas; must decode to exactly 64×64 pixels. */
+  png: v.string({ min: 16, max: 90_000 }),
+});
+export type AdminCreateSkin = Infer<typeof AdminCreateSkin>;
+
+export const AdminSkinAction = v.object({
+  id: v.string({ min: 36, max: 36, pattern: /^[0-9a-f-]{36}$/ }),
+  action: v.literal("enable", "disable", "delete"),
+});
+export type AdminSkinAction = Infer<typeof AdminSkinAction>;
+
 // --- tags ---------------------------------------------------------------------
 
 /** A player's MOTION tag, shown before their name to MOTION users. */

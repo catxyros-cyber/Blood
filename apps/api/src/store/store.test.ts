@@ -144,7 +144,7 @@ if (url) {
     // Fresh schema for every test.
     await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
     const applied = await migrate(pool, migrations, () => undefined);
-    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql", "006_accessories.sql"]);
+    assert.deepEqual(applied, ["001_init.sql", "002_license_keys.sql", "003_capes.sql", "004_tags.sql", "005_animated_capes.sql", "006_accessories.sql", "007_community_skins.sql"]);
     assert.deepEqual(await migrate(pool, migrations, () => undefined), [], "migrations are applied once");
     return { store: new PgStore(pool), done: async () => undefined };
   });

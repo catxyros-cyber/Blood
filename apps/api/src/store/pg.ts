@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { SyncDocument } from "@bloom/shared";
-import type { Accessory, Cape, Challenge, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
+import type { Accessory, Cape, Challenge, CommunitySkin, Grant, LicenseKey, PurchaseRecord, Session, Store, SubscriptionRecord, SyncPutResult, User } from "./types";
 
 /** The subset of pg.Pool that MOTION uses (keeps this file free of @types/pg). */
 export interface PgPool {
@@ -512,7 +512,49 @@ export class PgStore implements Store {
     return { wings, auras };
   }
 
+  async createCommunitySkin(skin: CommunitySkin) {
+    await this.pool.query(
+      "INSERT INTO community_skins (id, name, model, png, enabled, created_at) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO NOTHING",
+      [skin.id, skin.name, skin.model, skin.png, skin.enabled, ts(skin.createdAt)],
+    );
+  }
+  async getCommunitySkin(id: string) {
+    const { rows } = await this.pool.query<CommunitySkinRow>("SELECT * FROM community_skins WHERE id = $1", [id]);
+    return rows[0] ? toCommunitySkin(rows[0]) : null;
+  }
+  async listCommunitySkins(includeDisabled: boolean) {
+    const sql = "SELECT id, name, model, NULL::bytea AS png, enabled, created_at FROM community_skins " + (includeDisabled ? "" : "WHERE enabled ") + "ORDER BY created_at DESC";
+    const { rows } = await this.pool.query<CommunitySkinRow>(sql);
+    return rows.map(toCommunitySkin);
+  }
+  async updateCommunitySkin(id: string, enabled: boolean) {
+    const r = await this.pool.query("UPDATE community_skins SET enabled = $2 WHERE id = $1", [id, enabled]);
+    return (r.rowCount ?? 0) > 0;
+  }
+  async deleteCommunitySkin(id: string) {
+    const r = await this.pool.query("DELETE FROM community_skins WHERE id = $1", [id]);
+    return (r.rowCount ?? 0) > 0;
+  }
+
 }
+
+interface CommunitySkinRow {
+  id: string;
+  name: string;
+  model: "classic" | "slim";
+  png: Buffer | null;
+  enabled: boolean;
+  created_at: Date;
+}
+
+const toCommunitySkin = (r: CommunitySkinRow): CommunitySkin => ({
+  id: r.id,
+  name: r.name,
+  model: r.model,
+  png: r.png,
+  enabled: r.enabled,
+  createdAt: r.created_at.getTime(),
+});
 
 interface CapeRow {
   id: string;

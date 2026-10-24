@@ -10,8 +10,10 @@ import { app, navigate, reportError, toast } from "../../services/app";
 import { native } from "../../services/native";
 import {
   accountSkinUrl,
+  addCommunitySkin,
   addSkinFiles,
   applySkin,
+  loadCommunitySkins,
   loadSkins,
   normaliseSkin,
   removeSkin,
@@ -19,6 +21,7 @@ import {
   selectSkin,
   skinState,
   updateSkin,
+  type CommunitySkin,
   type SavedSkin,
 } from "../../services/skins";
 import { useStore } from "../../services/store";
@@ -53,7 +56,9 @@ export function SkinsPage() {
   const accounts = useStore(app, (s) => s.accounts);
   const account = activeAccount();
   const [filter, setFilter] = useState<Filter>("all");
-  const [tab, setTab] = useState<"library" | "editor">("library");
+  const [tab, setTab] = useState<"library" | "community" | "editor">("library");
+  const [communityId, setCommunityId] = useState<string | null>(null);
+  const [addingCommunityId, setAddingCommunityId] = useState<string | null>(null);
   const [model, setModel] = useState<SkinModel>("classic");
   const [overlay, setOverlay] = useState(true);
   const [animate, setAnimate] = useState(true);
@@ -65,12 +70,21 @@ export function SkinsPage() {
 
   useEffect(() => {
     if (!st.loaded) void loadSkins();
-  }, [st.loaded]);
+    if (!st.communityLoaded) void loadCommunitySkins();
+  }, [st.loaded, st.communityLoaded]);
 
   const selected = st.skins.find((s) => s.id === st.selectedId) ?? null;
   useEffect(() => {
     if (selected) setModel(selected.model);
   }, [selected?.id]);
+
+  const communitySelected = st.communitySkins.find((skin) => skin.id === communityId) ?? st.communitySkins[0] ?? null;
+  useEffect(() => {
+    if (!communityId && st.communitySkins[0]) setCommunityId(st.communitySkins[0].id);
+  }, [communityId, st.communitySkins]);
+  useEffect(() => {
+    if (tab === "community" && communitySelected) setModel(communitySelected.model);
+  }, [tab, communitySelected?.id]);
 
   const shown = useMemo(() => {
     const list = [...st.skins];
@@ -80,7 +94,7 @@ export function SkinsPage() {
   }, [st.skins, filter]);
 
   const accountSkin = accountSkinUrl();
-  const previewSrc = tab === "editor" ? editorPng : showAccount ? accountSkin : selected?.png ?? accountSkin;
+  const previewSrc = tab === "editor" ? editorPng : tab === "community" ? communitySelected?.image ?? null : showAccount ? accountSkin : selected?.png ?? accountSkin;
 
   const upload = async () => {
     const picked = await native.pickFiles({ title: "Choose Minecraft skins", filters: [["Minecraft skin (PNG)", ["png"]]], multiple: true });
@@ -91,6 +105,20 @@ export function SkinsPage() {
       toast({ kind: "success", title: added.length === 1 ? "Skin added" : `${added.length} skins added`, message: added.length < picked.length ? "Some files weren't Minecraft skins and were skipped." : "Select it and press Apply to use it in Minecraft." });
     } catch (e) {
       reportError("Couldn't add that skin", e);
+    }
+  };
+
+  const addCommunity = async (skin: CommunitySkin) => {
+    setAddingCommunityId(skin.id);
+    try {
+      const saved = await addCommunitySkin(skin.id);
+      toast({ kind: "success", title: "Added to your library", message: "\"" + saved.name + "\" is ready to preview and apply." });
+      setShowAccount(false);
+      setTab("library");
+    } catch (e) {
+      reportError("Could not add that community skin", e);
+    } finally {
+      setAddingCommunityId(null);
     }
   };
 
@@ -122,7 +150,7 @@ export function SkinsPage() {
             <Icon.User size={26} /> My Skin
           </span>
         }
-        subtitle="Upload, preview, edit and apply skins to your Minecraft account."
+        subtitle="Browse MOTION community skins, then preview, edit and apply one to your Minecraft account."
         actions={
           <div className="flex gap-2">
             <Button icon={<Icon.Edit size={15} />} onClick={() => openEditor({ png: blankSkin(), name: "New skin" })}>New skin</Button>
@@ -179,7 +207,7 @@ export function SkinsPage() {
               size="lg"
               variant="primary"
               loading={applying}
-              disabled={!selected || !account || applying || tab === "editor"}
+              disabled={!selected || !account || applying || tab !== "library"}
               icon={<Icon.Check size={17} />}
               onClick={() => void apply()}
             >
@@ -197,7 +225,7 @@ export function SkinsPage() {
         {/* Library / editor */}
         <Card className="p-5 min-w-0">
           <div className="flex items-center justify-between mb-4">
-            <Segmented value={tab} onChange={(t) => setTab(t)} options={[{ value: "library", label: "Library" }, { value: "editor", label: "Editor" }]} />
+            <Segmented value={tab} onChange={(t) => setTab(t)} options={[{ value: "library", label: "Library" }, { value: "community", label: "Community" }, { value: "editor", label: "Editor" }]} />
             {tab === "library" && (
               <Segmented value={filter} onChange={setFilter} options={[{ value: "all", label: `All (${st.skins.length})` }, { value: "favorites", label: "Favourites" }, { value: "recent", label: "Recent" }]} />
             )}
@@ -278,6 +306,47 @@ export function SkinsPage() {
                           >
                             <Icon.Trash size={14} />
                           </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          ) : tab === "community" ? (
+            <>
+              <div className="mb-4 text-[12.5px] text-muted">Shared MOTION skins. Add one to your library before applying it to your Minecraft account.</div>
+              {!st.communityLoaded ? (
+                <EmptyState title="Loading community skins">Fetching the MOTION skin catalog…</EmptyState>
+              ) : st.communityError ? (
+                <EmptyState title="Community skins unavailable">{st.communityError}</EmptyState>
+              ) : st.communitySkins.length === 0 ? (
+                <EmptyState title="No community skins published yet">Check back later for skins shared by MOTION.</EmptyState>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
+                  {st.communitySkins.map((skin) => {
+                    const active = skin.id === communitySelected?.id;
+                    const added = st.skins.some((local) => local.communityId === skin.id);
+                    return (
+                      <div
+                        key={skin.id}
+                        onClick={() => { setCommunityId(skin.id); setModel(skin.model); setShowAccount(false); }}
+                        className={cx("rounded-xl border p-3 flex items-center gap-3 cursor-pointer transition-colors", active ? "border-accent bg-accent/10" : "border-line bg-panel-2 hover:border-line-strong")}
+                      >
+                        <SkinHead png={skin.image} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-[13px] truncate">{skin.name}</div>
+                          <div className="flex items-center gap-1.5 mt-1"><Badge>{skin.model === "slim" ? "Slim" : "Classic"}</Badge><Badge tone="accent">MOTION</Badge></div>
+                          <Button
+                            className="mt-2"
+                            size="sm"
+                            variant={added ? "outline" : "primary"}
+                            loading={addingCommunityId === skin.id}
+                            disabled={added || addingCommunityId !== null}
+                            onClick={(e) => { e.stopPropagation(); void addCommunity(skin); }}
+                          >
+                            {added ? "In your library" : "Add to library"}
+                          </Button>
                         </div>
                       </div>
                     );
