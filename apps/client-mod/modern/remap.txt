@@ -64,7 +64,7 @@ MC >= 26.2 | new Matrix4f\(RenderSystem\.getModelViewMatrix\(\)\) | RenderSystem
 # ---------------------------------------------------------------- 26.3 and later
 # Blaze3D's GPU API moved to Renderpearl (com.mojang.renderpearl.api.*).
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.buffers\. | com.mojang.renderpearl.api.buffers.
-MC >= 26.3 | \bcom/mojang/blaze3d/buffers/ | com/mojang/renderpearl/api/buffers/
+MC >= 26.3 | com/mojang/blaze3d/buffers/ | com/mojang/renderpearl/api/buffers/
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.textures\. | com.mojang.renderpearl.api.textures.
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(CommandEncoder|RenderPass|RenderPassDescriptor|GpuQuery|GpuQueryPool)\b | com.mojang.renderpearl.api.commands.$1
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(GpuDevice|GpuBackend|DeviceInfo|GpuSurface)\b | com.mojang.renderpearl.api.device.$1
