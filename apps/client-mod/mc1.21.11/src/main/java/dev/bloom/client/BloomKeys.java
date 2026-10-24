@@ -19,8 +19,9 @@ public final class BloomKeys {
     public static final KeyMapping TOGGLE_HUD = new KeyMapping("key.bloomclient.toggle_hud", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping FREE_LOOK = new KeyMapping("key.bloomclient.free_look", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, CATEGORY);
     public static final KeyMapping ZOOM = new KeyMapping("key.bloomclient.zoom", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY);
+    public static final KeyMapping ADD_WAYPOINT = new KeyMapping("key.bloomclient.add_waypoint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
 
-    public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD, FREE_LOOK, ZOOM);
+    public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD, FREE_LOOK, ZOOM, ADD_WAYPOINT);
 
     private BloomKeys() {
     }
@@ -34,6 +35,7 @@ public final class BloomKeys {
         if (k == TOGGLE_HUD) return "Show/hide MOTION HUD";
         if (k == FREE_LOOK) return "Free look (hold)";
         if (k == ZOOM) return "Zoom";
+        if (k == ADD_WAYPOINT) return "Add waypoint";
         return k.getName();
     }
 
@@ -45,6 +47,7 @@ public final class BloomKeys {
         if (k == NEXT_PROFILE) return "Cycles through your visual profiles.";
         if (k == TOGGLE_HUD) return "Hides or shows all MOTION HUD widgets.";
         if (k == FREE_LOOK) return "Look around while keeping your movement facing direction fixed. Hold the key; release to recenter.";
+        if (k == ADD_WAYPOINT) return "Marks where you stand with a waypoint. Manage them on the Waypoints page.";
         if (k == ZOOM) return "Zoom in like a spyglass. Hold the key (or toggle it in General → Zoom) and scroll to zoom further.";
         return "";
     }

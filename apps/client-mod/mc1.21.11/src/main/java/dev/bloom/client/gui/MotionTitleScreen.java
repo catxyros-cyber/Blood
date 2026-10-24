@@ -34,6 +34,10 @@ public final class MotionTitleScreen extends Screen {
             "bloomclient", "textures/gui/motion_title_bg.png");
     private static final Identifier BRAND_MARK = Identifier.fromNamespaceAndPath(
             "bloomclient", "textures/gui/sprites/logo.png");
+    private static final int BRAND_MARK_SIZE = 256;
+    private static final Identifier DOLLAR = Identifier.fromNamespaceAndPath(
+            "bloomclient", "textures/gui/sprites/dollar.png");
+    private static final int DOLLAR_SIZE = 64;
     private static final String[] MENU_ITEMS = {"Singleplayer", "Multiplayer", "Minecraft Settings", "MOTION Client", "Quit Game"};
 
     private boolean entered;
@@ -140,46 +144,33 @@ public final class MotionTitleScreen extends Screen {
         drawUserAvatar(g, x, y, walkIn, stride, now);
     }
 
-    /** Full-resolution charcoal and satin-curtain artwork; small stars drift over it. */
+    /** Full-resolution charcoal and satin-curtain artwork; small $ marks drift down over the curtain. */
     private void drawMotionBackdrop(GuiGraphics g, long time) {
         g.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, 0, 0, 0f, 0f, width, height,
                 BACKGROUND_WIDTH, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, 0xFFFFFFFF);
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 9; i++) {
             float phase = time * (0.00012f + (i % 3) * 0.000025f);
-            int x = Math.round(width * (0.79f + i * 0.027f + (float) Math.sin(phase + i) * 0.009f));
-            int y = Math.floorMod(i * 91 + (int) (time * (0.012f + (i % 3) * 0.004f)), Math.max(1, height + 42)) - 21;
-            int radius = 4 + i % 4;
-            drawStar(g, x, y, radius, i % 2 == 0 ? 0xA8E4E9E6 : 0x78D0D7D2);
+            int x = Math.round(width * (0.77f + (i % 5) * 0.045f + (float) Math.sin(phase + i) * 0.012f));
+            int y = Math.floorMod(i * 97 + (int) (time * (0.012f + (i % 3) * 0.004f)), Math.max(1, height + 42)) - 21;
+            int size = 9 + (i * 5) % 9;
+            int alpha = i % 2 == 0 ? 0xB0 : 0x70;
+            int tint = i % 3 == 0 ? 0x9CFFC4 : 0xE4E9E6;
+            drawDollar(g, x, y, size, (alpha << 24) | tint, phase * 40f + i);
         }
+    }
+
+    /** A small $ mark that slowly sways (drawn from the dollar sprite, tinted). */
+    private void drawDollar(GuiGraphics g, int cx, int cy, int size, int color, float sway) {
+        int s = Math.max(4, Math.round(size * (1f + 0.08f * (float) Math.sin(sway))));
+        g.blit(RenderPipelines.GUI_TEXTURED, DOLLAR, cx - s / 2, cy - s / 2, 0f, 0f, s, s, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, color);
     }
 
     private void drawBrandMark(GuiGraphics g, int cx, int cy, int size, int color) {
         int x = cx - size / 2;
         int y = cy - size / 2;
-        g.blit(RenderPipelines.GUI_TEXTURED, BRAND_MARK, x, y, 0f, 0f, size, size, 32, 32, 32, 32, color);
+        g.blit(RenderPipelines.GUI_TEXTURED, BRAND_MARK, x, y, 0f, 0f, size, size, BRAND_MARK_SIZE, BRAND_MARK_SIZE, BRAND_MARK_SIZE, BRAND_MARK_SIZE, color);
     }
 
-    private void drawStar(GuiGraphics g, int cx, int cy, int r, int color) {
-        float[][] pts = new float[8][2];
-        for (int i = 0; i < 8; i++) {
-            double a = -Math.PI / 2 + i * Math.PI / 4;
-            float rr = i % 2 == 0 ? r : r * .34f;
-            pts[i][0] = cx + (float) Math.cos(a) * rr;
-            pts[i][1] = cy + (float) Math.sin(a) * rr;
-        }
-        for (int i = 0; i < 8; i++) drawLine(g, pts[i][0], pts[i][1], pts[(i + 1) % 8][0], pts[(i + 1) % 8][1], color, 1);
-    }
-
-    private void drawLine(GuiGraphics g, float x1, float y1, float x2, float y2, int color, int thickness) {
-        float dx = x2 - x1, dy = y2 - y1;
-        int steps = Math.max(1, (int) Math.ceil(Math.max(Math.abs(dx), Math.abs(dy))));
-        int half = Math.max(0, thickness - 1) / 2;
-        for (int i = 0; i <= steps; i++) {
-            float t = i / (float) steps;
-            int x = Math.round(x1 + dx * t), y = Math.round(y1 + dy * t);
-            g.fill(x - half, y - half, x + half + 1, y + half + 1, color);
-        }
-    }
     private void centerText(GuiGraphics g, String text, int cx, int y, int color) {
         g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
     }

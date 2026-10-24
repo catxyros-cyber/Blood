@@ -275,6 +275,7 @@ public final class BloomClient {
                 hadLevel = true;
                 CapeManager.tick(mc);
                 dev.bloom.client.game.MaceVisuals.tick(mc);
+                dev.bloom.client.game.HitEffects.tick(mc);
                 dev.bloom.client.game.Auras.tick(mc);
             }
             if (mc.level != null && mc.gameRenderer != null) {
@@ -336,6 +337,7 @@ public final class BloomClient {
     private void handleKeys(Minecraft mc) {
         FreeLook.tick(mc);
         Zoom.tick(mc);
+        dev.bloom.client.game.Waypoints.tick(mc);
         while (BloomKeys.MENU.consumeClick()) {
             if (mc.screen == null) mc.setScreen(new BloomMenuScreen(null));
         }
@@ -363,6 +365,8 @@ public final class BloomClient {
     }
 
     public void renderHud(GuiGraphics g, DeltaTracker delta) {
+        // Waypoints, health indicators and your own name tag (respect F1, not the MOTION HUD toggle).
+        dev.bloom.client.render.WorldLabels.render(g, delta.getGameTimeDeltaPartialTick(false));
         if (hudHidden) return;
         hud.render(g, delta);
     }

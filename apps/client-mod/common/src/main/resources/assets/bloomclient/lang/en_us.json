@@ -8,5 +8,6 @@
   "key.bloomclient.next_profile": "Next visual profile",
   "key.bloomclient.toggle_hud": "Show/hide MOTION HUD",
   "key.bloomclient.free_look": "Free look (hold)",
-  "key.bloomclient.zoom": "Zoom"
+  "key.bloomclient.zoom": "Zoom",
+  "key.bloomclient.add_waypoint": "Add waypoint"
 }

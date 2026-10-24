@@ -16,6 +16,8 @@
     "GuiMixin",
     "LevelRendererMixin",
     "MouseHandlerMixin",
+    "ItemInHandRendererMixin",
+    "MultiPlayerGameModeMixin",
     "CameraFreeLookMixin",
     "MinecraftTitleScreenMixin",
     "ScreenEffectRendererMixin"
