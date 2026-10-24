@@ -55,6 +55,8 @@ jobs:
       - name: Build jars and run core tests
         working-directory: apps/client-mod
         run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Check optional hooks resolved
+        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/fabric/build/libs/bloomclient-fabric-*.jar | grep -v sources)
       - uses: actions/upload-artifact@v4
         with:
           name: bloom-client-jars
@@ -78,6 +80,8 @@ jobs:
       - name: Build the Minecraft 1.21.11 jar
         working-directory: apps/client-mod/mc1.21.11
         run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Check optional hooks resolved
+        run: python3 apps/client-mod/tools/check-hooks.py $(ls apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar | grep -v sources)
       - uses: actions/upload-artifact@v4
         with:
           name: bloom-client-jars-12111
