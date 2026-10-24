@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public abstract class MinecraftTitleScreenMixin {
     @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
     private Screen motion$replaceTitleScreen(Screen next) {
+        dev.bloom.client.Hooks.fired("titleScreen");
         return BloomClient.ready() && next instanceof TitleScreen ? new MotionTitleScreen() : next;
     }
 }

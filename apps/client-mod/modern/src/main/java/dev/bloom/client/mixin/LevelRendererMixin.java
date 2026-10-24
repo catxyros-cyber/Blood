@@ -27,6 +27,7 @@ public abstract class LevelRendererMixin {
     private void bloom$capture(GraphicsResourceAllocator allocator, boolean renderBlockOutline,
                                net.minecraft.client.renderer.state.level.CameraRenderState camera, GpuBufferSlice fogBuffer,
                                Vector4f fogColor, boolean renderSky, boolean extra, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("matrices");
         float partialTick = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
         WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, partialTick);
     }
@@ -35,6 +36,7 @@ public abstract class LevelRendererMixin {
     private void bloom$capture(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline,
                                net.minecraft.client.renderer.state.level.CameraRenderState camera, org.joml.Matrix4fc modelView,
                                GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("matrices");
         WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 //#elif MC >= 26
@@ -43,6 +45,7 @@ public abstract class LevelRendererMixin {
                                net.minecraft.client.renderer.state.level.CameraRenderState camera, org.joml.Matrix4fc modelView,
                                GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky,
                                net.minecraft.client.renderer.chunk.ChunkSectionsToRender sections, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("matrices");
         WorldMatrices.capture(camera.viewRotationMatrix, camera.projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 //#else
@@ -50,6 +53,7 @@ public abstract class LevelRendererMixin {
     private void bloom$capture(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera,
                                Matrix4f viewMatrix, Matrix4f projectionMatrix, Matrix4f cullProjectionMatrix, GpuBufferSlice fogBuffer,
                                Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("matrices");
         WorldMatrices.capture(viewMatrix, projectionMatrix, fogColor, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 //#endif
@@ -60,18 +64,22 @@ public abstract class LevelRendererMixin {
     @Inject(method = "lambda$addSkyPass$0(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/SkyRenderState;)V",
             at = @At("TAIL"))
     private void bloom$sky(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("sky");
 //#elif MC >= 26
     @Inject(method = "lambda$addSkyPass$0(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/SkyRenderState;Lnet/minecraft/client/renderer/SkyRenderer;)V",
             at = @At("TAIL"))
     private static void bloom$sky(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("sky");
 //#elif MC >= 1.21.11
     @Inject(method = "method_62215(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/SkyRenderState;Lnet/minecraft/client/renderer/SkyRenderer;)V",
             at = @At("TAIL"))
     private static void bloom$sky(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("sky");
 //#else
     @Inject(method = "method_62215(Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/SkyRenderState;)V",
             at = @At("TAIL"))
     private void bloom$sky(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("sky");
 //#endif
         if (!BloomClient.ready()) return;
         try {

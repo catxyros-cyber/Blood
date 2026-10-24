@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GuiMixin {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void bloom$customCrosshair(GuiGraphics graphics, DeltaTracker delta, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("crosshair");
         if (CrosshairRenderer.render(graphics)) ci.cancel();
     }
 }

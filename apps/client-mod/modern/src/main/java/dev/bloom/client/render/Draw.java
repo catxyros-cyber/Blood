@@ -185,9 +185,9 @@ public final class Draw {
             GpuBufferSlice transforms = transforms(modelView, new Vector4f(1f, 1f, 1f, 1f), new Vector3f(), new Matrix4f());
             RenderTarget target = mainTarget();
             GpuTextureView color = colorOutput(target);
-            GpuTextureView depth = depthTest && target.useDepth ? depthOutput(target) : null;
+            GpuTextureView depth = depthTest && hasDepth(target) ? depthOutput(target) : null;
             try (Quads quads = Quads.upload(mesh); RenderPass pass = openPass("MOTION " + pipeline, color, depth)) {
-                pass.setPipeline(pipeline);
+                setPipeline(pass, pipeline);
                 RenderSystem.bindDefaultUniforms(pass);
                 pass.setUniform("DynamicTransforms", transforms);
                 bind.accept(pass);
@@ -274,13 +274,38 @@ public final class Draw {
 //#endif
     }
 
-    /** Where world drawing goes this frame (Minecraft may redirect it, e.g. for the Fabulous transparency pass). */
+    /** Where world drawing goes this frame (before 26.3 Minecraft could redirect it, e.g. for Fabulous transparency). */
     static GpuTextureView colorOutput(RenderTarget target) {
+//#if MC >= 26.3
+        return target.getColorTextureView();
+//#else
         return RenderSystem.outputColorTextureOverride != null ? RenderSystem.outputColorTextureOverride : target.getColorTextureView();
+//#endif
     }
 
     static GpuTextureView depthOutput(RenderTarget target) {
+//#if MC >= 26.3
+        return target.getDepthTextureView();
+//#else
         return RenderSystem.outputDepthTextureOverride != null ? RenderSystem.outputDepthTextureOverride : target.getDepthTextureView();
+//#endif
+    }
+
+    static boolean hasDepth(RenderTarget target) {
+//#if MC >= 26.3
+        return target.hasDepth();
+//#else
+        return target.useDepth;
+//#endif
+    }
+
+    /** 26.3 draws with compiled pipelines (Minecraft compiles and caches them). */
+    static void setPipeline(RenderPass pass, RenderPipeline pipeline) {
+//#if MC >= 26.3
+        pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
+//#else
+        pass.setPipeline(pipeline);
+//#endif
     }
 
     /** Opens a render pass that draws into {@code color} (and tests against {@code depth}, if given), clearing nothing. */
@@ -344,7 +369,9 @@ public final class Draw {
 
     /** Binds a texture with linear filtering, clamped at the edges (skyboxes, effect sprites, post effects). */
     public static void bindLinearClamp(RenderPass pass, String name, GpuTextureView view) {
-//#if MC >= 1.21.11
+//#if MC >= 26.3
+        pass.setUniform(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+//#elif MC >= 1.21.11
         pass.bindTexture(name, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
 //#else
         // Before 1.21.11 filtering lived on the texture itself.

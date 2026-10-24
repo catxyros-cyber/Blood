@@ -138,6 +138,30 @@ def remaps = file('remap.txt').readLines('UTF-8').findAll { it.trim() && !it.tri
     [cond: parts[0].trim(), re: java.util.regex.Pattern.compile(parts[1].trim()), to: parts[2].trim()]
 }.findAll { evalCond(it.cond) }
 
+// 26.3 compiles shaders with shaderc for OpenGL and Vulkan: it wants the separate-shader-objects
+// extension, #include instead of #moj_import, and explicit locations on stage inputs/outputs.
+// MOTION's shaders declare their varyings in the same order in both stages, so numbering them in
+// order lines them up.
+def modernShaders = cmpVer(mc, '26.3') >= 0
+def modernizeShader = { String text ->
+    def out = new StringBuilder()
+    int inLoc = 0, outLoc = 0
+    text.eachLine { String line ->
+        if (line.trim().startsWith('#version')) {
+            out << line << '\n' << '#extension GL_ARB_separate_shader_objects : require' << '\n'
+            return
+        }
+        def t = line.replace('#moj_import', '#include')
+        def m = t =~ /^(\s*)(in|out)(\s+\w+\s+\w+\s*;.*)$/
+        if (m.matches()) {
+            int loc = m.group(2) == 'in' ? inLoc++ : outLoc++
+            t = "${m.group(1)}layout(location = ${loc}) ${m.group(2)}${m.group(3)}"
+        }
+        out << t << '\n'
+    }
+    out.toString()
+}
+
 def ppJava = layout.buildDirectory.dir('generated/pp-java')
 def ppSmoke = layout.buildDirectory.dir('generated/pp-smoke')
 def ppRes = layout.buildDirectory.dir('generated/pp-res')
@@ -171,6 +195,7 @@ def preprocessSources = tasks.register('preprocessSources') {
                     // comma left dangling before a closing bracket by a switched-off entry.
                     if (f.name.endsWith('.json')) text = text.replaceAll(/,(\s*[\]}])/, '$1')
                     if (f.name.endsWith('.java')) remaps.each { r -> text = r.re.matcher(text).replaceAll(r.to) }
+                    if (modernShaders && f.name ==~ /.*\.(vsh|fsh|glsl)$/) text = modernizeShader(text)
                     outFile.setText(text, 'UTF-8')
                 } else {
                     outFile.bytes = f.bytes
@@ -279,8 +304,8 @@ dependencies {
 tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
     jvmArgs.add('-Dfabric.client.gametest')
     jvmArgs.add('-Dfabric.client.gametest.disableNetworkSynchronizer=true')
-    // Log every injector that matched nothing (most MOTION hooks are optional, so they'd fail silently).
-    jvmArgs.add('-Dmixin.debug.countInjections=true')
+    // MOTION records which of its (optional, so silently skippable) hooks ran; the test lists the rest.
+    jvmArgs.add('-Dmotion.smoke=true')
     jvmArgs.add('-Dmotion.smoke.avatar=sahur')
     useXVFB = true
 }

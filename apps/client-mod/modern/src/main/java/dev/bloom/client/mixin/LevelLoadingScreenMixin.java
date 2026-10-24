@@ -19,6 +19,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
     private void bloom$background(GuiGraphics g, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("loadingScreen");
         if (!MenuBackground.onLoadingScreens()) return;
         try {
             MenuBackground.draw(g, 0, 0, this.width, this.height, 1f);

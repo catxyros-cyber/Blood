@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class AbstractClientPlayerMixin {
     @Inject(method = "getSkin", at = @At("RETURN"), cancellable = true)
     private void bloom$cape(CallbackInfoReturnable<Object> cir) {
+        dev.bloom.client.Hooks.fired("skin");
         Identifier cape = CapeManager.capeFor(((AbstractClientPlayer) (Object) this).getUUID());
         if (cape == null) return;
         Object skin = cir.getReturnValue();

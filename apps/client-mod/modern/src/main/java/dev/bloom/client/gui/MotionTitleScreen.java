@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.Mc;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.client.Minecraft;
@@ -21,7 +22,6 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.PlayerModelType;
 import net.minecraft.world.entity.player.PlayerSkin;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -269,7 +269,7 @@ public final class MotionTitleScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() != GLFW.GLFW_MOUSE_BUTTON_1) return super.mouseClicked(event, doubleClick);
+        if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return super.mouseClicked(event, doubleClick);
         if (!entered) {
             enterMenu();
             return true;
@@ -289,14 +289,14 @@ public final class MotionTitleScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (!entered && (event.key() == GLFW.GLFW_KEY_ENTER || event.key() == GLFW.GLFW_KEY_SPACE)) {
+        if (!entered && (event.key() == InputConstants.KEY_RETURN || event.key() == InputConstants.KEY_SPACE)) {
             enterMenu();
             return true;
         }
         if (entered) {
             int key = event.key();
-            if (key >= GLFW.GLFW_KEY_1 && key <= GLFW.GLFW_KEY_5) {
-                activateMenuItem(key - GLFW.GLFW_KEY_1);
+            if (key >= InputConstants.KEY_1 && key <= InputConstants.KEY_5) {
+                activateMenuItem(key - InputConstants.KEY_1);
                 return true;
             }
         }

@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.Mc;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -29,7 +30,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -638,7 +638,7 @@ public class BloomMenuScreen extends Screen implements Host {
             return true;
         }
         if (focused != null && focused.keyPressed(key, scan, mods)) return true;
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             if (focused != null) {
                 focus(null);
                 return true;
@@ -650,19 +650,19 @@ public class BloomMenuScreen extends Screen implements Host {
             onClose();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_TAB && focused == null && !overview) {
+        if (key == InputConstants.KEY_TAB && focused == null && !overview) {
             // Tab / Shift+Tab: next / previous section.
             int n = nav.size();
             switchTo((navIndex + (Minecraft.getInstance().hasShiftDown() ? n - 1 : 1)) % n);
             Ui.click();
             return true;
         }
-        if (Minecraft.getInstance().hasControlDown() && key == GLFW.GLFW_KEY_F) {
+        if (Minecraft.getInstance().hasControlDown() && key == InputConstants.KEY_F) {
             focus(search);
             search.selectAll();
             return true;
         }
-        if (focused == null && key >= GLFW.GLFW_KEY_A && key <= GLFW.GLFW_KEY_Z && !Minecraft.getInstance().hasControlDown()) {
+        if (focused == null && key >= InputConstants.KEY_A && key <= InputConstants.KEY_Z && !Minecraft.getInstance().hasControlDown()) {
             // Start typing anywhere to search.
             focus(search);
             return false;

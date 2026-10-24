@@ -18,6 +18,7 @@ public abstract class CameraFreeLookMixin {
     @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewYRot(F)F"))
 //#endif
     private float motion$freeLookYaw(Entity entity, float partialTick) {
+        dev.bloom.client.Hooks.fired("freeLook");
         return FreeLook.viewYaw(entity, partialTick);
     }
 
@@ -27,6 +28,7 @@ public abstract class CameraFreeLookMixin {
     @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewXRot(F)F"))
 //#endif
     private float motion$freeLookPitch(Entity entity, float partialTick) {
+        dev.bloom.client.Hooks.fired("freeLook");
         return FreeLook.viewPitch(entity, partialTick);
     }
 
@@ -34,6 +36,7 @@ public abstract class CameraFreeLookMixin {
     /** Zoom: 26.1 moved the world's field of view into the camera (the hand's is calculateHudFov). */
     @Inject(method = "calculateFov(F)F", at = @At("RETURN"), cancellable = true, require = 0)
     private void motion$zoom(float partialTick, org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Float> cir) {
+        dev.bloom.client.Hooks.fired("zoomFov");
         double m = dev.bloom.client.Zoom.fovMultiplier();
         if (m < 0.999) cir.setReturnValue((float) (cir.getReturnValue() * m));
     }

@@ -1,10 +1,10 @@
 package dev.bloom.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.core.settings.ChoiceSetting;
 import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
 import net.minecraft.client.gui.GuiGraphics;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -91,10 +91,10 @@ public class DropdownPopup extends Popup {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         switch (key) {
-            case GLFW.GLFW_KEY_ESCAPE -> close();
-            case GLFW.GLFW_KEY_DOWN -> keyIndex = Math.min(options.size() - 1, keyIndex + 1);
-            case GLFW.GLFW_KEY_UP -> keyIndex = Math.max(0, keyIndex - 1);
-            case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
+            case InputConstants.KEY_ESCAPE -> close();
+            case InputConstants.KEY_DOWN -> keyIndex = Math.min(options.size() - 1, keyIndex + 1);
+            case InputConstants.KEY_UP -> keyIndex = Math.max(0, keyIndex - 1);
+            case InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 if (keyIndex >= 0) onPick.accept(options.get(keyIndex).id());
                 close();
             }

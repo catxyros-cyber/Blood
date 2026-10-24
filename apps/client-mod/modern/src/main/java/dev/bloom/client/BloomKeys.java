@@ -3,7 +3,6 @@ package dev.bloom.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -11,15 +10,15 @@ import java.util.List;
 public final class BloomKeys {
     public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("bloomclient", "main"));
 
-    public static final KeyMapping MENU = new KeyMapping("key.bloomclient.menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, CATEGORY);
-    public static final KeyMapping VISUALS_MENU = new KeyMapping("key.bloomclient.visuals_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_CONTROL, CATEGORY);
-    public static final KeyMapping HUD_EDITOR = new KeyMapping("key.bloomclient.hud_editor", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
-    public static final KeyMapping TOGGLE_VISUALS = new KeyMapping("key.bloomclient.toggle_visuals", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
-    public static final KeyMapping NEXT_PROFILE = new KeyMapping("key.bloomclient.next_profile", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
-    public static final KeyMapping TOGGLE_HUD = new KeyMapping("key.bloomclient.toggle_hud", InputConstants.Type.KEYSYM, InputConstants.UNKNOWN.getValue(), CATEGORY);
-    public static final KeyMapping FREE_LOOK = new KeyMapping("key.bloomclient.free_look", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, CATEGORY);
-    public static final KeyMapping ZOOM = new KeyMapping("key.bloomclient.zoom", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY);
-    public static final KeyMapping ADD_WAYPOINT = new KeyMapping("key.bloomclient.add_waypoint", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
+    public static final KeyMapping MENU = new KeyMapping("key.bloomclient.menu", InputConstants.KEY_RSHIFT, CATEGORY);
+    public static final KeyMapping VISUALS_MENU = new KeyMapping("key.bloomclient.visuals_menu", InputConstants.KEY_RCONTROL, CATEGORY);
+    public static final KeyMapping HUD_EDITOR = new KeyMapping("key.bloomclient.hud_editor", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping TOGGLE_VISUALS = new KeyMapping("key.bloomclient.toggle_visuals", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping NEXT_PROFILE = new KeyMapping("key.bloomclient.next_profile", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping TOGGLE_HUD = new KeyMapping("key.bloomclient.toggle_hud", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping FREE_LOOK = new KeyMapping("key.bloomclient.free_look", InputConstants.KEY_LALT, CATEGORY);
+    public static final KeyMapping ZOOM = new KeyMapping("key.bloomclient.zoom", InputConstants.KEY_C, CATEGORY);
+    public static final KeyMapping ADD_WAYPOINT = new KeyMapping("key.bloomclient.add_waypoint", InputConstants.KEY_B, CATEGORY);
 
     public static final List<KeyMapping> ALL = List.of(MENU, VISUALS_MENU, HUD_EDITOR, TOGGLE_VISUALS, NEXT_PROFILE, TOGGLE_HUD, FREE_LOOK, ZOOM, ADD_WAYPOINT);
 

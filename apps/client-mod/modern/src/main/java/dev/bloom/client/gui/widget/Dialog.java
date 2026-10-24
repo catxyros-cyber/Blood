@@ -1,9 +1,9 @@
 package dev.bloom.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
 import net.minecraft.client.gui.GuiGraphics;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,11 +104,11 @@ public class Dialog extends Popup {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             close();
             return true;
         }
-        if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
             confirm();
             return true;
         }

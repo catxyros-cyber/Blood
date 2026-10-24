@@ -207,7 +207,7 @@ public final class PostEffects {
             try (MeshData mesh = b.buildOrThrow();
                  Draw.Quads quads = Draw.Quads.upload(mesh);
                  RenderPass pass = Draw.openPass("MOTION post", out, null)) {
-                pass.setPipeline(pipeline);
+                Draw.setPipeline(pass, pipeline);
                 pass.setUniform("DynamicTransforms", uniforms);
                 Draw.bindLinearClamp(pass, "InSampler", in);
                 if (second != null) Draw.bindLinearClamp(pass, "BloomSampler", second);

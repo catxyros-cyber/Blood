@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class CloudRendererMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void bloom$hideClouds(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("clouds");
         BloomClient bc = BloomClient.get();
         if (bc != null && bc.skyActive() && !BloomSettings.SKY_CLOUDS.on()) ci.cancel();
     }

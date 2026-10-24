@@ -23,6 +23,7 @@ public abstract class ScreenBackgroundMixin {
 
     @Inject(method = "renderPanorama", at = @At("HEAD"), cancellable = true)
     private void bloom$panorama(GuiGraphics g, float partialTick, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("screenBackground");
         if (!MenuBackground.active()) return;
         try {
             MenuBackground.draw(g, 0, 0, width, height, 1f);
@@ -33,12 +34,14 @@ public abstract class ScreenBackgroundMixin {
 
     @Inject(method = "renderBlurredBackground", at = @At("HEAD"), cancellable = true)
     private void bloom$blur(GuiGraphics g, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("screenBackground");
         // An opaque background hides the world anyway: skip the (costly) blur.
         if (MenuBackground.active() && (minecraft.level == null || MenuBackground.inWorldAlpha() >= 0.99f)) ci.cancel();
     }
 
     @Inject(method = "renderMenuBackground(Lnet/minecraft/client/gui/GuiGraphics;IIII)V", at = @At("HEAD"), cancellable = true)
     private void bloom$menuBackground(GuiGraphics g, int x, int y, int w, int h, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("screenBackground");
         if (!MenuBackground.active()) return;
         try {
             MenuBackground.draw(g, x, y, w, h, minecraft.level == null ? 1f : MenuBackground.inWorldAlpha());

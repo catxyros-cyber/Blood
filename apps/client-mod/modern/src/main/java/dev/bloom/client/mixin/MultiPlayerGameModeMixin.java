@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MultiPlayerGameModeMixin {
     @Inject(method = "attack(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/entity/Entity;)V", at = @At("HEAD"), require = 0)
     private void motion$hitEffects(Player player, Entity target, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("attack");
         if (!BloomClient.ready()) return;
         try {
             HitEffects.onAttack(Minecraft.getInstance(), target);

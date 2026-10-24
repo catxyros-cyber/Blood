@@ -1,5 +1,6 @@
 package dev.bloom.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.Mc;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -33,7 +34,6 @@ import dev.bloom.client.hud.HudRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -572,25 +572,25 @@ public class HudEditorScreen extends Screen implements Host {
             return true;
         }
         if (focused != null && focused.keyPressed(key, scan, mods)) return true;
-        if (key == GLFW.GLFW_KEY_ESCAPE) {
+        if (key == InputConstants.KEY_ESCAPE) {
             onClose();
             return true;
         }
-        if (Minecraft.getInstance().hasControlDown() && key == GLFW.GLFW_KEY_Z) {
+        if (Minecraft.getInstance().hasControlDown() && key == InputConstants.KEY_Z) {
             undoLast();
             return true;
         }
         if (selected != null) {
             int step = Minecraft.getInstance().hasShiftDown() ? 10 : 1;
-            int dx = key == GLFW.GLFW_KEY_LEFT ? -step : key == GLFW.GLFW_KEY_RIGHT ? step : 0;
-            int dy = key == GLFW.GLFW_KEY_UP ? -step : key == GLFW.GLFW_KEY_DOWN ? step : 0;
+            int dx = key == InputConstants.KEY_LEFT ? -step : key == InputConstants.KEY_RIGHT ? step : 0;
+            int dy = key == InputConstants.KEY_UP ? -step : key == InputConstants.KEY_DOWN ? step : 0;
             if (dx != 0 || dy != 0) {
                 pushUndo();
                 selected.setOffset(selected.x + dx, selected.y + dy);
                 layouts.changed();
                 return true;
             }
-            if (key == GLFW.GLFW_KEY_DELETE || key == GLFW.GLFW_KEY_BACKSPACE) {
+            if (key == InputConstants.KEY_DELETE || key == InputConstants.KEY_BACKSPACE) {
                 pushUndo();
                 selected.visible = false;
                 layouts.changed();

@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class AvatarRendererMixin {
     @Inject(method = "extractCapeState", at = @At("TAIL"))
     private void bloom$smoothCape(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("cape");
         try {
             CapeMotion.apply(state);
         } catch (RuntimeException ignored) {
@@ -24,6 +25,7 @@ public abstract class AvatarRendererMixin {
 
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
     private void bloom$capeOnState(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("avatarState");
         SkinStatePatch.apply(entity.getUUID(), state);
         dev.bloom.client.game.AvatarStatePatch.apply(entity, state);
     }

@@ -1,11 +1,11 @@
 package dev.bloom.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.renderer.RenderPipelines;
 import dev.bloom.client.core.settings.ColorSetting;
 import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
 import net.minecraft.client.gui.GuiGraphics;
-import org.lwjgl.glfw.GLFW;
 
 /**
  * HSV colour picker: saturation/value square, hue bar, hex input, a few swatches and
@@ -183,7 +183,7 @@ public class ColorPickerPopup extends Popup {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
-        if (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
+        if (key == InputConstants.KEY_ESCAPE || key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER) {
             close();
             return true;
         }

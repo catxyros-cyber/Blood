@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class PlayerDisplayNameMixin {
     @Inject(method = "getDisplayName", at = @At("RETURN"), cancellable = true)
     private void bloom$tag(CallbackInfoReturnable<Component> cir) {
+        dev.bloom.client.Hooks.fired("displayName");
         Player self = (Player) (Object) this;
         if (!self.level().isClientSide()) return;
         cir.setReturnValue(CapeManager.tagged(self.getUUID(), cir.getReturnValue()));

@@ -18,12 +18,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class ClientLevelDataMixin {
     @Inject(method = "getOverworldClockTime", at = @At("RETURN"), cancellable = true)
     private void bloom$visualTime(CallbackInfoReturnable<Long> cir) {
+        dev.bloom.client.Hooks.fired("timeOfDay");
         if (!((Object) this instanceof ClientLevel)) return;
 //#else
 @Mixin(ClientLevel.ClientLevelData.class)
 public abstract class ClientLevelDataMixin {
     @Inject(method = "getDayTime", at = @At("RETURN"), cancellable = true)
     private void bloom$visualTime(CallbackInfoReturnable<Long> cir) {
+        dev.bloom.client.Hooks.fired("timeOfDay");
 //#endif
         BloomClient bc = BloomClient.get();
         if (bc == null || !bc.skyActive() || !BloomSettings.TIME_LOCK.on()) return;

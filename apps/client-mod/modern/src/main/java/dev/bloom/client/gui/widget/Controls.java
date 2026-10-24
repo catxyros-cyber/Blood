@@ -1,5 +1,6 @@
 package dev.bloom.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.core.settings.BoolSetting;
 import dev.bloom.client.core.settings.ChoiceSetting;
 import dev.bloom.client.core.settings.ColorSetting;
@@ -10,7 +11,6 @@ import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.Locale;
@@ -137,11 +137,11 @@ public final class Controls {
         public boolean keyPressed(int key, int scan, int mods) {
             if (!host.isFocused(this) || !enabled) return false;
             float step = setting.step() * (net.minecraft.client.Minecraft.getInstance().hasShiftDown() ? 10 : 1);
-            if (key == GLFW.GLFW_KEY_LEFT || key == GLFW.GLFW_KEY_DOWN) {
+            if (key == InputConstants.KEY_LEFT || key == InputConstants.KEY_DOWN) {
                 setting.set(setting.value() - step);
                 return true;
             }
-            if (key == GLFW.GLFW_KEY_RIGHT || key == GLFW.GLFW_KEY_UP) {
+            if (key == InputConstants.KEY_RIGHT || key == InputConstants.KEY_UP) {
                 setting.set(setting.value() + step);
                 return true;
             }

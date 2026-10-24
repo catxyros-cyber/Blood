@@ -13,7 +13,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -141,10 +140,10 @@ public class KeybindsPage extends GenericPage {
         @Override
         public boolean keyPressed(int k, int scan, int mods) {
             if (!listening || !screen.isFocused(this)) return false;
-            if (k == GLFW.GLFW_KEY_ESCAPE) {
+            if (k == InputConstants.KEY_ESCAPE) {
                 listening = false;
                 screen.focus(null);
-            } else if (k == GLFW.GLFW_KEY_BACKSPACE || k == GLFW.GLFW_KEY_DELETE) {
+            } else if (k == InputConstants.KEY_BACKSPACE || k == InputConstants.KEY_DELETE) {
                 apply(InputConstants.UNKNOWN);
             } else {
                 apply(k != -1 ? InputConstants.Type.KEYSYM.getOrCreate(k) : InputConstants.Type.SCANCODE.getOrCreate(scan));

@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 public abstract class MinecraftReloadMixin {
     @Inject(method = "reloadResourcePacks()Ljava/util/concurrent/CompletableFuture;", at = @At("RETURN"))
     private void bloom$reloaded(CallbackInfoReturnable<CompletableFuture<Void>> cir) {
+        dev.bloom.client.Hooks.fired("reload");
         CompletableFuture<Void> done = cir.getReturnValue();
         if (done == null) return;
         Minecraft mc = (Minecraft) (Object) this;

@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class WeatherEffectRendererMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void bloom$hideVanillaWeather(CallbackInfo ci) {
+        dev.bloom.client.Hooks.fired("weather");
         BloomClient bc = BloomClient.get();
         if (bc != null && BloomSettings.ENABLED.on() && BloomSettings.RAIN_HIDE_VANILLA.on() && !bc.worldEffectsPaused()) ci.cancel();
     }

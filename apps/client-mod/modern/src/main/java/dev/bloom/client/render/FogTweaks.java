@@ -92,6 +92,7 @@ public final class FogTweaks {
                 data.renderDistanceEnd = end;
             }
         }
+        if (color == null) return;
         float[] rgb = {color.x(), color.y(), color.z()};
         if (tintFogColor(camera, rgb)) color.set(rgb[0], rgb[1], rgb[2], color.w());
     }

@@ -15,6 +15,7 @@ public abstract class LoadingOverlayMixin {
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Ljava/util/function/IntSupplier;getAsInt()I"))
 //#endif
     private int bloom$backgroundColor(int original) {
+        dev.bloom.client.Hooks.fired("loadingOverlay");
         try {
             return MenuBackground.loadingColor(original);
         } catch (RuntimeException e) {

@@ -74,3 +74,5 @@ MC >= 26.3 | \bcom\.mojang\.blaze3d\.shaders\.(UniformType|ShaderType|ShaderSour
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.(PrimitiveTopology|IndexType)\b | com.mojang.renderpearl.api.pipeline.$1
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.GpuFormat\b | com.mojang.renderpearl.api.GpuFormat
 MC >= 26.3 | \bcom\.mojang\.blaze3d\.vertex\.(VertexFormat|VertexFormatElement)\b | com.mojang.renderpearl.api.vertex.$1
+# Key events: the second code is now SDL's keycode (GLFW's scancode).
+MC >= 26.3 | \bevent\.scancode\(\) | event.keycode()

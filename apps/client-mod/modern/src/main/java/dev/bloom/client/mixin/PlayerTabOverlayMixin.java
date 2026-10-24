@@ -17,6 +17,7 @@ import java.util.UUID;
 public abstract class PlayerTabOverlayMixin {
     @Inject(method = "getNameForDisplay", at = @At("RETURN"), cancellable = true)
     private void bloom$tag(PlayerInfo info, CallbackInfoReturnable<Component> cir) {
+        dev.bloom.client.Hooks.fired("tabName");
         UUID id = SkinCompat.profileId(info.getProfile());
         if (id != null) cir.setReturnValue(CapeManager.tagged(id, cir.getReturnValue()));
     }

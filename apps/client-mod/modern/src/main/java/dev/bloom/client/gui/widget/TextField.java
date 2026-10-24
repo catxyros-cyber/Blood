@@ -1,11 +1,11 @@
 package dev.bloom.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.gui.Theme;
 import dev.bloom.client.gui.Ui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -114,7 +114,7 @@ public class TextField extends Element {
         if (!host.isFocused(this)) return false;
         boolean ctrl = net.minecraft.client.Minecraft.getInstance().hasControlDown();
         switch (key) {
-            case GLFW.GLFW_KEY_BACKSPACE -> {
+            case InputConstants.KEY_BACKSPACE -> {
                 if (allSelected) {
                     change("");
                 } else if (cursor > 0) {
@@ -125,27 +125,27 @@ public class TextField extends Element {
                 }
                 return true;
             }
-            case GLFW.GLFW_KEY_DELETE -> {
+            case InputConstants.KEY_DELETE -> {
                 if (allSelected) change("");
                 else if (cursor < value.length()) changeKeepCursor(value.substring(0, cursor) + value.substring(cursor + 1));
                 return true;
             }
-            case GLFW.GLFW_KEY_LEFT -> {
+            case InputConstants.KEY_LEFT -> {
                 allSelected = false;
                 cursor = ctrl ? wordStart(cursor) : Math.max(0, cursor - 1);
                 return true;
             }
-            case GLFW.GLFW_KEY_RIGHT -> {
+            case InputConstants.KEY_RIGHT -> {
                 allSelected = false;
                 cursor = Math.min(value.length(), cursor + 1);
                 return true;
             }
-            case GLFW.GLFW_KEY_HOME -> {
+            case InputConstants.KEY_HOME -> {
                 allSelected = false;
                 cursor = 0;
                 return true;
             }
-            case GLFW.GLFW_KEY_END -> {
+            case InputConstants.KEY_END -> {
                 allSelected = false;
                 cursor = value.length();
                 return true;
@@ -153,20 +153,20 @@ public class TextField extends Element {
             default -> {
             }
         }
-        if (ctrl && key == GLFW.GLFW_KEY_A) {
+        if (ctrl && key == InputConstants.KEY_A) {
             selectAll();
             return true;
         }
-        if (ctrl && key == GLFW.GLFW_KEY_C) {
+        if (ctrl && key == InputConstants.KEY_C) {
             Minecraft.getInstance().keyboardHandler.setClipboard(value);
             return true;
         }
-        if (ctrl && key == GLFW.GLFW_KEY_V) {
+        if (ctrl && key == InputConstants.KEY_V) {
             insert(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
-        return key != GLFW.GLFW_KEY_ESCAPE && key != GLFW.GLFW_KEY_ENTER && key != GLFW.GLFW_KEY_KP_ENTER
-                && key != GLFW.GLFW_KEY_TAB && key != GLFW.GLFW_KEY_RIGHT_SHIFT;
+        return key != InputConstants.KEY_ESCAPE && key != InputConstants.KEY_RETURN && key != InputConstants.KEY_NUMPADENTER
+                && key != InputConstants.KEY_TAB && key != InputConstants.KEY_RSHIFT;
     }
 
     @Override

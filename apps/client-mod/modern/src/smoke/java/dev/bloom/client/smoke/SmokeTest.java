@@ -59,10 +59,37 @@ public class SmokeTest implements FabricClientGameTest {
             context.setScreen(() -> null);
             context.waitTicks(10);
 
+            // Exercise the hooks that only run on input: hit a pig in front of the player
+            // (attack, swing, mouse button), zoom with the scroll wheel, the tab list, the pause
+            // menu's background, and a resource reload.
+            world.getServer().runCommand("execute as @p at @p anchored eyes run summon minecraft:pig ^ ^-0.6 ^2 {NoAI:1b,NoGravity:1b}");
+            context.waitTicks(20);
+            context.getInput().pressMouse(0);
+            context.waitTicks(10);
+            context.takeScreenshot("07_hit");
+            context.getInput().holdKey(dev.bloom.client.BloomKeys.ZOOM);
+            context.waitTicks(5);
+            context.getInput().scroll(1.0);
+            context.waitTicks(10);
+            context.takeScreenshot("08_zoom");
+            context.getInput().releaseKey(dev.bloom.client.BloomKeys.ZOOM);
+            context.getInput().holdKey(o -> o.keyPlayerList);
+            context.waitTicks(10);
+            context.takeScreenshot("09_tab");
+            context.getInput().releaseKey(o -> o.keyPlayerList);
+            context.setScreen(() -> new net.minecraft.client.gui.screens.PauseScreen(true));
+            context.waitTicks(10);
+            context.takeScreenshot("10_pause");
+            context.setScreen(() -> null);
+            context.runOnClient(mc -> mc.reloadResourcePacks());
+            context.waitTicks(200);
+
             // Applies every mixin to its target now (most targets are already loaded).
             MixinEnvironment.getCurrentEnvironment().audit();
             log("mixin audit done");
             log("render errors: " + BloomClient.renderErrorSummary());
+            log("hooks fired: " + dev.bloom.client.Hooks.firedSet());
+            log("hooks NOT fired: " + dev.bloom.client.Hooks.notFired());
         }
         log("done");
     }
