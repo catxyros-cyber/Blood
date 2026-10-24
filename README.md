@@ -41,6 +41,9 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
 - **Premium (optional).**
   - Stripe Checkout runs on the server. Premium is unlocked **only** by verified webhooks, never by the client saying it paid.
   - Adds cloud sync, the Competitive and Extreme FPS presets, advanced analytics (heap, GC pauses, stutter) and any accent colour. Launching, mods, themes and MOTION Client are free.
+- **Crash Doctor.** When Minecraft crashes, MOTION reads the game's output and explains the cause in plain words. It recognises a missing or incompatible mod, a mod built for another Minecraft version, a mixin failure, running out of memory, the wrong Java version, damaged files, the GPU driver, the shader pack, and the mods the crash report suspects. Where it can, it offers a one-click fix: more RAM, turn off the culprit, get the missing mod, repair, use MOTION's Java, or open the shader packs.
+- **Worlds & servers.** Each installation lists your real worlds (name, icon, game mode, last played) and the servers from Minecraft's multiplayer list. **Play** opens a world and **Join** connects to a server straight from the launcher (Quick Play on 1.20+). The Home screen shows the servers and worlds you opened recently under **Jump back in**.
+- **Command palette.** Press **Ctrl+K** anywhere to play any installation, rejoin a server or world, jump to any page, repair, or check for updates.
 - **Automatic updates.** New versions download in the background and install by themselves when nobody is playing (15-second countdown with "Later"). Releases are one command: `npm run release -- x.y.z "notes"` then `git push --follow-tags`. See [docs/RELEASE.md](docs/RELEASE.md).
 
 - **MOTION Mods page.** Every built-in module in one place, per installation:
@@ -59,6 +62,7 @@ crosshair, a Right Shift settings menu, a Right Ctrl visuals menu with real shad
   - Day/night crossfade.
 - **Decorative weather.** Rain, snow, petals (crimson by default), leaves, fireflies and dust, all moved by wind. Includes presets, distance culling and an adaptive particle budget. Effects are client-side visuals only.
 - **HUD editor.** Thirteen widgets: FPS, frame time, memory, coordinates (with facing, dimension, biome), direction, keystrokes, CPS, armor (numbers, % or bars), potion effects (compact/expanded, hide by type or one by one), clock & session, held item, sprint & sneak, and an info panel. Drag them into place, snap them to guides, scale them and save layouts. A failing widget turns itself off without affecting the others.
+- **Zoom.** Hold **C** to zoom (4× by default). Scroll while zoomed to zoom further. Smooth easing, an optional cinematic camera, and toggle mode are under General → Zoom.
 - **Custom crosshair.** Cross, cross + dot, T, dot or square; size, gap, thickness, colour, opacity and outline.
 - **Profiles.** Eight built-in looks. You can also make your own, import and export them as files or `BLOOM1:` share codes, and switch profiles automatically by biome.
 - **Accessibility and performance.** Reduced motion and a performance mode. The low-FPS advisor *suggests* changes but never makes them.
