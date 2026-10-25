@@ -97,38 +97,54 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
             pose.mulPose(Axis.ZP.rotationDegrees(side * (droop + flap)));
             final int s = side;
             final float w = length / 16f, h = height / 16f;
-            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(tex), (p, vc) -> wing(p, vc, s, w, h, light, overlay));
+            // The wave runs from shoulder to tip: the outer feathers trail the stroke.
+            final float phase = m.phase, wave = lerp(0.012f, 0.06f, m.open);
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(tex), (p, vc) -> wing(p, vc, s, w, h, light, overlay, phase, wave));
             pose.popPose();
         }
         pose.popPose();
     }
 
-    /** Smooth, tapered silhouette with a gently raised leading edge. */
-    private static void wing(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
-        quad(p, vc, side, w, h, light, overlay);
-        featherRibs(p, vc, side, w, h, light, overlay);
+    /**
+     * Smooth, tapered silhouette with a gently raised leading edge, plus a shorter covert layer
+     * over the shoulder half (the same texture, scaled), which gives the wing some thickness.
+     */
+    private static void wing(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay, float phase, float wave) {
+        surface(p, vc, side, w, h, light, overlay, phase, wave, 1f, 0f, 0xFFFFFFFF);
+        surface(p, vc, side, w * 0.58f, h * 0.74f, light, overlay, phase, wave * 0.6f, 0.58f, 0.012f, 0xF2EEF4F0);
+        featherRibs(p, vc, side, w, h, light, overlay, phase, wave);
     }
 
-    private static void quad(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
+    /** Span-wise bend: the tip lags the stroke and curls a little, like real primaries. */
+    private static float bend(float t, float phase, float wave) {
+        return (float) Math.sin(phase - t * 1.6f) * wave * t * t;
+    }
+
+    private static void surface(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay,
+                                float phase, float wave, float uMax, float lift, int tint) {
         final int segments = 24;
         for (int i = 0; i < segments; i++) {
             float t0 = i / (float) segments;
             float t1 = (i + 1) / (float) segments;
             float x0 = side * w * t0;
             float x1 = side * w * t1;
-            float z0 = depth(t0);
-            float z1 = depth(t1);
+            float z0 = depth(t0) + bend(t0, phase, wave) + lift;
+            float z1 = depth(t1) + bend(t1, phase, wave) + lift;
             float top0 = topEdge(t0, h), top1 = topEdge(t1, h);
             float bottom0 = bottomEdge(t0, h), bottom1 = bottomEdge(t1, h);
-            vertex(p, vc, x0, bottom0, z0, t0, 1f, light, overlay);
-            vertex(p, vc, x0, top0, z0, t0, 0f, light, overlay);
-            vertex(p, vc, x1, top1, z1, t1, 0f, light, overlay);
-            vertex(p, vc, x1, bottom1, z1, t1, 1f, light, overlay);
+            // Normal of this strip (it curves back along the span), so light falls across the wing.
+            float dx = x1 - x0, dz = z1 - z0;
+            float nl = (float) Math.sqrt(dx * dx + dz * dz);
+            float nx = nl > 0 ? -dz / nl * side : 0f, nz = nl > 0 ? Math.abs(dx) / nl : 1f;
+            vertex(p, vc, x0, bottom0, z0, t0 * uMax, 1f, light, overlay, tint, nx, nz);
+            vertex(p, vc, x0, top0, z0, t0 * uMax, 0f, light, overlay, tint, nx, nz);
+            vertex(p, vc, x1, top1, z1, t1 * uMax, 0f, light, overlay, tint, nx, nz);
+            vertex(p, vc, x1, bottom1, z1, t1 * uMax, 1f, light, overlay, tint, nx, nz);
         }
     }
 
     /** Fine, translucent veins fan from the hinge toward the feather tips. */
-    private static void featherRibs(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay) {
+    private static void featherRibs(PoseStack.Pose p, VertexConsumer vc, int side, float w, float h, int light, int overlay, float phase, float wave) {
         final float thickness = 0.0065f;
         for (int i = 1; i <= 6; i++) {
             float t = i / 7f;
@@ -141,8 +157,8 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
             float length = Math.max(0.001f, (float) Math.sqrt(dx * dx + dy * dy));
             float ox = -dy / length * thickness;
             float oy = dx / length * thickness;
-            float z0 = depth(0.10f) + 0.004f;
-            float z1 = depth(t) + 0.004f;
+            float z0 = depth(0.10f) + bend(0.10f, phase, wave) + 0.004f;
+            float z1 = depth(t) + bend(t, phase, wave) + 0.004f;
             int tint = 0x70D8F3E2;
             vertex(p, vc, x0 - ox, y0 - oy, z0, 0.10f, 0.42f, light, overlay, tint);
             vertex(p, vc, x0 + ox, y0 + oy, z0, 0.10f, 0.48f, light, overlay, tint);
@@ -182,8 +198,13 @@ public final class WingsLayer extends RenderLayer<AvatarRenderState, PlayerModel
 
     private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
                                float u, float v, int light, int overlay, int tint) {
+        vertex(p, vc, x, y, z, u, v, light, overlay, tint, 0f, 1f);
+    }
+
+    private static void vertex(PoseStack.Pose p, VertexConsumer vc, float x, float y, float z,
+                               float u, float v, int light, int overlay, int tint, float nx, float nz) {
         vc.addVertex(p, x, y, z).setColor(tint).setUv(u, v).setOverlay(overlay)
-                .setLight(light).setNormal(p, 0f, 0f, 1f);
+                .setLight(light).setNormal(p, nx, 0f, nz);
     }
 
     private static float lerp(float a, float b, float t) {

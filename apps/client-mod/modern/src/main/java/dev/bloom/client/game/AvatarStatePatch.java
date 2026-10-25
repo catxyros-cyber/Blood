@@ -15,8 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AvatarStatePatch {
     /** Render-state entity id → avatar model id, for this frame's players. */
     private static final Map<Integer, String> ACTIVE = new ConcurrentHashMap<>();
-    /** Test hook (CI smoke test): show this avatar on the local player. */
-    private static final String FORCED = System.getProperty("motion.smoke.avatar");
 
     private AvatarStatePatch() {
     }
@@ -25,7 +23,9 @@ public final class AvatarStatePatch {
         String model = null;
         try {
             if (!entity.isInvisible() && !entity.isSpectator() && !state.isSpectator) model = CapeManager.avatarFor(entity.getUUID());
-            if (model == null && FORCED != null && entity == net.minecraft.client.Minecraft.getInstance().player) model = FORCED;
+            // Test hook (CI smoke test): show this avatar on the local player; the test can clear it.
+            String forced = System.getProperty("motion.smoke.avatar");
+            if (model == null && forced != null && !forced.isEmpty() && entity == net.minecraft.client.Minecraft.getInstance().player) model = forced;
         } catch (RuntimeException ignored) {
             // Never break player rendering over a cosmetic.
         }

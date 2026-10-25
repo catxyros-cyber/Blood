@@ -57,6 +57,13 @@ public class SmokeTest implements FabricClientGameTest {
             context.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
             context.waitTicks(20);
             context.takeScreenshot("05_back");
+            // Wings on the plain player model: drop the forced 3D avatar.
+            System.setProperty("motion.smoke.avatar", "");
+            context.waitTicks(30);
+            context.takeScreenshot("05b_wings_back");
+            context.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+            context.waitTicks(20);
+            context.takeScreenshot("05c_wings_front");
             context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
             context.setScreen(() -> new BloomMenuScreen(null));
