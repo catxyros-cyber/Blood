@@ -148,7 +148,7 @@ public final class MotionTitleScreen extends Screen {
         float targetX = width * 0.79f;
         float x = entering ? width + 100f + (targetX - width - 100f) * t : targetX;
         float stride = entering ? (1f - walkIn) * (float) Math.sin(now * 0.016f) : (float) Math.sin(now * 0.0015f) * 0.025f;
-        float y = height * 0.22f + (entering ? (1f - t) * 36f : 0f);
+        float y = height * 0.30f + (entering ? (1f - t) * 36f : 0f);
         drawUserAvatar(g, x, y, walkIn, stride, now);
     }
 
@@ -231,7 +231,7 @@ public final class MotionTitleScreen extends Screen {
         state.ageInTicks = now / 50f;
         avatarModel.setupAnim(state);
 
-        int viewHeight = Math.round(Math.min(height * 0.76f, 650f));
+        int viewHeight = Math.round(Math.min(height * 0.6f, 520f));
         int viewWidth = Math.round(viewHeight * 0.78f);
         int x0 = Math.round(centerX - viewWidth / 2f);
         int y0 = Math.round(Math.max(10f, top - height * 0.07f));
@@ -247,10 +247,18 @@ public final class MotionTitleScreen extends Screen {
 //#endif
 
         String name = minecraft.getUser().getName();
-        int nameY = Math.max(12, y0 - 14);
-        int nameX = Math.round(centerX - Ui.width(name) / 2f);
-        Ui.text(g, name, nameX, nameY, 0xFFE8EAE9);
-        g.fill(nameX, nameY + 10, nameX + Ui.width(name), nameY + 11, 0xAAE8EAE9);
+        // A soft shadow under the feet, then a name tag like the one players see in game.
+        int shadowW = Math.round(viewHeight * 0.34f);
+        int feetY = y1 - Math.round(viewHeight * 0.02f);
+        for (int i = 0; i < 4; i++) {
+            int rw = Math.round(shadowW * (1f - i * 0.2f)), rh = 2 + (3 - i);
+            g.fill(Math.round(centerX - rw / 2f), feetY - rh / 2, Math.round(centerX + rw / 2f), feetY + rh / 2, 0x22000000);
+        }
+        int nameW = Ui.width(name);
+        int nameY = Math.max(10, y0 - 16);
+        int nameX = Math.round(centerX - nameW / 2f);
+        Ui.panel(g, nameX - 5, nameY - 3, nameW + 10, 15, 0x66000000);
+        Ui.text(g, name, nameX, nameY, 0xFFF2F4F3);
     }
     private static float easeOutCubic(float value) {
         float inverse = 1f - value;

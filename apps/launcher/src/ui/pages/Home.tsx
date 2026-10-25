@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { BUILT_IN_PROFILES } from "../../core/bloomclient/catalog";
 import type { SettingsView } from "../../core/bloomclient/settingsFile";
 import { readSettings as readBloomSettings, status as bloomStatus, type ClientStatus } from "../../services/bloomClient";
@@ -12,7 +12,7 @@ import { formatPlaytime, isRunning, play, stopGame } from "../../services/game";
 import { selectedInstance } from "../../services/instances";
 import { patchNoteBody, patchNotes, type PatchNote } from "../../services/news";
 import { useStore } from "../../services/store";
-import { Badge, Button, Card, cx, formatBytes, gb, IconButton, Menu, Modal, ProgressBar, SectionTitle, Skeleton, Spinner, timeAgo } from "../components";
+import { Badge, Button, Card, cx, formatBytes, gb, Menu, Modal, ProgressBar, SectionTitle, Skeleton, Spinner, timeAgo } from "../components";
 import { Icon } from "../icons";
 import { InstanceIcon, loaderLabel, NewInstanceModal } from "../instanceParts";
 import { Markdown } from "../markdown";
@@ -24,6 +24,9 @@ import { TeamCard } from "../teamCard";
 import { installSummary, type InstallSummary } from "../../services/dashboard";
 import { installUpdate, updateState } from "../../services/updater";
 import { activeLayout, HUD_WIDGETS, widgetVisible } from "../../core/bloomclient/modules";
+import { secureSkinUrl } from "../../core/auth/microsoft";
+import { loadSkins, skinState } from "../../services/skins";
+import { SkinViewer, useSkinModel } from "../skinViewer";
 
 /** `quiet` renders a neutral button, for lists where many installations each have one. */
 export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instance; size?: "lg" | "md"; quiet?: boolean }) {
@@ -108,24 +111,11 @@ export function LiveStats({ instanceId }: { instanceId: string }) {
 
 function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
   const instances = useStore(app, (s) => s.instances);
-  const settings = useStore(app, (s) => s.settings);
-  const [modCount, setModCount] = useState<number | null>(null);
   const [client, setClient] = useState<ClientStatus | null>(null);
-  const [summary, setSummary] = useState<InstallSummary | null>(null);
-  const system = useStore(app, (s) => s.system);
   useEffect(() => {
-    setModCount(null);
     setClient(null);
-    setSummary(null);
-    installSummary(inst).then(setSummary).catch(() => setSummary(null));
-    if (inst.loader === "vanilla") setModCount(0);
-    else
-      listContent(inst, "mods")
-        .then((m) => setModCount(m.filter((x) => x.enabled).length))
-        .catch(() => setModCount(null));
     bloomStatus(inst).then(setClient).catch(() => setClient(null));
   }, [inst]);
-  const memory = inst.memory ?? settings.memory;
   const played = [inst.lastPlayedAt ? `Played ${timeAgo(inst.lastPlayedAt)}` : "Not played yet", inst.totalPlayMs ? formatPlaytime(inst.totalPlayMs) : null]
     .filter(Boolean)
     .join(" · ");
@@ -135,7 +125,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
       <div className="flex-1 min-h-10" />
       <div className="flex items-end justify-between gap-10">
         <div className="min-w-0 max-w-[680px]">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="rise-in flex flex-wrap items-center gap-2 mb-3">
             <Menu
               align="left"
               trigger={
@@ -163,6 +153,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
               </span>
             )}
           </div>
+          <div className="rise-in" style={{ "--d": "60ms" } as CSSProperties}>
           <Menu
             align="left"
             trigger={
@@ -182,7 +173,8 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             ]}
           />
           <div className="text-[14px] text-fg/70 mt-1.5">{played}</div>
-          <div className="flex flex-wrap items-center gap-2 mt-6">
+          </div>
+          <div className="rise-in flex flex-wrap items-center gap-2 mt-6" style={{ "--d": "120ms" } as CSSProperties}>
             <PlayButton inst={inst} />
             <HeroAction icon={<Icon.Hud size={16} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} />
             <HeroAction icon={<Icon.Puzzle size={16} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
@@ -191,30 +183,80 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
           <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
         </div>
-        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[272px] shrink-0 hidden min-[1200px]:block">
-          <div className="flex items-center justify-between gap-3 mb-3.5 whitespace-nowrap">
-            <div className="text-[13px] font-semibold">This installation</div>
-            <span className={cx("text-[11px] font-semibold inline-flex items-center gap-1", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
-              <span className={cx("h-1.5 w-1.5 rounded-full", summary?.filesReady ? "bg-accent" : "bg-faint")} />
-              {summary ? (summary.filesReady ? "Ready" : "Not downloaded") : "…"}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[13px]">
-            <QuickStat label="Mods" value={inst.loader === "vanilla" ? "Vanilla" : modCount === null ? "…" : `${modCount} enabled`} />
-            <QuickStat
-              label="Allocated RAM"
-              value={memory ? `${gb(memory.maxMb)}${system ? ` of ${gb(Math.round(system.totalMemory / 1_048_576))}` : ""}` : "Auto (4 GB)"}
-            />
-            <QuickStat
-              label="Java"
-              value={summary ? (summary.java ? `${summary.java} · ${summary.javaSource === "custom" ? "custom" : "auto"}` : "Auto") : "…"}
-              warn={summary?.javaError}
-            />
-            <QuickStat label="Preset" value={PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "None"} />
-          </div>
-        </div>
+        <HeroCharacter />
       </div>
     </section>
+  );
+}
+
+/** The player's own character standing in the landscape: the account's skin, else the one picked in My Skin. */
+function HeroCharacter() {
+  const accounts = useStore(app, (s) => s.accounts);
+  const activeId = useStore(app, (s) => s.settings.activeAccountId);
+  const reduce = useStore(app, (s) => s.settings.reduceMotion);
+  const skins = useStore(skinState, (s) => s);
+  const account = accounts.find((a) => a.id === activeId) ?? accounts[0];
+  const accountSkin = secureSkinUrl(account?.skinUrl) ?? null;
+  useEffect(() => {
+    if (!skins.loaded) void loadSkins();
+  }, [skins.loaded]);
+  const saved = skins.skins.find((s) => s.id === skins.selectedId) ?? null;
+  const applied = skins.skins.filter((s) => s.appliedAt).sort((a, b) => (b.appliedAt ?? 0) - (a.appliedAt ?? 0))[0];
+  const src = accountSkin ?? saved?.png ?? null;
+  const model = useSkinModel(src, accountSkin ? (applied?.model ?? "classic") : (saved?.model ?? "classic"));
+  if (!src) return null;
+  return (
+    <div className="hero-character group relative w-[250px] shrink-0 self-end -mb-6 hidden min-[1120px]:block">
+      {account && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2 h-6 inline-flex items-center rounded bg-black/50 text-[13px] font-medium whitespace-nowrap pointer-events-none">
+          {account.username}
+        </div>
+      )}
+      <SkinViewer src={src} model={model} height={340} fill={0.76} sway animate={!reduce} initial={{ x: -6, y: -26 }} />
+      <button
+        type="button"
+        onClick={() => navigate({ page: "skins" })}
+        className="chip absolute bottom-1 left-1/2 -translate-x-1/2 h-8 px-3 rounded-lg text-[13px] font-medium inline-flex items-center gap-1.5 cursor-pointer opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+      >
+        <Icon.Paint size={14} /> Change skin
+      </button>
+    </div>
+  );
+}
+
+/** Mods, memory, Java and preset for the selected installation. */
+function InstallationCard({ inst }: { inst: Instance }) {
+  const settings = useStore(app, (s) => s.settings);
+  const system = useStore(app, (s) => s.system);
+  const [modCount, setModCount] = useState<number | null>(null);
+  const [summary, setSummary] = useState<InstallSummary | null>(null);
+  useEffect(() => {
+    setModCount(null);
+    setSummary(null);
+    installSummary(inst).then(setSummary).catch(() => setSummary(null));
+    if (inst.loader === "vanilla") setModCount(0);
+    else
+      listContent(inst, "mods")
+        .then((m) => setModCount(m.filter((x) => x.enabled).length))
+        .catch(() => setModCount(null));
+  }, [inst]);
+  const memory = inst.memory ?? settings.memory;
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between gap-3 mb-3.5 whitespace-nowrap">
+        <div className="text-[14px] font-semibold">This installation</div>
+        <span className={cx("text-[12px] font-semibold inline-flex items-center gap-1.5", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
+          <span className={cx("h-1.5 w-1.5 rounded-full", summary?.filesReady ? "bg-accent" : "bg-faint")} />
+          {summary ? (summary.filesReady ? "Ready" : "Not downloaded") : "…"}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[13px]">
+        <QuickStat label="Mods" value={inst.loader === "vanilla" ? "Vanilla" : modCount === null ? "…" : `${modCount} enabled`} />
+        <QuickStat label="Allocated RAM" value={memory ? `${gb(memory.maxMb)}${system ? ` of ${gb(Math.round(system.totalMemory / 1_048_576))}` : ""}` : "Auto (4 GB)"} />
+        <QuickStat label="Java" value={summary ? (summary.java ? `${summary.java} · ${summary.javaSource === "custom" ? "custom" : "auto"}` : "Auto") : "…"} warn={summary?.javaError} />
+        <QuickStat label="Preset" value={PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "None"} />
+      </div>
+    </Card>
   );
 }
 
@@ -575,9 +617,9 @@ export function HomePage() {
                       </div>
                       <div className="text-[12px] text-faint truncate">{isRunning(i.id) ? "Running now" : `Played ${timeAgo(i.lastPlayedAt)}`}</div>
                     </div>
-                    <IconButton label="Open installation" onClick={(e) => { e.stopPropagation(); navigate({ page: "instance", id: i.id }); }}>
-                      <Icon.ChevronDown size={16} className="-rotate-90" />
-                    </IconButton>
+                    <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <PlayButton inst={i} size="md" quiet />
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -593,6 +635,7 @@ export function HomePage() {
         </div>
         <aside className="space-y-8">
           <LauncherStatus />
+          {inst && <InstallationCard inst={inst} />}
           {inst && <BloomClientCard inst={inst} />}
           {inst && (
             <section>

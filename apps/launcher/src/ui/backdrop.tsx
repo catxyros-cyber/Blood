@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { app, effectiveAccent } from "../services/app";
 import { native } from "../services/native";
 import { useStore } from "../services/store";
+import { cx } from "./components";
 
 const customCache = new Map<string, string | null>();
 
@@ -187,7 +188,10 @@ export function Backdrop() {
         <div className="absolute inset-0" style={{ background: `color-mix(in srgb, var(--bg) ${Math.round(bg.dim * 100)}%, transparent)` }} />
       </div>
       <div className="absolute inset-0 transition-opacity duration-300" style={{ opacity: home ? 1 : 0 }}>
-        <FadeImage src={sharp} fadeMs={fadeMs} className="absolute inset-x-0 top-0 w-full h-[max(560px,74%)] object-cover object-[50%_22%]" />
+        {/* A slow settle each time Home opens; one transform on one layer, so it's cheap. */}
+        <div className={cx("absolute inset-x-0 top-0 h-[max(560px,74%)] overflow-hidden", home && fadeMs > 0 && "hero-settle")}>
+          <FadeImage src={sharp} fadeMs={fadeMs} className="absolute inset-0 w-full h-full object-cover object-[50%_22%]" />
+        </div>
         <div className="absolute inset-x-0 top-0 h-[max(560px,74%)] hero-fade" />
         <div className="absolute inset-y-0 left-0 w-[64%] bg-gradient-to-r from-bg/70 via-bg/30 to-transparent" />
         {settings.petals && fadeMs > 0 && home && <Embers color={effectiveAccent(settings)} />}
