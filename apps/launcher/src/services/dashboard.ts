@@ -17,6 +17,18 @@ export interface InstallSummary {
   javaError?: string;
 }
 
+// Probing Java starts a process; the answer for a given executable doesn't change while MOTION runs.
+const probes = new Map<string, ReturnType<typeof native.javaProbe>>();
+function probeJava(file: string) {
+  let p = probes.get(file);
+  if (!p) {
+    p = native.javaProbe(file);
+    probes.set(file, p);
+    p.catch(() => probes.delete(file));
+  }
+  return p;
+}
+
 export async function installSummary(inst: Instance): Promise<InstallSummary> {
   const p = P();
   const text = await p.readText(path(L().versions, inst.gameVersion, `${inst.gameVersion}.json`)).catch(() => null);
@@ -32,7 +44,7 @@ export async function installSummary(inst: Instance): Promise<InstallSummary> {
   const custom = inst.javaPath || app.get().settings.javaPath;
   if (custom) {
     try {
-      const info = await native.javaProbe(custom);
+      const info = await probeJava(custom);
       return { java: `Java ${info.major}`, javaSource: "custom", filesReady: Boolean(text), javaError: required && info.major < required ? `Minecraft ${inst.gameVersion} needs Java ${required}` : undefined };
     } catch {
       return { java: null, javaSource: "custom", filesReady: Boolean(text), javaError: "The custom Java path can't be run" };

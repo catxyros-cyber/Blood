@@ -10,20 +10,20 @@ import { Button, Callout, cx, Field, Modal, Select, Spinner, TextInput, Toggle }
 import { Icon } from "./icons";
 
 const LOADER_COLORS: Record<LoaderId, string> = {
-  vanilla: "from-emerald-500/30 to-lime-400/10",
-  fabric: "from-amber-200/25 to-orange-300/5",
-  quilt: "from-violet-400/30 to-fuchsia-400/5",
-  neoforge: "from-orange-500/30 to-red-400/5",
-  forge: "from-sky-500/25 to-indigo-400/5",
+  vanilla: "bg-emerald-400/12 text-emerald-200",
+  fabric: "bg-amber-300/12 text-amber-100",
+  quilt: "bg-violet-400/12 text-violet-200",
+  neoforge: "bg-orange-400/12 text-orange-200",
+  forge: "bg-sky-400/12 text-sky-200",
 };
 
 export function InstanceIcon({ inst, size = 44, className }: { inst: Pick<Instance, "icon" | "name" | "loader">; size?: number; className?: string }) {
   if (inst.icon) {
-    return <img src={inst.icon} alt="" width={size} height={size} draggable={false} className={cx("rounded-xl object-cover shrink-0 bg-raised", className)} style={{ width: size, height: size }} />;
+    return <img src={inst.icon} alt="" width={size} height={size} draggable={false} className={cx("rounded-lg object-cover shrink-0 bg-raised", className)} style={{ width: size, height: size }} />;
   }
   return (
     <div
-      className={cx("rounded-xl shrink-0 grid place-items-center bg-gradient-to-br border border-white/5 font-display font-bold text-fg/90", LOADER_COLORS[inst.loader], className)}
+      className={cx("rounded-lg shrink-0 grid place-items-center border border-white/5 font-display font-semibold", LOADER_COLORS[inst.loader], className)}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {inst.name.trim().charAt(0).toUpperCase() || "?"}
@@ -121,7 +121,7 @@ export function VersionLoaderPicker({
         </Field>
       </div>
       <Toggle checked={snapshots} onChange={setSnapshots} label="Show snapshots and old versions" />
-      {(loader === "forge" || loader === "neoforge") && <p className="text-[12.5px] text-faint -mt-1">{LOADERS.find((l) => l.id === loader)?.note}</p>}
+      {(loader === "forge" || loader === "neoforge") && <p className="text-[13px] text-faint -mt-1">{LOADERS.find((l) => l.id === loader)?.note}</p>}
       {loader !== "vanilla" && (
         <Field label={`${LOADERS.find((l) => l.id === loader)?.name} version`}>
           {loaderError ? (
@@ -181,7 +181,7 @@ export function RenameModal({ inst, open, onClose }: { inst: Instance; open: boo
         <Field label="Name">
           <TextInput value={name} onChange={setName} autoFocus onEnter={() => void save()} />
         </Field>
-        <p className="text-[12.5px] text-faint mt-2">The folder on disk keeps its name, so mods and worlds aren't moved.</p>
+        <p className="text-[13px] text-faint mt-2">The folder on disk keeps its name, so mods and worlds aren't moved.</p>
       </div>
     </Modal>
   );
@@ -229,7 +229,7 @@ export function NewInstanceModal({ open, onClose }: { open: boolean; onClose: ()
           <TextInput value={name} onChange={setName} placeholder={autoName || "My installation"} autoFocus />
         </Field>
         <VersionLoaderPicker gameVersion={sel.gameVersion} loader={sel.loader} loaderVersion={sel.loaderVersion} onChange={setSel} />
-        <p className="text-[12.5px] text-faint leading-relaxed">
+        <p className="text-[13px] text-faint leading-relaxed">
           Each installation has its own mods, resource packs, shaders, worlds and settings. Game files are downloaded from Mojang when you first press Play.
         </p>
       </div>

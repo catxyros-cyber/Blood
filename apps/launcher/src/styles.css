@@ -176,11 +176,9 @@ textarea,
 @keyframes bloom-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 @keyframes bloom-pop {
@@ -225,7 +223,7 @@ textarea,
 }
 
 .animate-in {
-  animation: bloom-fade-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: bloom-fade-in 160ms ease-out both;
 }
 .animate-pop {
   animation: bloom-pop 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -237,7 +235,7 @@ textarea,
   animation: bloom-shimmer 1.2s linear infinite;
 }
 .play-glow {
-  animation: bloom-breathe 3.2s ease-in-out infinite;
+  animation: none;
 }
 
 :root[data-motion="reduce"] *,
@@ -246,27 +244,33 @@ textarea,
   animation-duration: 0.001ms !important;
   transition-duration: 0.001ms !important;
 }
+/* The operating system's "reduce motion" counts too, whatever the launcher setting says. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 /* Range slider */
 input[type="range"].bloom-range {
   appearance: none;
-  height: 6px;
+  height: 4px;
   border-radius: 999px;
   background: linear-gradient(to right, var(--bloom-accent) var(--fill, 50%), var(--line-strong) var(--fill, 50%));
   outline: none;
 }
 input[type="range"].bloom-range::-webkit-slider-thumb {
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   border-radius: 999px;
   background: var(--fg);
-  border: 4px solid var(--bloom-accent);
+  border: 0;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
   cursor: pointer;
-  transition: transform 120ms;
-}
-input[type="range"].bloom-range::-webkit-slider-thumb:hover {
-  transform: scale(1.12);
 }
 
 /* Rendered Modrinth descriptions / patch notes */
@@ -364,67 +368,53 @@ input[type="range"].bloom-range::-webkit-slider-thumb:hover {
   image-rendering: pixelated;
 }
 
-/* ---------------------------------------------------------------- MOTION look */
+/* ---------------------------------------------------------------- MOTION look
+   Flat and restrained: solid surfaces, hairline borders, one accent colour. These helpers are
+   used across the pages; they deliberately carry no glows, blurs or gradients. */
 .glass {
-  background: var(--glass);
-  backdrop-filter: blur(18px) saturate(1.15);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
 }
 .accent-gradient {
-  background: linear-gradient(135deg, var(--bloom-accent), var(--accent-2));
+  background: var(--bloom-accent);
 }
 .text-gradient {
-  background: linear-gradient(120deg, var(--fg) 15%, var(--bloom-accent) 55%, var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.backdrop-art {
-  transition: opacity 600ms ease, filter 600ms ease;
+  color: var(--fg);
 }
 .hero-fade {
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 25%, transparent) 0%, transparent 18%, transparent 55%, color-mix(in srgb, var(--bg) 70%, transparent) 82%, var(--bg) 100%);
+  background: linear-gradient(to bottom, transparent 0%, transparent 45%, color-mix(in srgb, var(--bg) 75%, transparent) 78%, var(--bg) 100%);
 }
-/* Sharp, slightly angular primary action. */
+/* The primary action: a solid accent button. */
 .play-button {
-  background: linear-gradient(180deg, color-mix(in oklab, var(--bloom-accent) 86%, white) 0%, var(--bloom-accent) 50%, color-mix(in oklab, var(--bloom-accent) 78%, black) 100%);
+  background: var(--bloom-accent);
   color: var(--accent-ink);
-  box-shadow:
-    0 12px 40px -10px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 85%), transparent),
-    inset 0 1px 0 rgb(255 255 255 / 0.28);
-  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
-  text-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+  border-radius: 10px;
 }
 .play-button:hover {
-  filter: brightness(1.08) saturate(1.05);
+  filter: brightness(1.07);
 }
-/* clip-path hides box-shadow, so the glow sits on a wrapper. */
+.play-button:active {
+  filter: brightness(0.96);
+}
 .play-glow-wrap {
-  filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 55%), transparent));
+  display: inline-flex;
 }
 .chip {
-  background: rgb(255 255 255 / 0.05);
-  border: 1px solid rgb(255 255 255 / 0.08);
-  backdrop-filter: blur(10px);
+  background: rgb(0 0 0 / 0.35);
+  border: 1px solid rgb(255 255 255 / 0.1);
 }
-/* Accent glow helpers: scale with Accent intensity and disappear at 0. */
-.glow-accent {
-  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 70%), transparent);
-}
-.glow-text {
-  text-shadow: 0 0 18px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 60%), transparent);
-}
-.nav-active-bar {
-  box-shadow: 0 0 12px 1px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 90%), transparent);
+.glow-accent,
+.glow-text,
+.nav-active-bar,
+.wordmark {
+  box-shadow: none;
+  text-shadow: none;
+  filter: none;
 }
 .accent-rule {
-  background: linear-gradient(90deg, var(--bloom-accent), transparent);
+  background: var(--bloom-accent);
 }
-/* Angled corner cut used on cards that deserve emphasis. */
 .cut-corner {
-  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
-}
-.wordmark {
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--bloom-accent) calc(var(--glow) * 35%), transparent));
+  clip-path: none;
 }
 
 /* Accessory previews (Customize → Wings & aura) */

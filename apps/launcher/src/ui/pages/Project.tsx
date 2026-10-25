@@ -76,8 +76,8 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
   if (!project) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-28 rounded-2xl" />
-        <Skeleton className="h-96 rounded-2xl" />
+        <Skeleton className="h-28 rounded-xl" />
+        <Skeleton className="h-96 rounded-xl" />
       </div>
     );
   }
@@ -92,14 +92,14 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
       </button>
       <div className="flex gap-5 items-start mb-6">
         {project.icon_url ? (
-          <img src={project.icon_url} alt="" className="h-24 w-24 rounded-2xl object-cover bg-raised shrink-0" draggable={false} />
+          <img src={project.icon_url} alt="" className="h-24 w-24 rounded-xl object-cover bg-raised shrink-0" draggable={false} />
         ) : (
-          <div className="h-24 w-24 rounded-2xl bg-raised border border-line grid place-items-center text-faint shrink-0">
+          <div className="h-24 w-24 rounded-xl bg-raised border border-line grid place-items-center text-faint shrink-0">
             <Icon.Package size={36} />
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[28px] font-semibold tracking-tight">{project.title}</h1>
+          <h1 className="font-display text-[24px] font-semibold tracking-tight">{project.title}</h1>
           <p className="text-muted mt-1 max-w-2xl">{project.description}</p>
           <div className="flex items-center gap-4 mt-3 text-[13px] text-muted flex-wrap">
             {owner && (
@@ -143,7 +143,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
                   {noCompat ? "No compatible version" : "Install"}
                 </Button>
               )}
-              {noCompat && <div className="text-[12.5px] text-warn mt-2">No version for Minecraft {target!.gameVersion}{isMod ? ` with ${loaderLabel(target!)}` : ""}.</div>}
+              {noCompat && <div className="text-[13px] text-warn mt-2">No version for Minecraft {target!.gameVersion}{isMod ? ` with ${loaderLabel(target!)}` : ""}.</div>}
               {compatible[0] && !installed && <div className="text-[12px] text-faint mt-2 truncate">Latest compatible: {compatible[0].version_number}</div>}
             </>
           )}
@@ -183,7 +183,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {project.gallery.map((g) => (
-                  <button key={g.url} type="button" className="rounded-2xl overflow-hidden border border-line bg-raised text-left cursor-pointer" onClick={() => setViewing(g.url)}>
+                  <button key={g.url} type="button" className="rounded-xl overflow-hidden border border-line bg-raised text-left cursor-pointer" onClick={() => setViewing(g.url)}>
                     <img src={g.url} alt={g.title ?? ""} className="w-full aspect-video object-cover" loading="lazy" />
                     {g.title && <div className="px-3 py-2 text-[13px] text-muted truncate">{g.title}</div>}
                   </button>
@@ -194,7 +194,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
         </div>
         <aside className="space-y-4">
           <Card className="p-4 text-[13px] space-y-2">
-            <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold">Compatibility</div>
+            <div className="text-[13px] text-muted font-medium">Compatibility</div>
             <div className="flex justify-between">
               <span className="text-muted">Client</span>
               <span>{SIDE[project.client_side]}</span>
@@ -221,7 +221,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
             </div>
           </Card>
           <Card className="p-4 text-[13px] space-y-2">
-            <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold">Links</div>
+            <div className="text-[13px] text-muted font-medium">Links</div>
             {[
               ["Source code", project.source_url],
               ["Issues", project.issues_url],

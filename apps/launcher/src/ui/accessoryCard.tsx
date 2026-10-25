@@ -52,7 +52,7 @@ function Picker({ kind, title, items, current, busy, onPick }: {
 }) {
   return (
     <div>
-      <div className="text-[12.5px] font-semibold text-muted uppercase tracking-wide mb-2">{title}</div>
+      <div className="text-[13px] font-medium text-muted mb-2">{title}</div>
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
@@ -73,11 +73,11 @@ function Picker({ kind, title, items, current, busy, onPick }: {
               current === a.id ? "border-accent bg-accent/10" : "border-line bg-panel-2 hover:border-white/20", !a.allowed && "opacity-50")}
           >
             {busy === `${kind}:${a.id}` ? <Spinner size={14} /> : kind === "wings" ? <WingsPreview a={a} /> : kind === "avatar" ? <AvatarPreview a={a} /> : <AuraPreview a={a} />}
-            <span className="text-[11.5px] truncate max-w-[94px]">{a.name}</span>
-            {!a.allowed && <span className="text-[10px] text-amber-200">Premium</span>}
+            <span className="text-[12px] truncate max-w-[94px]">{a.name}</span>
+            {!a.allowed && <span className="text-[11px] text-amber-200">Premium</span>}
           </button>
         ))}
-        {items.length === 0 && <div className="text-[12.5px] text-faint self-center">None published yet.</div>}
+        {items.length === 0 && <div className="text-[13px] text-faint self-center">None published yet.</div>}
       </div>
     </div>
   );

@@ -3,11 +3,10 @@
  * behind regular pages and shown clearly on Home, plus optional rising embers.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { app, effectiveAccent } from "../services/app";
 import { native } from "../services/native";
 import { useStore } from "../services/store";
-import { cx } from "./components";
 
 const customCache = new Map<string, string | null>();
 
@@ -39,30 +38,160 @@ export function forgetCustomBackground(path: string) {
   customCache.delete(path);
 }
 
+/** The bundled art for a theme: the full scene (Home) and a small pre-blurred copy (other pages). */
+export function themeArt(theme: string): { sharp: string; soft: string; thumb: string } {
+  return { sharp: `/backgrounds/${theme}.webp`, soft: `/backgrounds/${theme}-soft.webp`, thumb: `/backgrounds/${theme}-thumb.webp` };
+}
+
+const decoded = new Map<string, Promise<boolean>>();
+/** Load and decode once per session, so switching pages or themes never shows a half-drawn image. */
+function decodeOnce(src: string): Promise<boolean> {
+  let p = decoded.get(src);
+  if (!p) {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+    p = img.decode().then(
+      () => true,
+      () => false,
+    );
+    decoded.set(src, p);
+  }
+  return p;
+}
+
+/** The newest of `src` that has finished decoding (null until the first one has). */
+function useDecoded(src: string | null): string | null {
+  const [ready, setReady] = useState<string | null>(null);
+  useEffect(() => {
+    if (!src) return setReady(null);
+    let live = true;
+    void decodeOnce(src).then((ok) => {
+      if (live && ok) setReady(src);
+    });
+    return () => {
+      live = false;
+    };
+  }, [src]);
+  return src ? ready : null;
+}
+
+const softCache = new Map<string, Promise<string | null>>();
+/**
+ * A small blurred copy of the player's own background, made once with a canvas. Drawing that
+ * scaled up costs nothing per frame, unlike a CSS blur over the whole window.
+ */
+function softVariant(src: string, blurPx: number): Promise<string | null> {
+  const key = `${blurPx}:${src}`;
+  let p = softCache.get(key);
+  if (!p) {
+    p = (async () => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const w = 960;
+      const h = Math.max(1, Math.round((w * img.naturalHeight) / Math.max(1, img.naturalWidth)));
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const g = c.getContext("2d");
+      if (!g) return null;
+      // The blur is applied at 960 px wide; scale the setting (window pixels) to match.
+      const scaled = (blurPx * w) / Math.max(1280, window.innerWidth);
+      g.filter = `blur(${scaled.toFixed(1)}px)`;
+      const pad = scaled * 3;
+      g.drawImage(img, -pad, -pad, w + pad * 2, h + pad * 2);
+      const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/webp", 0.8));
+      return blob ? URL.createObjectURL(blob) : null;
+    })().catch(() => null);
+    softCache.set(key, p);
+  }
+  return p;
+}
+
+function useSoftCustom(src: string | null, blurPx: number): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!src || blurPx <= 0) return setUrl(null);
+    let live = true;
+    void softVariant(src, blurPx).then((u) => live && setUrl(u));
+    return () => {
+      live = false;
+    };
+  }, [src, blurPx]);
+  return url;
+}
+
+/**
+ * Stacked copies of an image that fade in over the previous one, then the old copy is dropped.
+ * Nothing is drawn until the image has decoded, so there's no flash of a half-loaded picture.
+ */
+function FadeImage({ src, className, style, fadeMs }: { src: string | null; className: string; style?: CSSProperties; fadeMs: number }) {
+  const [layers, setLayers] = useState<{ src: string; key: number }[]>([]);
+  const counter = useRef(0);
+  useEffect(() => {
+    if (!src) return setLayers([]);
+    setLayers((l) => (l.length && l[l.length - 1]!.src === src ? l : [...l.slice(-1), { src, key: ++counter.current }]));
+    const t = setTimeout(() => setLayers((l) => l.slice(-1)), fadeMs + 50);
+    return () => clearTimeout(t);
+  }, [src, fadeMs]);
+  return (
+    <>
+      {layers.map((l, i) => (
+        <img
+          key={l.key}
+          src={l.src}
+          alt=""
+          draggable={false}
+          decoding="async"
+          className={className}
+          style={{ ...style, animation: i > 0 || layers.length === 1 ? `bloom-fade-in ${fadeMs}ms ease-out both` : undefined }}
+        />
+      ))}
+    </>
+  );
+}
+
 export function Backdrop() {
   const settings = useStore(app, (s) => s.settings);
   const page = useStore(app, (s) => s.route.page);
-  const custom = useCustomBackground(settings.background.mode === "custom" ? settings.background.custom : null);
-  const bg = settings.background;
-  const src = bg.mode === "none" ? null : bg.mode === "custom" ? custom : `/backgrounds/${settings.theme}.jpg`;
   const home = page === "home";
-  const dim = home ? 0 : bg.dim;
-  const blur = home || settings.reduceMotion ? (home ? 0 : Math.min(bg.blur, 6)) : bg.blur;
+  const bg = settings.background;
+  const custom = useCustomBackground(bg.mode === "custom" ? bg.custom : null);
+  const art = themeArt(settings.theme);
+  const sharpSrc = bg.mode === "none" ? null : bg.mode === "custom" ? custom : art.sharp;
+  // Pages other than Home: a pre-blurred copy (bundled for theme art, made once for your own image).
+  const softCustom = useSoftCustom(bg.mode === "custom" ? custom : null, bg.blur);
+  const softSrc = bg.mode === "none" ? null : bg.blur <= 0 ? sharpSrc : bg.mode === "custom" ? softCustom : art.soft;
+
+  // The full-size image is only fetched once Home has been shown (the app may start elsewhere).
+  const [wantSharp, setWantSharp] = useState(home);
+  useEffect(() => {
+    if (home) setWantSharp(true);
+  }, [home]);
+  const sharp = useDecoded(wantSharp ? sharpSrc : null);
+  const soft = useDecoded(softSrc);
+  const fadeMs = settings.reduceMotion || matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 320;
+  // Theme art's soft copy already looks like ~12px; stronger settings add only the difference.
+  const extraBlur = bg.mode === "theme" && bg.blur > 12 ? (bg.blur - 12) / 2 : 0;
+
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-      {src && (
-        <img
-          src={src}
-          alt=""
-          className={cx("backdrop-art absolute inset-x-0 top-0 w-full object-cover", home ? "h-[max(560px,68%)] object-bottom" : "h-full")}
-          style={{ filter: blur ? `blur(${blur}px)` : undefined, transform: blur ? "scale(1.04)" : undefined }}
-          draggable={false}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none bg-bg" aria-hidden>
+      <div className="absolute inset-0 transition-opacity duration-300" style={{ opacity: home ? 0 : 1 }}>
+        <FadeImage
+          src={soft}
+          fadeMs={fadeMs}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={extraBlur ? { filter: `blur(${extraBlur}px)`, transform: "scale(1.04)" } : undefined}
         />
-      )}
-      <div className="absolute inset-0 transition-colors duration-500" style={{ background: `color-mix(in srgb, var(--bg) ${Math.round(dim * 100)}%, transparent)` }} />
-      {home && <div className="absolute inset-x-0 top-0 h-[max(560px,68%)] hero-fade" />}
-      {home && <div className="absolute inset-y-0 left-0 w-[70%] bg-gradient-to-r from-bg/55 via-bg/20 to-transparent" />}
-      {home && settings.petals && !settings.reduceMotion && <Embers color={effectiveAccent(settings)} />}
+        <div className="absolute inset-0" style={{ background: `color-mix(in srgb, var(--bg) ${Math.round(bg.dim * 100)}%, transparent)` }} />
+      </div>
+      <div className="absolute inset-0 transition-opacity duration-300" style={{ opacity: home ? 1 : 0 }}>
+        <FadeImage src={sharp} fadeMs={fadeMs} className="absolute inset-x-0 top-0 w-full h-[max(560px,74%)] object-cover object-[50%_22%]" />
+        <div className="absolute inset-x-0 top-0 h-[max(560px,74%)] hero-fade" />
+        <div className="absolute inset-y-0 left-0 w-[64%] bg-gradient-to-r from-bg/70 via-bg/30 to-transparent" />
+        {settings.petals && fadeMs > 0 && home && <Embers color={effectiveAccent(settings)} />}
+      </div>
     </div>
   );
 }

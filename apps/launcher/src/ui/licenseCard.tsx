@@ -57,10 +57,10 @@ export function LicenseCard({ compact = false }: { compact?: boolean }) {
   const showEntry = status === "none" || status === "expired" || status === "revoked";
 
   return (
-    <Card className={cx("p-5", status === "active" && "border-amber-300/25 bg-gradient-to-br from-amber-300/[0.05] to-panel")}>
+    <Card className={cx("p-5", status === "active" && "border-amber-300/25")}>
       <div className="flex items-center gap-2">
         <Icon.Key size={17} className={status === "active" ? "text-amber-200" : "text-accent"} />
-        <h3 className="font-semibold text-[14.5px] flex-1">Premium key</h3>
+        <h3 className="font-semibold text-[14px] flex-1">Premium key</h3>
         {status === "checking" && <Spinner size={14} />}
         {status === "active" && (
           <span className="inline-flex items-center gap-1 h-[20px] px-1.5 rounded-md text-[11px] font-semibold border border-amber-300/30 bg-amber-300/10 text-amber-200">
@@ -127,7 +127,7 @@ export function LicenseCard({ compact = false }: { compact?: boolean }) {
         </div>
       )}
 
-      {error && <p className="text-[12.5px] text-danger mt-3 selectable">{error}</p>}
+      {error && <p className="text-[13px] text-danger mt-3 selectable">{error}</p>}
 
       {!compact && status !== "none" && status !== "checking" && (
         <button

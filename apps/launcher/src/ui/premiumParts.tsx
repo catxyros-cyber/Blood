@@ -25,7 +25,7 @@ export function PremiumBadge({ className, label = "Premium" }: { className?: str
 /** Shown in place of a Premium feature for Free users. */
 export function PremiumLock({ title, children, compact }: { title: string; children?: ReactNode; compact?: boolean }) {
   return (
-    <div className={cx("rounded-2xl border border-dashed border-amber-300/25 bg-amber-300/[0.03] flex items-center gap-4", compact ? "p-4" : "p-6")}>
+    <div className={cx("rounded-xl border border-dashed border-amber-300/25 bg-amber-300/[0.03] flex items-center gap-4", compact ? "p-4" : "p-6")}>
       <div className="h-10 w-10 rounded-xl bg-amber-300/10 text-amber-200 grid place-items-center shrink-0">
         <Icon.Lock size={18} />
       </div>
@@ -54,14 +54,13 @@ export function UpgradeCard() {
   const configured = useStore(app, (s) => s.premium.configured);
   if (premium || !configured) return null;
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-amber-300/20 bg-gradient-to-br from-amber-300/[0.07] via-panel to-panel p-5">
-      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-300/10 blur-2xl pointer-events-none" />
-      <div className="relative">
+    <div className="rounded-xl border border-line bg-panel p-4">
+      <div>
         <div className="flex items-center gap-2 text-amber-200 font-semibold text-[13px]">
           <Icon.Crown size={15} /> MOTION Premium
         </div>
-        <div className="font-display text-[17px] font-semibold mt-2 leading-snug">Advanced presets, measured GC analytics, any accent colour and cloud sync.</div>
-        <div className="text-[12.5px] text-muted mt-1.5">Launching and mod management stay free.</div>
+        <div className="text-[14px] font-medium mt-2 leading-snug">Advanced presets, measured GC analytics, any accent colour and cloud sync.</div>
+        <div className="text-[13px] text-muted mt-1.5">Launching and mod management stay free.</div>
         <Button size="sm" variant="primary" className="mt-4" onClick={() => navigate({ page: "premium" })}>
           Explore Premium
         </Button>

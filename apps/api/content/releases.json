@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.30",
+    "date": "2026-10-25",
+    "notes": "A cleaner launcher: new Minecraft-style backgrounds for every theme, simpler Home and menus, matching dropdowns, keyboard-friendly menus and dialogs, twice-as-fast startup and much smaller images. Your real Minecraft face in the launcher and in the MOTION menu.\n\nMOTION Client 0.2.24."
+  },
+  {
     "version": "1.0.29",
     "date": "2026-10-25",
     "notes": "MOTION Client now runs on Minecraft 1.21.10, 1.21.11, 26.1 (26.1–26.1.2), 26.2 and 26.3, with better 3D avatars, backgrounds and player icons\n\nMOTION Client 0.2.23."

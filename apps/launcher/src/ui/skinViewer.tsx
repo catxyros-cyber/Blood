@@ -99,7 +99,7 @@ export function SkinViewer({ src, model, overlay = true, height = 420, animate =
   return (
     <div
       className={["relative select-none overflow-hidden cursor-grab active:cursor-grabbing touch-none", className].filter(Boolean).join(" ")}
-      style={{ height, perspective: 1100, background: "radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent 65%)" }}
+      style={{ height, perspective: 1100 }}
       onPointerDown={(e) => {
         drag.current = { x: e.clientX, y: e.clientY };
         (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);

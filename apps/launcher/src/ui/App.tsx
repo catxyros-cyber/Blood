@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { startPresence } from "../services/team";
 import { basename } from "../core/util/path";
 import { app, boot, navigate, P, reportError, toast } from "../services/app";
@@ -8,24 +8,47 @@ import { getInstance, loadInstances, selectedInstance } from "../services/instan
 import { events } from "../services/native";
 import { loadAnnouncements, loadPlans, refreshPremium } from "../services/premium";
 import { useStore } from "../services/store";
+import { refreshAllAccountSkins } from "../services/accounts";
 import { pullSync, watchForChanges } from "../services/sync";
 import { startAutoUpdates } from "../services/updater";
 import { startLicenseChecks } from "../services/license";
-import { Button, ConfirmHost, Spinner } from "./components";
+import { Button, ConfirmHost } from "./components";
 import { BloodMark, Icon, Wordmark } from "./icons";
-import { AccountsPage } from "./pages/Accounts";
-import { BrowsePage } from "./pages/Browse";
 import { HomePage } from "./pages/Home";
-import { InstancePage } from "./pages/Instance";
-import { LibraryPage } from "./pages/Library";
-import { PerformancePage } from "./pages/Performance";
 import { PremiumPage, PremiumWelcome } from "./pages/Premium";
-import { ProjectPage } from "./pages/Project";
-import { SettingsPage } from "./pages/Settings";
-import { SkinsPage } from "./pages/Skins";
-import { CustomizePage } from "./pages/Customize";
-import { ModsPage } from "./pages/Mods";
-import { Backdrop, useCustomBackground } from "./backdrop";
+
+// Home (the usual first page) is part of the startup bundle; the other pages load on first use,
+// and are fetched in the background once the launcher is idle so that first use is instant too.
+const pageModules = {
+  accounts: () => import("./pages/Accounts"),
+  browse: () => import("./pages/Browse"),
+  instance: () => import("./pages/Instance"),
+  library: () => import("./pages/Library"),
+  performance: () => import("./pages/Performance"),
+  project: () => import("./pages/Project"),
+  settings: () => import("./pages/Settings"),
+  skins: () => import("./pages/Skins"),
+  customize: () => import("./pages/Customize"),
+  mods: () => import("./pages/Mods"),
+};
+const AccountsPage = lazy(() => pageModules.accounts().then((m) => ({ default: m.AccountsPage })));
+const BrowsePage = lazy(() => pageModules.browse().then((m) => ({ default: m.BrowsePage })));
+const InstancePage = lazy(() => pageModules.instance().then((m) => ({ default: m.InstancePage })));
+const LibraryPage = lazy(() => pageModules.library().then((m) => ({ default: m.LibraryPage })));
+const PerformancePage = lazy(() => pageModules.performance().then((m) => ({ default: m.PerformancePage })));
+const ProjectPage = lazy(() => pageModules.project().then((m) => ({ default: m.ProjectPage })));
+const SettingsPage = lazy(() => pageModules.settings().then((m) => ({ default: m.SettingsPage })));
+const SkinsPage = lazy(() => pageModules.skins().then((m) => ({ default: m.SkinsPage })));
+const CustomizePage = lazy(() => pageModules.customize().then((m) => ({ default: m.CustomizePage })));
+const ModsPage = lazy(() => pageModules.mods().then((m) => ({ default: m.ModsPage })));
+
+function preloadPages() {
+  const idle = (cb: () => void) => ("requestIdleCallback" in window ? window.requestIdleCallback(cb, { timeout: 4000 }) : setTimeout(cb, 1500));
+  idle(() => {
+    for (const load of Object.values(pageModules)) void load().catch(() => undefined);
+  });
+}
+import { Backdrop, themeArt, useCustomBackground } from "./backdrop";
 import { DragOverlay, Sidebar, TitleBar, Toasts } from "./shell";
 import { bumpContent } from "./contentEvents";
 import { InstallPlanHost } from "./installFlow";
@@ -45,6 +68,9 @@ function startServices() {
   void loadAnnouncements();
   startAutoUpdates();
   startLicenseChecks();
+  preloadPages();
+  // Faces in the sidebar and account list follow skin changes made anywhere.
+  void refreshAllAccountSkins();
 
   // Refresh Premium whenever the active Minecraft account changes.
   let account = app.get().settings.activeAccountId;
@@ -153,17 +179,13 @@ function Splash({ error, onRetry }: { error?: string | null; onRetry?: () => voi
   const custom = useCustomBackground(splashBackgroundPath());
   return (
     <div className="relative h-full overflow-hidden">
-      <img src={custom ?? `/backgrounds/${theme}.jpg`} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70 scale-105 blur-[2px]" draggable={false} />
-      <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/60 to-bg/20" />
+      {/* The small pre-blurred copy: decodes in a few milliseconds, so it doesn't hold up startup. */}
+      <img src={custom ?? themeArt(theme).soft} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50" draggable={false} decoding="async" />
+      <div className="absolute inset-0 bg-bg/60" />
       <div className="relative h-full grid place-items-center">
         <div className="flex flex-col items-center text-center animate-in">
-          <div className="relative">
-            <div className="absolute -inset-4 blur-2xl opacity-50 bg-accent rounded-full" style={{ opacity: "calc(var(--glow) * 0.6)" }} />
-            <div className="relative">
-              <BloodMark size={88} />
-            </div>
-          </div>
-          <Wordmark height={40} className="mt-7" />
+          <BloodMark size={64} />
+          <Wordmark height={28} className="mt-6" />
           {error ? (
             <>
               <div className="text-danger mt-4 max-w-md selectable">{error}</div>
@@ -173,12 +195,10 @@ function Splash({ error, onRetry }: { error?: string | null; onRetry?: () => voi
             </>
           ) : (
             <>
-              <div className="mt-6 h-[3px] w-56 rounded-full bg-white/8 overflow-hidden">
+              <div className="mt-7 h-[2px] w-48 rounded-full bg-white/10 overflow-hidden">
                 <div className="h-full w-2/5 rounded-full bg-accent" style={{ animation: "bloom-indeterminate 1.1s ease-in-out infinite" }} />
               </div>
-              <div className="flex items-center gap-2 text-muted mt-3 text-[12.5px] tracking-wide">
-                <Spinner size={12} /> Starting MOTION…
-              </div>
+              <div className="text-muted mt-3 text-[13px]">Starting MOTION…</div>
             </>
           )}
         </div>
@@ -220,13 +240,15 @@ export function App() {
         <div className="relative flex-1 flex min-h-0">
           <Sidebar />
           <main id="bloom-main" className="flex-1 min-w-0 overflow-y-auto">
-            {route.page === "home" ? (
-              <Router />
-            ) : (
-              <div key={route.page} className="max-w-[1180px] mx-auto px-8 py-7 animate-in">
+            <Suspense fallback={null}>
+              {route.page === "home" ? (
                 <Router />
-              </div>
-            )}
+              ) : (
+                <div key={route.page} className="max-w-[1120px] mx-auto px-10 py-8 animate-in">
+                  <Router />
+                </div>
+              )}
+            </Suspense>
           </main>
         </div>
       )}

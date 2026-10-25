@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { createStore, useStore } from "../services/store";
 import { Icon } from "./icons";
 
@@ -12,11 +13,11 @@ export function cx(...c: (string | false | null | undefined)[]): string {
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-accent-ink hover:brightness-110 active:brightness-95 font-semibold",
-  secondary: "bg-raised text-fg hover:bg-line-strong border border-line",
-  ghost: "text-muted hover:text-fg hover:bg-raised",
-  danger: "bg-danger/15 text-danger hover:bg-danger/25 border border-danger/30",
-  outline: "border border-line-strong text-fg hover:border-accent/60 hover:bg-accent/5",
+  primary: "bg-accent text-accent-ink hover:brightness-107 active:brightness-95 font-semibold",
+  secondary: "bg-raised text-fg hover:bg-line-strong border border-line font-medium",
+  ghost: "text-muted hover:text-fg hover:bg-raised font-medium",
+  danger: "bg-danger/12 text-danger hover:bg-danger/20 border border-danger/25 font-medium",
+  outline: "border border-line-strong text-fg hover:bg-raised font-medium",
 };
 
 export function Button({
@@ -28,12 +29,12 @@ export function Button({
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md" | "lg"; icon?: ReactNode; loading?: boolean }) {
-  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-sm gap-2 rounded-[10px]", lg: "h-11 px-5 text-[15px] gap-2.5 rounded-xl" };
+  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-[13px] gap-2 rounded-lg", lg: "h-11 px-5 text-[14px] gap-2 rounded-lg" };
   return (
     <button
       type="button"
       className={cx(
-        "inline-flex items-center justify-center whitespace-nowrap transition-all duration-150 disabled:opacity-45 disabled:pointer-events-none cursor-pointer",
+        "inline-flex items-center justify-center whitespace-nowrap transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none cursor-pointer",
         sizes[size],
         VARIANTS[variant],
         className,
@@ -69,7 +70,7 @@ export function Card({ className, children, onClick }: { className?: string; chi
   return (
     <div
       onClick={onClick}
-      className={cx("rounded-2xl border border-line bg-panel", onClick && "cursor-pointer hover:border-line-strong transition-colors", className)}
+      className={cx("rounded-xl border border-line bg-panel", onClick && "cursor-pointer hover:border-line-strong transition-colors", className)}
     >
       {children}
     </div>
@@ -78,10 +79,10 @@ export function Card({ className, children, onClick }: { className?: string; chi
 
 export function PageHeader({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="flex items-end justify-between gap-6 mb-6">
+    <div className="flex items-end justify-between gap-6 mb-7">
       <div className="min-w-0">
-        <h1 className="font-display text-[26px] font-semibold tracking-tight leading-tight truncate">{title}</h1>
-        {subtitle && <p className="text-muted mt-1">{subtitle}</p>}
+        <h1 className="font-display text-[24px] font-semibold tracking-tight leading-tight truncate">{title}</h1>
+        {subtitle && <p className="text-muted text-[14px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
@@ -91,7 +92,7 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">{children}</h2>
+      <h2 className="text-[14px] font-semibold text-fg">{children}</h2>
       {action}
     </div>
   );
@@ -105,7 +106,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: "neutr
     danger: "bg-danger/10 text-danger border-danger/25",
     info: "bg-info/10 text-info border-info/25",
   };
-  return <span className={cx("inline-flex items-center gap-1 h-[22px] px-2 rounded-md border text-[11.5px] font-medium", tones[tone], className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center gap-1 h-[22px] px-2 rounded-md border text-[12px] font-medium", tones[tone], className)}>{children}</span>;
 }
 
 export function Spinner({ size = 16 }: { size?: number }) {
@@ -133,9 +134,9 @@ export function ProgressBar({ value, className }: { value: number | null; classN
 export function EmptyState({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center text-center py-16 px-6 animate-in">
-      <div className="h-14 w-14 rounded-2xl bg-raised border border-line grid place-items-center text-accent mb-4">{icon ?? <Icon.Sparkle size={24} />}</div>
-      <h3 className="font-display text-lg font-semibold">{title}</h3>
-      {children && <p className="text-muted mt-1.5 max-w-md">{children}</p>}
+      <div className="h-12 w-12 rounded-xl bg-raised border border-line grid place-items-center text-muted mb-4">{icon ?? <Icon.Sparkle size={22} />}</div>
+      <h3 className="font-display text-[16px] font-semibold">{title}</h3>
+      {children && <p className="text-muted text-[14px] mt-1.5 max-w-md leading-relaxed">{children}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -154,11 +155,11 @@ export function Callout({ tone = "info", title, children, action }: { tone?: "in
   };
   const icon = tone === "danger" || tone === "warn" ? <Icon.Alert size={17} /> : <Icon.Info size={17} />;
   return (
-    <div className={cx("flex gap-3 rounded-xl border px-4 py-3", tones[tone])}>
+    <div className={cx("flex gap-3 rounded-lg border px-4 py-3", tones[tone])}>
       <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 text-fg">
         {title && <div className="font-semibold mb-0.5 break-words">{title}</div>}
-        <div className="text-muted text-[13.5px] leading-relaxed break-words">{children}</div>
+        <div className="text-muted text-[14px] leading-relaxed break-words">{children}</div>
       </div>
       {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
@@ -174,7 +175,7 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
     <label className="block">
       <div className="text-[13px] font-medium mb-1.5">{label}</div>
       {children}
-      {hint && <div className="text-[12.5px] text-faint mt-1.5 leading-relaxed">{hint}</div>}
+      {hint && <div className="text-[13px] text-faint mt-1.5 leading-relaxed">{hint}</div>}
     </label>
   );
 }
@@ -190,7 +191,7 @@ export function TextInput({ value, onChange, placeholder, className, icon, autoF
   mono?: boolean;
 }) {
   return (
-    <div className={cx("flex items-center gap-2 h-9 px-3 rounded-[10px] bg-panel-2 border border-line focus-within:border-accent/60 transition-colors", className)}>
+    <div className={cx("flex items-center gap-2 h-9 px-3 rounded-lg bg-panel-2 border border-line focus-within:border-line-strong transition-colors", className)}>
       {icon && <span className="text-faint">{icon}</span>}
       <input
         autoFocus={autoFocus}
@@ -211,20 +212,156 @@ export function Select<T extends string>({ value, onChange, options, className }
   options: { value: T; label: string; disabled?: boolean }[];
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const typed = useRef({ text: "", at: 0 });
+  const selected = options.findIndex((o) => o.value === value);
+  const current = options[selected];
+
+  const place = () => {
+    const r = button.current?.getBoundingClientRect();
+    if (!r) return;
+    const below = window.innerHeight - r.bottom - 8;
+    const above = r.top - 8;
+    const want = Math.min(300, options.length * 32 + 8);
+    const down = below >= want || below >= above;
+    setPos({ left: r.left, width: r.width, ...(down ? { top: r.bottom + 4 } : { bottom: window.innerHeight - r.top + 4 }), maxHeight: Math.max(120, Math.min(300, down ? below : above)) });
+  };
+  const show = () => {
+    place();
+    setActive(selected >= 0 ? selected : options.findIndex((o) => !o.disabled));
+    setOpen(true);
+  };
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) button.current?.focus({ preventScroll: true });
+  };
+  const choose = (i: number) => {
+    const o = options[i];
+    if (!o || o.disabled) return;
+    close(true);
+    if (o.value !== value) onChange(o.value);
+  };
+  const move = (from: number, dir: 1 | -1) => {
+    for (let k = 1; k <= options.length; k++) {
+      const i = (from + dir * k + options.length * 2) % options.length;
+      if (!options[i]?.disabled) return i;
+    }
+    return from;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!list.current?.contains(e.target as Node) && !button.current?.contains(e.target as Node)) setOpen(false);
+    };
+    // The list floats over the page; anything moving underneath it closes it.
+    const onScroll = (e: Event) => {
+      if (!list.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onResize = () => setOpen(false);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    list.current?.focus({ preventScroll: true });
+  }, [open]);
+  useEffect(() => {
+    if (open && active >= 0) list.current?.querySelector<HTMLElement>(`[data-i="${active}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const onListKey = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => move(a < 0 ? (e.key === "ArrowDown" ? -1 : 0) : a, e.key === "ArrowDown" ? 1 : -1));
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      setActive(e.key === "Home" ? move(-1, 1) : move(options.length, -1));
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    } else if (e.key.length === 1) {
+      // Type to jump, like a native list.
+      const now = Date.now();
+      typed.current = { text: (now - typed.current.at < 700 ? typed.current.text : "") + e.key.toLowerCase(), at: now };
+      const hit = options.findIndex((o) => !o.disabled && o.label.toLowerCase().startsWith(typed.current.text));
+      if (hit >= 0) setActive(hit);
+    }
+  };
+
   return (
     <div className={cx("relative", className)}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none h-9 pl-3 pr-9 rounded-[10px] bg-panel-2 border border-line hover:border-line-strong focus:border-accent/60 outline-none cursor-pointer"
+      <button
+        ref={button}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => (open ? close(false) : show())}
+        onKeyDown={(e) => {
+          if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            show();
+          }
+        }}
+        className={cx(
+          "w-full h-9 pl-3 pr-9 rounded-lg bg-panel-2 border text-left truncate cursor-pointer outline-none transition-colors",
+          open ? "border-line-strong" : "border-line hover:border-line-strong focus-visible:border-line-strong",
+        )}
       >
-        {options.map((o) => (
-          <option key={o.value} value={o.value} disabled={o.disabled} className="bg-panel">
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <Icon.ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none" />
+        {current?.label ?? ""}
+      </button>
+      <Icon.ChevronDown size={16} className={cx("absolute right-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none transition-transform duration-150", open && "rotate-180")} />
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={list}
+            role="listbox"
+            tabIndex={-1}
+            aria-activedescendant={active >= 0 ? `opt-${active}` : undefined}
+            onKeyDown={onListKey}
+            className="fixed z-[80] overflow-y-auto rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop outline-none"
+            style={{ left: pos.left, minWidth: pos.width, maxWidth: Math.max(pos.width, 420), top: pos.top, bottom: pos.bottom, maxHeight: pos.maxHeight }}
+          >
+            {options.map((o, i) => (
+              <div
+                key={o.value}
+                id={`opt-${i}`}
+                data-i={i}
+                role="option"
+                aria-selected={o.value === value}
+                aria-disabled={o.disabled || undefined}
+                onMouseMove={() => !o.disabled && active !== i && setActive(i)}
+                onClick={() => choose(i)}
+                className={cx(
+                  "flex items-center gap-2 h-8 pl-2 pr-3 rounded-md text-[13px] whitespace-nowrap",
+                  o.disabled ? "opacity-40 cursor-default" : "cursor-pointer",
+                  i === active && !o.disabled && "bg-line-strong",
+                )}
+              >
+                <span className="w-4 shrink-0 text-accent">{o.value === value && <Icon.Check size={14} />}</span>
+                <span className="truncate">{o.label}</span>
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -253,7 +390,7 @@ export function Toggle({ checked, onChange, label, description, disabled }: {
   );
   if (!label) return sw;
   return (
-    <div className="flex items-center justify-between gap-6 py-1">
+    <div className="flex items-center justify-between gap-6 py-1.5">
       <div className="min-w-0">
         <div className="font-medium">{label}</div>
         {description && <div className="text-[13px] text-muted mt-0.5">{description}</div>}
@@ -298,7 +435,7 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
           type="button"
           onClick={() => onChange(t.value)}
           className={cx(
-            "relative h-10 px-3.5 text-[13.5px] font-medium transition-colors cursor-pointer",
+            "relative h-10 px-3.5 text-[14px] font-medium transition-colors cursor-pointer",
             value === t.value ? "text-fg" : "text-muted hover:text-fg",
           )}
         >
@@ -313,15 +450,15 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
 
 export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div className="inline-flex p-1 rounded-xl bg-panel-2 border border-line">
+    <div className="inline-flex p-0.5 rounded-lg bg-panel-2 border border-line">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
           className={cx(
-            "h-7 px-3 rounded-lg text-[13px] font-medium transition-all cursor-pointer",
-            value === o.value ? "bg-raised text-fg shadow-sm" : "text-muted hover:text-fg",
+            "h-7 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer",
+            value === o.value ? "bg-raised text-fg" : "text-muted hover:text-fg",
           )}
         >
           {o.label}
@@ -341,40 +478,89 @@ export function Menu({ trigger, items, align = "right" }: {
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) (ref.current?.querySelector("button, [tabindex]") as HTMLElement | null)?.focus();
+  };
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
-    window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
+  useLayoutEffect(() => {
+    if (!open || !panel.current) return;
+    // Open upwards when there isn't room below (rows near the bottom of the window).
+    const h = panel.current.offsetHeight;
+    const trig = ref.current?.getBoundingClientRect();
+    if (trig) setUp(trig.bottom + 4 + h > window.innerHeight - 8 && trig.top > h + 8);
+    // Focus the menu so arrows and Escape work; no item is highlighted until the keyboard moves.
+    panel.current.focus({ preventScroll: true });
+  }, [open]);
+  const onKey = (e: ReactKeyboardEvent) => {
+    const buttons: HTMLButtonElement[] = panel.current ? Array.from(panel.current.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")) : [];
+    const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const next = e.key === "ArrowDown" ? (at + 1) % buttons.length : (at <= 0 ? buttons.length : at) - 1;
+      buttons[next]?.focus();
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      buttons[e.key === "Home" ? 0 : buttons.length - 1]?.focus();
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    }
+  };
   return (
     <div className="relative" ref={ref} onClick={(e) => e.stopPropagation()}>
-      <div onClick={() => setOpen((o) => !o)}>{trigger}</div>
+      <div
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && !open) {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {trigger}
+      </div>
       {open && (
         <div
+          ref={panel}
+          role="menu"
+          tabIndex={-1}
+          onKeyDown={onKey}
           className={cx(
-            "absolute z-40 mt-1 min-w-48 rounded-xl border border-line-strong bg-raised p-1 shadow-2xl shadow-black/50 animate-pop",
+            "absolute z-40 min-w-48 rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop outline-none",
             align === "right" ? "right-0" : "left-0",
+            up ? "bottom-full mb-1 origin-bottom" : "top-full mt-1 origin-top",
           )}
         >
           {items.map((it, i) =>
             it === "divider" ? (
-              <div key={i} className="my-1 h-px bg-line" />
+              <div key={i} role="separator" className="my-1 h-px bg-line" />
             ) : (
               <button
                 key={i}
                 type="button"
+                role="menuitem"
                 disabled={it.disabled}
                 onClick={() => {
                   setOpen(false);
                   it.onClick();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-lg text-left text-[13px] cursor-pointer disabled:opacity-40",
-                  it.danger ? "text-danger hover:bg-danger/10" : "text-fg hover:bg-line-strong",
+                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-md text-left text-[13px] cursor-pointer disabled:opacity-40 outline-none",
+                  it.danger ? "text-danger hover:bg-danger/10 focus-visible:bg-danger/10" : "text-fg hover:bg-line-strong focus-visible:bg-line-strong",
                 )}
               >
                 <span className="text-muted">{it.icon}</span>
@@ -400,29 +586,64 @@ export function Modal({ open, onClose, title, children, footer, width = 520 }: {
   footer?: ReactNode;
   width?: number;
 }) {
+  const box = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const before = document.activeElement as HTMLElement | null;
+    // Focus the first control that asked for it, else the dialog itself.
+    const t = requestAnimationFrame(() => {
+      const el = box.current;
+      if (!el || el.contains(document.activeElement)) return;
+      (el.querySelector<HTMLElement>("[autofocus], [data-autofocus]") ?? el).focus({ preventScroll: true });
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return closeRef.current();
+      if (e.key !== "Tab" || !box.current) return;
+      // Keep Tab inside the dialog.
+      const f: HTMLElement[] = [];
+      box.current
+        .querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')
+        .forEach((x) => {
+          if (x.offsetParent !== null) f.push(x);
+        });
+      if (!f.length) return;
+      const first = f[0]!, last = f[f.length - 1]!;
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === box.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      cancelAnimationFrame(t);
+      window.removeEventListener("keydown", onKey);
+      before?.focus?.({ preventScroll: true });
+    };
+  }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-[2px] p-6" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-6" onMouseDown={onClose}>
       <div
-        className="w-full max-h-[85vh] flex flex-col rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60 animate-pop"
+        ref={box}
+        tabIndex={-1}
+        className="w-full max-h-[85vh] flex flex-col rounded-xl border border-line-strong bg-panel shadow-2xl shadow-black/50 animate-pop outline-none"
         style={{ maxWidth: width }}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
-          <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+          <h2 className="font-display text-[16px] font-semibold">{title}</h2>
           <IconButton label="Close" onClick={onClose}>
             <Icon.Close size={16} />
           </IconButton>
         </div>
-        <div className="px-5 pb-4 overflow-y-auto">{children}</div>
+        <div className="px-5 pb-5 overflow-y-auto">{children}</div>
         {footer && <div className="flex justify-end gap-2 px-5 py-3.5 border-t border-line">{footer}</div>}
       </div>
     </div>

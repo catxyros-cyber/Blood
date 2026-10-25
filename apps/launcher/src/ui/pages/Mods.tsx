@@ -97,12 +97,7 @@ export function ModsPage({ instanceId, category = "all" }: { instanceId?: string
   return (
     <>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            MOTION Mods
-            <span className="h-[3px] w-10 rounded-full accent-rule" />
-          </span>
-        }
+        title="MOTION Mods"
         subtitle={<>Built-in HUD modules, performance mods and quality-of-life switches. Settings are kept separately for each installation.</>}
         actions={
           <Select
@@ -157,7 +152,8 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
   function blocked(m: ModuleInfo): string | null {
     if (m.kind === "hud" || m.kind === "setting") {
       if (!client) return "Checking MOTION Client…";
-      if (!client.enabled) return client.support.ok ? "Install MOTION Client for this installation first." : client.support.message;
+      // The MOTION Client card at the top explains why; each module only needs a short pointer.
+      if (!client.enabled) return client.support.ok ? "Install MOTION Client above to use this." : "Needs MOTION Client (see above).";
     }
     if (m.kind === "perf" && inst.loader === "vanilla") return "Needs a mod loader (Fabric, Quilt, Forge or NeoForge).";
     return null;
@@ -214,20 +210,20 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
       <Presets inst={inst} disabled={!clientReady} onApplied={() => setTick((t) => t + 1)} />
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex p-1 rounded-xl bg-panel-2 border border-line">
+        <div className="inline-flex p-0.5 rounded-lg bg-panel-2 border border-line">
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
               type="button"
               onClick={() => navigate({ page: "mods", instanceId: inst.id, category: c.value })}
               className={cx(
-                "h-8 px-3 rounded-lg text-[13px] font-medium transition-all cursor-pointer inline-flex items-center gap-1.5",
-                category === c.value ? "bg-accent text-accent-ink shadow-sm" : "text-muted hover:text-fg",
+                "h-8 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5",
+                category === c.value ? "bg-raised text-fg" : "text-muted hover:text-fg",
               )}
             >
               {c.icon}
               {c.label}
-              <span className={cx("tabular-nums text-[11.5px]", category === c.value ? "opacity-80" : "text-faint")}>{counts[c.value]}</span>
+              <span className={cx("tabular-nums text-[12px]", category === c.value ? "opacity-80" : "text-faint")}>{counts[c.value]}</span>
             </button>
           ))}
         </div>
@@ -271,7 +267,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 
 function ClientBanner({ inst, client, running, problems, onChanged }: { inst: Instance; client: ClientStatus | null; running: boolean; problems: number; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
-  if (!client) return <Skeleton className="h-[74px] rounded-2xl" />;
+  if (!client) return <Skeleton className="h-[74px] rounded-xl" />;
   const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
@@ -379,7 +375,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Presets</h2>
+        <h2 className="text-[14px] font-semibold text-fg">Presets</h2>
         <Menu
           trigger={
             <Button size="sm" variant="ghost" icon={<Icon.Undo size={14} />}>
@@ -414,7 +410,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
               <span className="h-8 w-8 rounded-lg bg-accent/12 text-accent grid place-items-center">{icons[p.id]}</span>
               <span className="font-semibold">{p.name}</span>
             </div>
-            <p className="text-[12.5px] text-muted mt-2 leading-relaxed flex-1">{p.description}</p>
+            <p className="text-[13px] text-muted mt-2 leading-relaxed flex-1">{p.description}</p>
             <Button className="mt-3" size="sm" variant={p.id === "performance" ? "primary" : "outline"} disabled={disabled} loading={busy === p.id} onClick={() => void apply(p)}>
               Apply
             </Button>
@@ -470,7 +466,7 @@ function ModuleCard({
     labels.push("All versions");
   }
   return (
-    <Card className={cx("p-4 transition-colors", on && !blocked && "border-accent/30 bg-gradient-to-br from-accent/[0.06] to-transparent")}>
+    <Card className={cx("p-4 transition-colors", on && !blocked && "border-line-strong")}>
       <div className="flex items-start gap-3">
         <div className={cx("h-10 w-10 rounded-xl grid place-items-center shrink-0 transition-colors", on && !blocked ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>{moduleIcon(m)}</div>
         <div className="min-w-0 flex-1">
@@ -479,7 +475,7 @@ function ModuleCard({
           </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {labels.map((l) => (
-              <span key={l} className="text-[10.5px] uppercase tracking-[0.06em] text-faint border border-line rounded px-1.5 h-[18px] inline-flex items-center">
+              <span key={l} className="text-[11px] text-faint border border-line rounded px-1.5 h-[18px] inline-flex items-center">
                 {l}
               </span>
             ))}
@@ -495,11 +491,11 @@ function ModuleCard({
       </div>
       <p className="text-[13px] text-muted mt-3 leading-relaxed">{description}</p>
       {m.note && <p className="text-[12px] text-faint mt-1.5 leading-relaxed">{m.note}</p>}
-      {blocked && <p className="text-[12px] text-warn mt-1.5">{blocked}</p>}
+      {blocked && <p className="text-[12px] text-faint mt-1.5">{blocked}</p>}
       {m.kind === "vanilla" && running && <p className="text-[12px] text-warn mt-1.5">Close Minecraft to change this here.</p>}
       {configurable && !blocked && view && (
         <>
-          <button type="button" onClick={() => setOpen((o) => !o)} className="mt-3 text-[12.5px] font-semibold text-accent hover:underline cursor-pointer inline-flex items-center gap-1">
+          <button type="button" onClick={() => setOpen((o) => !o)} className="mt-3 text-[13px] font-semibold text-accent hover:underline cursor-pointer inline-flex items-center gap-1">
             <Icon.Sliders size={13} /> {open ? "Hide options" : "Options"}
           </button>
           {open && (
@@ -521,7 +517,7 @@ function WidgetOptions({ inst, widget, view, onView }: { inst: Instance; widget:
   const save = (p: Promise<SettingsView>) => p.then(onView).catch((e) => reportError("Couldn't save", e));
   return (
     <div className="space-y-2.5">
-      <div className="text-[11.5px] text-faint">
+      <div className="text-[12px] text-faint">
         Layout: <span className="text-muted">{layout.name}</span> · move widgets with the in-game HUD editor (Right Shift → HUD Editor).
       </div>
       {info.options.map((opt) => (
@@ -546,7 +542,7 @@ function WidgetOptions({ inst, widget, view, onView }: { inst: Instance; widget:
                   type="button"
                   onClick={() => void save(setSettings(inst, { [POTION_HIDDEN_KEY]: isHidden ? hidden.filter((h) => h !== e.id) : [...hidden, e.id] }))}
                   className={cx(
-                    "h-6 px-2 rounded-md border text-[11.5px] cursor-pointer transition-colors",
+                    "h-6 px-2 rounded-md border text-[12px] cursor-pointer transition-colors",
                     isHidden ? "border-accent/40 bg-accent/12 text-fg line-through decoration-accent/70" : "border-line text-muted hover:text-fg",
                   )}
                 >

@@ -1,0 +1,680 @@
+<!doctype html>
+<!--
+  MOTION's theme backgrounds: a blocky landscape rendered once, offline, by render.mjs.
+  A WebGL2 voxel ray tracer (DDA through a heightmap world with procedurally placed trees):
+  per-texel block textures, sun/moon shadows, Minecraft-style corner ambient occlusion,
+  water with reflections, flat block clouds, aerial fog. Each theme is the same world lit and
+  graded differently (see THEMES in render.mjs). Nothing here ships in the app; only the images do.
+-->
+<html>
+<head><meta charset="utf-8"><title>MOTION background renderer</title></head>
+<body style="margin:0;background:#000">
+<canvas id="c"></canvas>
+<script id="vs" type="x-shader/x-vertex">#version 300 es
+in vec2 p;
+void main() { gl_Position = vec4(p, 0.0, 1.0); }
+</script>
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+precision highp int;
+precision highp sampler2D;
+out vec4 outColor;
+
+uniform sampler2D uWorld;      // R: column height (top solid block y), G: forest density, B: coldness, A: rock
+uniform ivec2 uWorldOrigin;    // world x,z of texel (0,0)
+uniform ivec2 uWorldSize;
+uniform vec2 uRes;             // full image size in pixels
+uniform vec2 uTile;            // pixel offset of this tile
+uniform int uSamples;          // samples per pixel axis (1 or 2)
+uniform int uMode;             // 0 full, 1 far layer (ignore geometry nearer than uSplit), 2 near layer (alpha)
+uniform float uSplit;
+
+uniform vec3 uCamPos;
+uniform float uYaw, uPitch, uFov;
+
+uniform vec3 uSunDir;          // towards the sun or moon
+uniform vec3 uSunCol;          // direct light colour * intensity
+uniform vec3 uAmbTop, uAmbBottom; // sky/ground ambient
+uniform vec3 uZenith, uHorizon, uGroundSky;
+uniform vec3 uFogCol;
+uniform float uFogDensity;
+uniform float uDiscSize;       // angular half-size of the sun/moon square
+uniform vec3 uDiscCol;
+uniform int uDiscMoon;         // 1 draws a cratered moon
+uniform float uHalo;
+uniform float uGlowWide;     // 1 for a sun lighting the whole horizon, ~0 for a moon
+uniform float uStars;
+uniform float uAurora;
+uniform vec3 uAuroraCol;
+uniform float uCloudCover;
+uniform vec3 uCloudCol;
+uniform float uExposure;
+uniform float uSaturation;
+uniform vec3 uGrade;           // per-channel multiplier after tonemapping
+uniform float uWater;          // water surface height
+
+const int WATER = 62;
+const float CLOUD_Y = 150.0;
+
+// ---------------------------------------------------------------- hashing
+uint hash3(ivec3 p) {
+  uint h = uint(p.x) * 73856093u ^ uint(p.y) * 19349663u ^ uint(p.z) * 83492791u;
+  h ^= h >> 13; h *= 0x5bd1e995u; h ^= h >> 15;
+  return h;
+}
+float rnd3(ivec3 p) { return float(hash3(p) & 0xffffu) / 65535.0; }
+float rnd2(ivec2 p) { return rnd3(ivec3(p, 7)); }
+
+// ---------------------------------------------------------------- world
+vec4 column(ivec2 xz) {
+  ivec2 t = xz - uWorldOrigin;
+  if (t.x < 0 || t.y < 0 || t.x >= uWorldSize.x || t.y >= uWorldSize.y) return vec4(-100.0, 0.0, 0.0, 0.0);
+  return texelFetch(uWorld, t, 0);
+}
+float heightAt(ivec2 xz) { return column(xz).r; }
+
+const int CELL = 7;
+uniform sampler2D uTrees;   // per 7x7 cell: trunk x, base y, trunk z, height (+100 for spruce); x < -1e5 = none
+uniform ivec2 uTreeOrigin;  // cell coords of texel (0,0)
+uniform ivec2 uTreeSize;
+uniform sampler2D uShadow;  // per column: lowest y still lit by the sun/moon
+
+// 0 air, 3 log, 4 leaves
+int treeVoxel(ivec3 p) {
+  ivec2 cell = ivec2(floor(vec2(p.xz) / float(CELL)));
+  ivec2 ti = cell - uTreeOrigin;
+  if (ti.x < 0 || ti.y < 0 || ti.x >= uTreeSize.x || ti.y >= uTreeSize.y) return 0;
+  vec4 tr = texelFetch(uTrees, ti, 0);
+  if (tr.x < -1e5) return 0;
+  int kind = tr.w >= 100.0 ? 1 : 0;
+  int h = int(tr.w) - kind * 100;
+  ivec3 base = ivec3(tr.xyz);
+  int dy = p.y - base.y;
+  if (dy < 0 || dy > h) return 0;
+  ivec2 d = p.xz - base.xz;
+  int ad = max(abs(d.x), abs(d.y));
+  if (ad > 2) return 0;
+  if (d == ivec2(0) && dy < h) return 3;
+  if (kind == 0) {
+    // Oak: two wide layers below the top, two narrow ones at the top.
+    if (dy == h - 2 || dy == h - 3) {
+      if (!(abs(d.x) == 2 && abs(d.y) == 2 && rnd3(p) < 0.6)) return 4;
+    } else if (dy == h - 1) {
+      if (ad <= 1 && !(abs(d.x) == 1 && abs(d.y) == 1 && rnd3(p) < 0.4)) return 4;
+    } else if (dy == h) {
+      if (abs(d.x) + abs(d.y) <= 1) return 4;
+    }
+  } else {
+    // Spruce: rings that narrow towards the top.
+    int fromTop = h - dy;
+    if (dy >= 2) {
+      int r = fromTop == 0 ? 0 : (fromTop == 1 ? 1 : ((fromTop % 2 == 0) ? 1 : 2));
+      if (fromTop > 6) r = (fromTop % 2 == 0) ? 2 : 1;
+      if (ad <= r && abs(d.x) + abs(d.y) <= r + (r == 2 ? 1 : 0)) return 4;
+    }
+  }
+  return 0;
+}
+
+bool lit(vec3 p) {
+  ivec2 t = ivec2(floor(p.xz)) - uWorldOrigin;
+  if (t.x < 0 || t.y < 0 || t.x >= uWorldSize.x || t.y >= uWorldSize.y) return true;
+  return p.y >= texelFetch(uShadow, t, 0).r - 0.02;
+}
+
+// Block id: 0 air, 1 terrain, 3 log, 4 leaves
+int block(ivec3 p) {
+  float h = heightAt(p.xz);
+  if (float(p.y) <= h) return 1;
+  if (float(p.y) > h + 12.0) return 0;
+  return treeVoxel(p);
+}
+bool solid(ivec3 p) { return block(p) != 0; }
+
+// Coarse max height for 8x8 columns (trees included): from mip level 3 of the R channel is not
+// a max, so it's packed separately in uMax.
+uniform sampler2D uMax; // R: max height in the 8x8 column (+ tree allowance)
+float coarseMax(ivec2 cell8) {
+  ivec2 t = cell8 - uWorldOrigin / 8;
+  if (t.x < 0 || t.y < 0 || t.x >= uWorldSize.x / 8 || t.y >= uWorldSize.y / 8) return -100.0;
+  return texelFetch(uMax, t, 0).r;
+}
+
+// ---------------------------------------------------------------- tracing
+struct Hit { bool hit; float t; ivec3 cell; vec3 n; int id; };
+
+Hit trace(vec3 ro, vec3 rd, float tMax, float tMin) {
+  Hit h; h.hit = false; h.t = tMax; h.id = 0;
+  vec3 inv = 1.0 / rd;
+  float t = 0.0;
+  for (int outer = 0; outer < 420; outer++) {
+    if (t > tMax) break;
+    vec3 p = ro + rd * (t + 1e-4);
+    if (p.y > 200.0 && rd.y >= 0.0) break;
+    if (p.y < 0.0) break;
+    ivec2 c8 = ivec2(floor(p.xz / 8.0));
+    float m = coarseMax(c8);
+    // Exit of this 8x8 column.
+    vec2 lo = vec2(c8) * 8.0, hi = lo + 8.0;
+    vec2 tx = (vec2(rd.x > 0.0 ? hi.x : lo.x, rd.z > 0.0 ? hi.y : lo.y) - ro.xz) * inv.xz;
+    float tExit = min(tx.x, tx.y);
+    float yA = p.y, yB = ro.y + rd.y * tExit;
+    if (min(yA, yB) > m + 1.0) { t = tExit + 1e-3; continue; }
+    // Fine DDA inside the column.
+    ivec3 cell = ivec3(floor(p));
+    ivec3 stp = ivec3(sign(rd));
+    vec3 tDelta = abs(inv);
+    vec3 next = (vec3(cell) + max(vec3(stp), 0.0) - ro) * inv;
+    vec3 n = vec3(0.0);
+    float tc = t;
+    for (int i = 0; i < 64; i++) {
+      if (cell.x < c8.x * 8 || cell.x >= c8.x * 8 + 8 || cell.z < c8.y * 8 || cell.z >= c8.y * 8 + 8) break;
+      if (tc > tMax) break;
+      int id = block(cell);
+      if (id != 0 && tc >= tMin) {
+        h.hit = true; h.t = tc; h.cell = cell; h.n = n; h.id = id;
+        return h;
+      }
+      if (next.x < next.y && next.x < next.z) { tc = next.x; next.x += tDelta.x; cell.x += stp.x; n = vec3(-float(stp.x), 0.0, 0.0); }
+      else if (next.y < next.z) { tc = next.y; next.y += tDelta.y; cell.y += stp.y; n = vec3(0.0, -float(stp.y), 0.0); }
+      else { tc = next.z; next.z += tDelta.z; cell.z += stp.z; n = vec3(0.0, 0.0, -float(stp.z)); }
+      if (cell.y < 0 || cell.y > 220) break;
+    }
+    t = tExit + 1e-3;
+  }
+  return h;
+}
+
+
+
+// ---------------------------------------------------------------- materials
+// Per-texel variation on a 16x16 grid, like a block texture.
+float texel(ivec3 cell, vec3 n, vec2 uv, int salt) {
+  ivec2 t = ivec2(floor(uv * 16.0));
+  return rnd3(ivec3(cell.x * 16 + t.x, cell.y * 16 + t.y + salt * 131, cell.z * 16 + int(dot(abs(n), vec3(5.0, 11.0, 17.0)))));
+}
+
+vec3 albedo(int id, ivec3 cell, vec3 n, vec3 hp, out bool isLeaf) {
+  isLeaf = false;
+  vec3 f = fract(hp);
+  vec2 uv = abs(n.y) > 0.5 ? f.xz : (abs(n.x) > 0.5 ? vec2(f.z, f.y) : vec2(f.x, f.y));
+  float v = texel(cell, n, uv, 1);
+  vec4 col = column(cell.xz);
+  if (id == 3) {
+    if (abs(n.y) > 0.5) {
+      vec2 c = uv - 0.5; float r = length(c) * 16.0;
+      float ring = step(0.5, fract(r * 0.33));
+      return mix(vec3(0.42, 0.32, 0.19), vec3(0.55, 0.43, 0.26), ring) * (0.9 + 0.2 * v);
+    }
+    float stripe = step(0.55, rnd3(ivec3(cell.x * 16 + int(uv.x * 16.0), 3, cell.z)));
+    return mix(vec3(0.36, 0.27, 0.16), vec3(0.27, 0.2, 0.12), stripe) * (0.85 + 0.25 * v);
+  }
+  if (id == 4) {
+    isLeaf = true;
+    bool spruce = col.b > 0.55;
+    vec3 base = spruce ? vec3(0.17, 0.30, 0.20) : vec3(0.22, 0.43, 0.15);
+    return base * (0.6 + 0.6 * v);
+  }
+  // Terrain: what's at this depth below the column top?
+  float top = col.r;
+  int depth = int(top) - cell.y;
+  float cold = col.b;
+  bool rock = col.a > 0.5;
+  float snowLine = 128.0 + (rnd2(cell.xz) - 0.5) * 6.0 - cold * 8.0;
+  bool snow = top >= snowLine;
+  bool sand = top <= float(WATER + 1) && !rock;
+  vec3 grass = mix(vec3(0.36, 0.56, 0.22), vec3(0.32, 0.47, 0.30), cold);
+  vec3 dirt = vec3(0.47, 0.34, 0.22);
+  vec3 stone = vec3(0.47, 0.47, 0.48);
+  vec3 snowc = vec3(0.92, 0.95, 0.98);
+  vec3 sandc = vec3(0.85, 0.79, 0.58);
+  vec3 c;
+  if (depth == 0) {
+    if (snow) c = abs(n.y) > 0.5 ? snowc : (uv.y > 0.8 - 0.12 * rnd2(ivec2(cell.x * 16 + int(uv.x * 16.0), cell.z)) ? snowc : (rock ? stone : dirt));
+    else if (sand) c = sandc;
+    else if (rock) c = stone;
+    else if (abs(n.y) > 0.5) c = grass;
+    else c = uv.y > 0.78 - 0.14 * rnd2(ivec2(cell.x * 16 + int(uv.x * 16.0), cell.z * 7 + int(n.x))) ? grass : dirt;
+  } else if (depth <= 3 && !rock && !snow) {
+    c = sand ? sandc : dirt;
+  } else {
+    c = stone;
+  }
+  float var = (c == stone) ? 0.28 : 0.2;
+  return c * (1.0 - var * 0.5 + var * v);
+}
+
+// Minecraft-style corner ambient occlusion on the hit face.
+float faceAO(ivec3 cell, vec3 n, vec3 hp) {
+  ivec3 nn = ivec3(n);
+  ivec3 a, b;
+  if (nn.y != 0) { a = ivec3(1, 0, 0); b = ivec3(0, 0, 1); }
+  else if (nn.x != 0) { a = ivec3(0, 1, 0); b = ivec3(0, 0, 1); }
+  else { a = ivec3(1, 0, 0); b = ivec3(0, 1, 0); }
+  ivec3 o = cell + nn;
+  float s[8];
+  s[0] = solid(o - a) ? 1.0 : 0.0; s[1] = solid(o + a) ? 1.0 : 0.0;
+  s[2] = solid(o - b) ? 1.0 : 0.0; s[3] = solid(o + b) ? 1.0 : 0.0;
+  s[4] = solid(o - a - b) ? 1.0 : 0.0; s[5] = solid(o + a - b) ? 1.0 : 0.0;
+  s[6] = solid(o - a + b) ? 1.0 : 0.0; s[7] = solid(o + a + b) ? 1.0 : 0.0;
+  vec3 f = fract(hp);
+  float ua = dot(f, vec3(a)), ub = dot(f, vec3(b));
+  // corner = (sideA, sideB, diag)
+  float c00 = (s[0] > 0.5 && s[2] > 0.5) ? 0.0 : 3.0 - s[0] - s[2] - s[4];
+  float c10 = (s[1] > 0.5 && s[2] > 0.5) ? 0.0 : 3.0 - s[1] - s[2] - s[5];
+  float c01 = (s[0] > 0.5 && s[3] > 0.5) ? 0.0 : 3.0 - s[0] - s[3] - s[6];
+  float c11 = (s[1] > 0.5 && s[3] > 0.5) ? 0.0 : 3.0 - s[1] - s[3] - s[7];
+  float ao = mix(mix(c00, c10, ua), mix(c01, c11, ua), ub) / 3.0;
+  return 0.45 + 0.55 * ao;
+}
+
+// ---------------------------------------------------------------- sky
+vec3 basis(vec3 d, out vec3 r, out vec3 u) {
+  r = normalize(cross(vec3(0.0, 1.0, 0.0), d));
+  u = cross(d, r);
+  return d;
+}
+
+vec3 skyColor(vec3 rd, bool withDisc) {
+  float e = rd.y;
+  vec3 c = e >= 0.0 ? mix(uHorizon, uZenith, pow(clamp(e, 0.0, 1.0), 0.55)) : mix(uHorizon, uGroundSky, clamp(-e * 6.0, 0.0, 1.0));
+  float sd = max(dot(rd, uSunDir), 0.0);
+  // Glow around the light, strongest along the horizon beneath it.
+  c += uSunCol * uHalo * (uGlowWide * pow(sd, 3.0) * 0.22 * exp(-max(e, 0.0) * 5.0) + pow(sd, 24.0) * 0.25 + pow(sd, 200.0) * 0.5);
+  if (uAurora > 0.0 && e > 0.02) {
+    float az = atan(rd.x, rd.z);
+    float band = sin(az * 5.0 + sin(az * 11.0) * 0.6) * 0.5 + 0.5;
+    float curtain = pow(band, 3.0) * smoothstep(0.03, 0.18, e) * smoothstep(0.62, 0.22, e);
+    c += uAuroraCol * uAurora * curtain;
+  }
+  if (uStars > 0.0 && e > 0.04) {
+    vec2 sp = vec2(atan(rd.x, rd.z), asin(clamp(rd.y, -1.0, 1.0))) * 260.0;
+    ivec2 sc = ivec2(floor(sp));
+    float r = rnd2(sc);
+    if (r > 0.9965) {
+      vec2 fp = fract(sp) - 0.5;
+      float s = smoothstep(0.42, 0.0, max(abs(fp.x), abs(fp.y)));
+      c += vec3(0.9, 0.95, 1.0) * uStars * s * (r - 0.9965) / 0.0035 * smoothstep(0.04, 0.3, e);
+    }
+  }
+  if (withDisc) {
+    vec3 r, u; basis(uSunDir, r, u);
+    float a = dot(rd, r), b = dot(rd, u);
+    if (dot(rd, uSunDir) > 0.0 && max(abs(a), abs(b)) < uDiscSize) {
+      vec2 q = vec2(a, b) / uDiscSize * 0.5 + 0.5;
+      ivec2 px = ivec2(floor(q * 16.0));
+      float tex = 1.0;
+      if (uDiscMoon == 1) {
+        // A fixed 8x8 crater pattern (1 light, 2 mid, 3 dark), drawn at 2x2 texels per cell.
+        const int MOON[64] = int[64](
+          1,1,1,1,1,1,1,1,
+          1,2,2,1,1,1,1,1,
+          1,2,2,1,1,3,3,1,
+          1,1,1,1,1,3,3,1,
+          1,1,3,1,1,1,1,1,
+          1,3,3,1,1,2,2,1,
+          1,1,1,1,1,2,2,1,
+          1,1,1,1,1,1,1,1);
+        ivec2 cp = clamp(px / 2, ivec2(0), ivec2(7));
+        int v = MOON[(7 - cp.y) * 8 + cp.x];
+        tex = v == 3 ? 0.62 : (v == 2 ? 0.8 : 1.0);
+        tex *= 0.96 + 0.04 * rnd2(px);
+      } else {
+        tex = 0.92 + 0.08 * rnd2(px);
+        // Brighter core, like Minecraft's sun.
+        vec2 cc = abs(q - 0.5);
+        tex *= max(cc.x, cc.y) < 0.28 ? 1.1 : 0.95;
+      }
+      c = mix(c, uDiscCol * tex, 0.97);
+    }
+  }
+  return c;
+}
+
+// Flat Minecraft clouds: 12x12-block cells on a plane, clustered with low-frequency noise.
+vec4 clouds(vec3 ro, vec3 rd) {
+  if (uCloudCover <= 0.0 || rd.y <= 0.002) return vec4(0.0);
+  float t = (CLOUD_Y - ro.y) / rd.y;
+  if (t > 2600.0) return vec4(0.0);
+  vec2 p = (ro + rd * t).xz + vec2(40.0, 0.0);
+  ivec2 cell = ivec2(floor(p / 12.0));
+  vec2 g = vec2(cell) / 9.0;
+  ivec2 gi = ivec2(floor(g));
+  vec2 gf = fract(g); gf = gf * gf * (3.0 - 2.0 * gf);
+  float n = mix(mix(rnd2(gi), rnd2(gi + ivec2(1, 0)), gf.x), mix(rnd2(gi + ivec2(0, 1)), rnd2(gi + ivec2(1, 1)), gf.x), gf.y);
+  float m = n * 0.75 + rnd2(cell) * 0.25;
+  if (m < 1.0 - uCloudCover) return vec4(0.0);
+  // Edges of a cloud cell slightly darker: reads as thickness.
+  vec2 f = fract(p / 12.0);
+  float edge = min(min(f.x, 1.0 - f.x), min(f.y, 1.0 - f.y));
+  vec3 col = uCloudCol * (edge < 0.06 ? 0.86 : 1.0);
+  float a = 0.78 * exp(-t / 1400.0);
+  return vec4(col, a);
+}
+
+// ---------------------------------------------------------------- shading
+vec3 fogged(vec3 c, vec3 rd, float t) {
+  float sd = max(dot(rd, uSunDir), 0.0);
+  vec3 fc = uFogCol + uSunCol * uHalo * pow(sd, 10.0) * 0.25;
+  float f = 1.0 - exp(-t * uFogDensity);
+  return mix(c, fc, clamp(f, 0.0, 1.0));
+}
+
+vec3 shadeHit(vec3 ro, vec3 rd, Hit h) {
+  vec3 hp = ro + rd * h.t;
+  vec3 n = h.n;
+  if (dot(n, n) < 0.5) n = vec3(0.0, 1.0, 0.0);
+  bool leaf;
+  vec3 alb = albedo(h.id, h.cell, n, hp, leaf);
+  float ao = faceAO(h.cell, n, hp);
+  float ndl = max(dot(n, uSunDir), 0.0);
+  float sh = 0.0;
+  if (ndl > 0.0) sh = lit(hp + n * 0.02) ? 1.0 : 0.0;
+  // Minecraft's directional face shading keeps blocks readable in flat light.
+  float face = n.y > 0.5 ? 1.0 : (n.y < -0.5 ? 0.5 : (abs(n.z) > 0.5 ? 0.8 : 0.65));
+  vec3 amb = mix(uAmbBottom, uAmbTop, n.y * 0.5 + 0.5);
+  vec3 light = amb * ao * face + uSunCol * ndl * sh * (0.6 + 0.4 * ao);
+  if (leaf) light += uSunCol * 0.08 * sh; // a little light through the leaves
+  return alb * light;
+}
+
+vec3 waterShade(vec3 ro, vec3 rd, float tw, Hit below) {
+  vec3 wp = ro + rd * tw;
+  // Gentle ripple normal, per block texel so it stays blocky.
+  // Calm water: a slight per-block wobble, so reflections break up into blocky streaks.
+  ivec2 t = ivec2(floor(wp.xz * vec2(2.0, 1.0)));
+  vec3 n = normalize(vec3((rnd2(t) - 0.5) * 0.012, 1.0, (rnd2(t + 77) - 0.5) * 0.03));
+  vec3 rr = reflect(rd, n);
+  vec3 refl;
+  Hit h = trace(wp + n * 0.01, rr, 700.0, 0.0);
+  if (h.hit) refl = fogged(shadeHit(wp, rr, h), rr, h.t);
+  else {
+    refl = skyColor(rr, true);
+    vec4 cl = clouds(wp, rr);
+    refl = mix(refl, cl.rgb, cl.a);
+  }
+  float depth = below.hit ? below.t - tw : 20.0;
+  vec3 bed = below.hit ? shadeHit(ro, rd, below) : vec3(0.0);
+  vec3 deep = vec3(0.05, 0.12, 0.2) * (uAmbTop * 0.8 + uSunCol * 0.2);
+  vec3 refr = mix(bed * vec3(0.55, 0.7, 0.8), deep, 1.0 - exp(-depth * 0.35));
+  float fres = 0.04 + 0.96 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
+  fres = clamp(fres * 1.6, 0.0, 1.0);
+  return mix(refr, refl, max(fres, 0.25));
+}
+
+vec3 aces(vec3 x) {
+  return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
+
+vec4 render(vec2 px) {
+  vec2 ndc = (px / uRes) * 2.0 - 1.0;
+  float aspect = uRes.x / uRes.y;
+  float th = tan(uFov * 0.5);
+  vec3 dir = normalize(vec3(ndc.x * th, ndc.y * th / aspect, 1.0));
+  float cp = cos(uPitch), spt = sin(uPitch), cy = cos(uYaw), sy = sin(uYaw);
+  dir = vec3(dir.x, dir.y * cp + dir.z * spt, -dir.y * spt + dir.z * cp);
+  dir = vec3(dir.x * cy + dir.z * sy, dir.y, -dir.x * sy + dir.z * cy);
+  vec3 ro = uCamPos, rd = dir;
+
+  float tMin = uMode == 1 ? uSplit : 0.0;
+  Hit h = trace(ro, rd, 1600.0, tMin);
+  if (uMode == 2) {
+    if (!h.hit || h.t > uSplit) return vec4(0.0);
+  }
+  float tw = rd.y < 0.0 ? (uWater - ro.y) / rd.y : 1e9;
+  bool water = false;
+  if (tw > tMin && tw < (h.hit ? h.t : 1e9)) {
+    vec3 wp = ro + rd * tw;
+    water = heightAt(ivec2(floor(wp.xz))) < float(WATER) + 0.5;
+  }
+  if (uMode == 2 && water && tw > uSplit) return vec4(0.0);
+  vec3 c;
+  float dist;
+  if (water) {
+    c = waterShade(ro, rd, tw, h);
+    dist = tw;
+    c = fogged(c, rd, dist);
+  } else if (h.hit) {
+    c = shadeHit(ro, rd, h);
+    dist = h.t;
+    c = fogged(c, rd, dist);
+    vec4 cl = clouds(ro, rd);
+    float tc = rd.y > 0.0 ? (CLOUD_Y - ro.y) / rd.y : 1e9;
+    if (tc < dist) c = mix(c, cl.rgb, cl.a);
+  } else {
+    c = skyColor(rd, true);
+    vec4 cl = clouds(ro, rd);
+    float tc = (CLOUD_Y - ro.y) / max(rd.y, 1e-4);
+    vec3 cc = fogged(cl.rgb, rd, tc * 0.5);
+    c = mix(c, cc, cl.a);
+  }
+  return vec4(c, 1.0);
+}
+
+void main() {
+  vec2 base = gl_FragCoord.xy + uTile;
+  vec4 acc = vec4(0.0);
+  int n = uSamples;
+  for (int i = 0; i < 4; i++) {
+    if (i >= n * n) break;
+    vec2 o = n == 1 ? vec2(0.5) : vec2(0.25 + 0.5 * float(i % 2), 0.25 + 0.5 * float(i / 2)) + vec2(0.125 * (float(i / 2) - 0.5), -0.125 * (float(i % 2) - 0.5));
+    acc += render(base - 0.5 + o);
+  }
+  vec4 c = acc / float(n * n);
+  vec3 col = c.rgb;
+  if (c.a > 0.0) col /= c.a;
+  col = aces(col * uExposure);
+  float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col = mix(vec3(l), col, uSaturation) * uGrade;
+  col = pow(clamp(col, 0.0, 1.0), vec3(1.0 / 2.2));
+  outColor = vec4(col, c.a);
+}
+</script>
+<script>
+// ---------------------------------------------------------------- world generation (CPU)
+function mulberry(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function makeNoise(seed) {
+  const r = mulberry(seed), P = new Uint8Array(512), G = new Float32Array(512);
+  const p = [...Array(256).keys()];
+  for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 512; i++) { P[i] = p[i & 255]; G[i] = r() * 2 - 1; }
+  const fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  return (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const a = P[(xi & 255) + P[yi & 255]], b = P[((xi + 1) & 255) + P[yi & 255]], c = P[(xi & 255) + P[(yi + 1) & 255]], d = P[((xi + 1) & 255) + P[(yi + 1) & 255]];
+    const u = fade(xf), v = fade(yf);
+    const l1 = G[a] + (G[b] - G[a]) * u, l2 = G[c] + (G[d] - G[c]) * u;
+    return l1 + (l2 - l1) * v;
+  };
+}
+function fbm(n, x, y, oct = 5, lac = 2, gain = 0.5) { let a = 1, f = 1, s = 0, norm = 0; for (let i = 0; i < oct; i++) { s += a * n(x * f, y * f); norm += a; a *= gain; f *= lac; } return s / norm; }
+function ridged(n, x, y, oct = 5) { let a = 1, f = 1, s = 0, norm = 0; for (let i = 0; i < oct; i++) { const v = 1 - Math.abs(n(x * f, y * f) * 1.6); s += a * v * v; norm += a; a *= 0.5; f *= 2.03; } return s / norm; }
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+window.buildWorld = function (cfg) {
+  const { ox, oz, w, h, seed } = cfg;
+  const n1 = makeNoise(seed), n2 = makeNoise(seed + 1), n3 = makeNoise(seed + 2), n4 = makeNoise(seed + 3);
+  const data = new Float32Array(w * h * 4);
+  const hm = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) {
+    const z = oz + j;
+    for (let i = 0; i < w; i++) {
+      const x = ox + i;
+      // Zones along the view (z): shore under the camera, a wide lake, forested hills, mountains.
+      const dz = z - cfg.camZ;
+      const shore = 1 - smooth(cfg.lakeStart - 22, cfg.lakeStart, dz);           // 1 at the camera's shore
+      const lake = smooth(cfg.lakeStart - 6, cfg.lakeStart + 10, dz) * (1 - smooth(cfg.lakeEnd - 14, cfg.lakeEnd + 6, dz + 18 * fbm(n2, x / 90, 3, 2)));
+      const hills = smooth(cfg.lakeEnd - 10, cfg.lakeEnd + 60, dz);
+      const mountains = smooth(cfg.mountZ, cfg.mountZ + 170, dz);
+      // Gentle shore: a little higher towards the frame edges, so trees there frame the view.
+      let y = 64.5 + 3 * fbm(n1, x / 26, z / 26, 3) + shore * (2.5 + Math.min(1, Math.abs(x) / 70) * 6);
+      y -= lake * (9 + 3 * fbm(n2, x / 30, z / 30, 3));
+      y += hills * (6 + 16 * Math.max(0, fbm(n2, x / 60 + 3, z / 60, 4) + 0.35)) * (1 - mountains * 0.4);
+      // The range: taller on the right, under the light; lower and calmer on the left.
+      const side = 0.35 + 0.65 * smooth(-420, 260, x);
+      const r = ridged(n4, x / 140, z / 140, 6);
+      y += mountains * side * (r * r * 120 + 24 * (fbm(n3, x / 80, z / 80, 4) + 0.5));
+      const yi = Math.floor(y);
+      hm[j * w + i] = yi;
+      let forest = (smooth(-0.25, 0.25, fbm(n3, x / 110 + 9, z / 110, 3)) * 0.75 + 0.1) * (1 - smooth(112, 128, yi)) * (yi > 63 ? 1 : 0);
+      // On the camera's shore only at the frame edges, so the trees frame the lake instead of hiding it.
+      if (dz < cfg.lakeStart) forest *= 0.7 * smooth(0.5, 0.68, Math.abs(x) / (dz + 14));
+      const cold = smooth(84, 112, yi);
+      const k = (j * w + i) * 4;
+      data[k] = yi; data[k + 1] = forest; data[k + 2] = cold; data[k + 3] = 0;
+    }
+  }
+  // Steep slopes show rock.
+  for (let j = 1; j < h - 1; j++) for (let i = 1; i < w - 1; i++) {
+    const c = hm[j * w + i];
+    const s = Math.max(Math.abs(hm[j * w + i + 1] - c), Math.abs(hm[j * w + i - 1] - c), Math.abs(hm[(j + 1) * w + i] - c), Math.abs(hm[(j - 1) * w + i] - c));
+    data[(j * w + i) * 4 + 3] = s >= 3 && c > 70 ? 1 : 0;
+  }
+  // Trees: one chance per 7x7 cell, trunk kept 2 blocks from the cell edge so canopies stay inside.
+  const CELL = 7;
+  const r = mulberry(seed + 99);
+  const cx0 = Math.ceil(ox / CELL), cz0 = Math.ceil(oz / CELL);
+  const tw = Math.floor(w / CELL) - 1, th = Math.floor(h / CELL) - 1;
+  const trees = new Float32Array(tw * th * 4).fill(-1e6);
+  const tops = new Float32Array(hm); // terrain top (block y) or canopy top, for shadows and skipping
+  for (let j = 0; j < th; j++) for (let i = 0; i < tw; i++) {
+    const roll = r(), offx = 2 + Math.floor(r() * 3), offz = 2 + Math.floor(r() * 3), tall = r();
+    const tx = (cx0 + i) * CELL + offx, tz = (cz0 + j) * CELL + offz;
+    const li = tx - ox, lj = tz - oz;
+    if (li < 2 || lj < 2 || li >= w - 2 || lj >= h - 2) continue;
+    const k = lj * w + li;
+    const y0 = hm[k];
+    if (y0 < 63 || data[k * 4 + 3] > 0.5 || roll > data[k * 4 + 1]) continue;
+    let steep = false;
+    for (const d of [1, -1, w, -w]) if (Math.abs(hm[k + d] - y0) > 1) steep = true;
+    if (steep) continue;
+    const spruce = data[k * 4 + 2] > 0.55;
+    const ht = spruce ? 6 + Math.floor(tall * 4) : 4 + Math.floor(tall * 3);
+    const q = (j * tw + i) * 4;
+    trees[q] = tx; trees[q + 1] = y0 + 1; trees[q + 2] = tz; trees[q + 3] = ht + (spruce ? 100 : 0);
+    for (let dz = -2; dz <= 2; dz++) for (let dx = -2; dx <= 2; dx++) {
+      const kk = (lj + dz) * w + li + dx;
+      tops[kk] = Math.max(tops[kk], y0 + ht);
+    }
+  }
+  // 8x8 max (terrain and canopies) for empty-space skipping.
+  const mw = w / 8, mh = h / 8, mx = new Float32Array(mw * mh * 4);
+  for (let j = 0; j < mh; j++) for (let i = 0; i < mw; i++) {
+    let m = -100;
+    for (let jj = j * 8; jj < j * 8 + 8; jj++) for (let ii = i * 8; ii < i * 8 + 8; ii++) m = Math.max(m, tops[jj * w + ii]);
+    mx[(j * mw + i) * 4] = m;
+  }
+  return { data, mx, trees, treeOrigin: [cx0, cz0], treeSize: [tw, th], tops };
+};
+
+// Lowest lit y per column for a light from `dir` (unit vector towards the light): a sweep from
+// the light's side, carrying the shadow line down by tan(elevation) per block travelled.
+window.shadowMap = function (world, cfg, dir) {
+  const { w, h } = cfg;
+  const tops = world.tops;
+  const out = new Float32Array(w * h * 4);
+  const horiz = Math.hypot(dir[0], dir[2]);
+  if (horiz < 1e-4) { for (let k = 0; k < w * h; k++) out[k * 4] = tops[k] + 1; return out; }
+  const tanEl = dir[1] / horiz;
+  const sx = dir[0] / horiz, sz = dir[2] / horiz;
+  const S = new Float32Array(w * h);
+  const alongZ = Math.abs(sz) >= Math.abs(sx);
+  const stepMain = alongZ ? Math.sign(sz) : Math.sign(sx);
+  const side = alongZ ? sx / Math.abs(sz) : sz / Math.abs(sx);
+  const drop = tanEl / (alongZ ? Math.abs(sz) : Math.abs(sx));
+  const nMain = alongZ ? h : w, nSide = alongZ ? w : h;
+  const idx = (m, s) => (alongZ ? m * w + s : s * w + m);
+  for (let a = 0; a < nMain; a++) {
+    const m = stepMain > 0 ? nMain - 1 - a : a;
+    const prev = m + stepMain;
+    for (let s = 0; s < nSide; s++) {
+      const top = tops[idx(m, s)] + 1;
+      let v = top;
+      if (prev >= 0 && prev < nMain) {
+        const f = s + side, f0 = Math.floor(f), t = f - f0;
+        if (f0 >= 0 && f0 + 1 < nSide) v = Math.max(top, S[idx(prev, f0)] * (1 - t) + S[idx(prev, f0 + 1)] * t - drop);
+      }
+      S[idx(m, s)] = v;
+    }
+  }
+  for (let k = 0; k < w * h; k++) out[k * 4] = S[k];
+  return out;
+};
+
+
+window.setup = function (cfg) {
+  const c = document.getElementById("c");
+  c.width = cfg.tile; c.height = cfg.tile;
+  const gl = c.getContext("webgl2", { preserveDrawingBuffer: true, premultipliedAlpha: false, antialias: false });
+  gl.getExtension("EXT_color_buffer_float");
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, document.getElementById("vs").textContent));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, document.getElementById("fs").textContent));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, "p");
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  const world = buildWorld(cfg.world);
+  const tex = (unit, w, h, d) => {
+    const t = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, d);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  };
+  tex(0, cfg.world.w, cfg.world.h, world.data);
+  tex(1, cfg.world.w / 8, cfg.world.h / 8, world.mx);
+  tex(2, world.treeSize[0], world.treeSize[1], world.trees);
+  const u = (n) => gl.getUniformLocation(prog, n);
+  gl.uniform1i(u("uWorld"), 0);
+  gl.uniform1i(u("uMax"), 1);
+  gl.uniform1i(u("uTrees"), 2);
+  gl.uniform1i(u("uShadow"), 3);
+  gl.uniform2i(u("uTreeOrigin"), world.treeOrigin[0], world.treeOrigin[1]);
+  gl.uniform2i(u("uTreeSize"), world.treeSize[0], world.treeSize[1]);
+  gl.uniform2i(u("uWorldOrigin"), cfg.world.ox, cfg.world.oz);
+  gl.uniform2i(u("uWorldSize"), cfg.world.w, cfg.world.h);
+  window.__gl = { gl, u, cfg, world, tex };
+  return true;
+};
+
+// Per theme: the light direction decides the shadow map.
+window.setLight = function (dir) {
+  const { cfg, world, tex } = window.__gl;
+  tex(3, cfg.world.w, cfg.world.h, window.shadowMap(world, cfg.world, dir));
+  return true;
+};
+
+window.renderTile = function (opts) {
+  const { gl, u } = window.__gl;
+  const T = opts.uniforms;
+  for (const [k, v] of Object.entries(T)) {
+    const l = u(k);
+    if (l === null) continue;
+    if (Array.isArray(v)) (v.length === 2 ? gl.uniform2fv : gl.uniform3fv).call(gl, l, v);
+    else if (Number.isInteger(v) && /^u(Mode|Samples|DiscMoon)$/.test(k)) gl.uniform1i(l, v);
+    else gl.uniform1f(l, v);
+  }
+  gl.uniform2f(u("uTile"), opts.x, opts.y);
+  gl.viewport(0, 0, opts.w, opts.h);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  const px = new Uint8Array(opts.w * opts.h * 4);
+  gl.readPixels(0, 0, opts.w, opts.h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  // Base64 for the trip back to Node.
+  let s = "";
+  for (let i = 0; i < px.length; i += 0x8000) s += String.fromCharCode.apply(null, px.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+</script>
+</body>
+</html>

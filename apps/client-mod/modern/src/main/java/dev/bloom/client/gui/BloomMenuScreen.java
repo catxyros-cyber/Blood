@@ -354,8 +354,17 @@ public class BloomMenuScreen extends Screen implements Host {
             Ui.spriteTinted(g, "logo", wx + 14, wy + 8, 22, 22, 0xFFFFFFFF);
             Ui.text(g, "MOTION", wx + 43, wy + 8, Theme.alpha(p.text(), t));
             Ui.text(g, "CLIENT", wx + 43 + Ui.font().width("MOTION "), wy + 8, Theme.alpha(0xFFE6C35E, t));
+            // You: face and name, just left of the search box.
+            String you = Ui.ellipsize(net.minecraft.client.Minecraft.getInstance().getUser().getName(), 90);
+            int youW = 16 + 6 + Ui.font().width(you);
+            int youX = search.x - 12 - youW;
+            boolean showYou = youX > wx + 44 + Ui.font().width("MOTION CLIENT") + 24;
+            if (showYou) {
+                dev.bloom.client.game.PlayerFace.draw(g, youX, wy + 11, 16, Theme.alpha(0xFFFFFFFF, t));
+                Ui.text(g, you, youX + 22, wy + 15, Theme.alpha(p.text(), t));
+            }
             int subtitleX = wx + 44;
-            int subtitleW = Math.max(32, search.x - subtitleX - 12);
+            int subtitleW = Math.max(32, (showYou ? youX : search.x) - subtitleX - 12);
             Ui.text(g, Ui.ellipsize("CLICK GUI  ·  Click a switch to toggle, a section to open details", subtitleW), subtitleX, wy + 21, Theme.alpha(p.textFaint(), t));
             g.fill(wx + 8, wy + 38, wx + ww - 8, wy + 39, Theme.alpha(p.border(), 0.8f * t));
             if (search.value().isBlank()) {
@@ -456,19 +465,25 @@ public class BloomMenuScreen extends Screen implements Host {
             if (!compact) Ui.text(g, Ui.ellipsize(c.label(), iw - 30), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));
             y += itemH + 1;
         }
-        // Active profile chip at the bottom
+        // You (face and name), then the active visual profile, at the bottom
         if (!compact) {
+            int py = wy + wh - 42;
+            dev.bloom.client.game.PlayerFace.draw(g, wx + 8, py + 2, 12, Theme.alpha(0xFFFFFFFF, t));
+            String you = net.minecraft.client.Minecraft.getInstance().getUser().getName();
+            Ui.text(g, Ui.ellipsize(you, sidebar - 32), wx + 25, py + 4, Theme.alpha(p.text(), t));
             var prof = BloomClient.get().profiles().active();
             int by = wy + wh - 22;
             boolean over = Ui.inside(mx, my, wx + 4, by, sidebar - 9, 16);
             Ui.smallPanel(g, wx + 4, by, sidebar - 9, 16, over ? p.surfaceActive() : p.surface());
             Ui.icon(g, "profiles", wx + 8, by + 3, 10, Theme.accentArgb());
             Ui.text(g, Ui.ellipsize(prof.name(), sidebar - 32), wx + 21, by + 4, p.textDim());
+        } else {
+            dev.bloom.client.game.PlayerFace.draw(g, wx + (sidebar - 12) / 2 - 1, wy + wh - 20, 12, Theme.alpha(0xFFFFFFFF, t));
         }
     }
 
     private int itemHeight() {
-        return Math.min(visualsMenu ? 22 : 20, (wh - 70) / nav.size());
+        return Math.min(visualsMenu ? 22 : 20, (wh - 92) / nav.size());
     }
 
     private void drawPetals(GuiGraphics g, float dt, float t) {

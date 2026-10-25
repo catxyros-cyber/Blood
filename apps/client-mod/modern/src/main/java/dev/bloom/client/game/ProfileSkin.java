@@ -20,7 +20,7 @@ import java.util.Base64;
 import java.util.UUID;
 
 /**
- * Your own skin for the title screen, fetched straight from Mojang's public profile service. A
+ * Your own skin for the title screen and MOTION's menus, fetched straight from Mojang's public profile service. A
  * plain profile object has no texture data, so asking Minecraft's skin manager for it only ever
  * returned the default Steve/Alex skin.
  */
@@ -30,6 +30,9 @@ public final class ProfileSkin {
 
     private static volatile Skin skin;
     private static volatile boolean started;
+    /** When the last attempt failed (network, Mojang down); a later call tries again after a pause. */
+    private static volatile long failedAt;
+    private static final long RETRY_MS = 30_000;
 
     private ProfileSkin() {
     }
@@ -40,8 +43,10 @@ public final class ProfileSkin {
     }
 
     public static void fetch(UUID id) {
-        if (started || id == null) return;
+        if (id == null || skin != null) return;
+        if (started && (failedAt == 0 || System.currentTimeMillis() - failedAt < RETRY_MS)) return;
         started = true;
+        failedAt = 0;
         HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).followRedirects(HttpClient.Redirect.NORMAL).build();
         String uuid = id.toString().replace("-", "");
         HttpRequest profile = HttpRequest.newBuilder(URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid))
@@ -70,13 +75,17 @@ public final class ProfileSkin {
                     HttpResponse.BodyHandlers.ofByteArray()).thenApply(r -> new Object[]{r, isSlim});
         }).whenComplete((pair, err) -> {
             if (err != null) {
-                Log.warn("MOTION title screen: couldn't load your skin (" + err + ")");
+                Log.warn("MOTION: couldn't load your skin (" + err + "), will retry");
+                failedAt = System.currentTimeMillis();
                 return;
             }
             @SuppressWarnings("unchecked")
             HttpResponse<byte[]> r = (HttpResponse<byte[]>) pair[0];
             boolean slim = (Boolean) pair[1];
-            if (r.statusCode() != 200 || r.body().length > 512 * 1024) return;
+            if (r.statusCode() != 200 || r.body().length > 512 * 1024) {
+                failedAt = System.currentTimeMillis();
+                return;
+            }
             NativeImage img;
             try {
                 img = NativeImage.read(new java.io.ByteArrayInputStream(r.body()));

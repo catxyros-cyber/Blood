@@ -145,11 +145,7 @@ export function SkinsPage() {
   return (
     <div>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            <Icon.User size={26} /> My Skin
-          </span>
-        }
+        title="My Skin"
         subtitle="Browse MOTION community skins, then preview, edit and apply one to your Minecraft account."
         actions={
           <div className="flex gap-2">
@@ -185,7 +181,7 @@ export function SkinsPage() {
                 <>
                   <span className="h-2 w-2 rounded-full bg-accent" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[13.5px] truncate">{account.username}</div>
+                    <div className="font-semibold text-[14px] truncate">{account.username}</div>
                     <div className="text-[12px] text-muted">Signed in with Microsoft</div>
                   </div>
                   {accountSkin && (
@@ -236,11 +232,11 @@ export function SkinsPage() {
               <button
                 type="button"
                 onClick={() => void upload()}
-                className="w-full rounded-2xl border-2 border-dashed border-line-strong hover:border-accent/60 bg-panel-2/60 py-7 grid place-items-center text-center cursor-pointer transition-colors mb-5"
+                className="w-full rounded-xl border-2 border-dashed border-line-strong hover:border-accent/60 bg-panel-2/60 py-7 grid place-items-center text-center cursor-pointer transition-colors mb-5"
               >
                 <Icon.Upload size={26} className="text-accent" />
                 <div className="font-semibold mt-2">Drop PNG skins anywhere on this page</div>
-                <div className="text-[12.5px] text-muted">or click to choose files · 64×64 (old 64×32 skins are converted)</div>
+                <div className="text-[13px] text-muted">or click to choose files · 64×64 (old 64×32 skins are converted)</div>
               </button>
 
               {shown.length === 0 ? (
@@ -315,7 +311,7 @@ export function SkinsPage() {
             </>
           ) : tab === "community" ? (
             <>
-              <div className="mb-4 text-[12.5px] text-muted">Shared MOTION skins. Add one to your library before applying it to your Minecraft account.</div>
+              <div className="mb-4 text-[13px] text-muted">Shared MOTION skins. Add one to your library before applying it to your Minecraft account.</div>
               {!st.communityLoaded ? (
                 <EmptyState title="Loading community skins">Fetching the MOTION skin catalog…</EmptyState>
               ) : st.communityError ? (

@@ -26,21 +26,23 @@ export function TitleBar() {
   }, [win]);
   const btn = "h-full w-[46px] grid place-items-center text-muted hover:text-fg hover:bg-raised transition-colors";
   return (
-    <div className="relative z-10 h-9 shrink-0 flex items-center bg-bg/35 backdrop-blur-md border-b border-white/5 select-none" data-tauri-drag-region>
-      <div className="flex items-center gap-2 pl-3.5 pointer-events-none opacity-80" data-tauri-drag-region>
-        <BloodMark size={15} />
-        <Wordmark height={11} />
-      </div>
+    <div className="relative z-10 h-9 shrink-0 flex items-center bg-bg border-b border-line select-none" data-tauri-drag-region>
+      {!ready && (
+        <div className="flex items-center gap-2 pl-3.5 pointer-events-none opacity-80" data-tauri-drag-region>
+          <BloodMark size={15} />
+          <Wordmark height={11} />
+        </div>
+      )}
       <div className="flex-1 h-full flex items-center justify-center" data-tauri-drag-region>
         {ready && (
           <button
             type="button"
             onClick={openPalette}
-            className="h-6 w-[280px] max-w-[40vw] flex items-center gap-2 px-2.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-faint hover:text-muted hover:border-white/15 text-[12px] cursor-pointer transition-colors"
+            className="h-6 w-[300px] max-w-[40vw] flex items-center gap-2 px-2.5 rounded-md bg-panel-2 border border-line text-faint hover:text-muted hover:border-line-strong text-[12px] cursor-pointer transition-colors"
           >
             <Icon.Search size={13} />
-            <span className="flex-1 text-left truncate">Play, join, or jump to…</span>
-            <kbd className="font-mono text-[10.5px] opacity-80">Ctrl K</kbd>
+            <span className="flex-1 text-left truncate">Search</span>
+            <kbd className="font-mono text-[11px] opacity-70">Ctrl K</kbd>
           </button>
         )}
       </div>
@@ -67,7 +69,7 @@ export function Avatar({ account, size = 28 }: { account?: Account; size?: numbe
 
   if (!skin || imageFailed) {
     return (
-      <div className="rounded-lg bg-raised border border-line grid place-items-center text-muted shrink-0" style={{ width: size, height: size }}>
+      <div className="rounded-md bg-raised border border-line grid place-items-center text-muted shrink-0" style={{ width: size, height: size }}>
         <Icon.User size={size * 0.55} />
       </div>
     );
@@ -75,7 +77,7 @@ export function Avatar({ account, size = 28 }: { account?: Account; size?: numbe
 
   const image = (left: number) => ({ width: size * 8, height: size * 8, left, top: -size, imageRendering: "pixelated" as const });
   return (
-    <div className="relative rounded-lg overflow-hidden shrink-0 border border-white/10" style={{ width: size, height: size }}>
+    <div className="relative rounded-md overflow-hidden shrink-0 border border-white/10" style={{ width: size, height: size }}>
       <img src={skin} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size)} />
       <img src={skin} alt="" draggable={false} onError={() => setImageFailed(true)} className="absolute max-w-none pixelated" style={image(-size * 5)} />
     </div>
@@ -87,16 +89,19 @@ function NavItem({ icon, label, active, onClick, badge }: { icon: ReactNode; lab
       type="button"
       onClick={onClick}
       className={cx(
-        "group relative flex items-center gap-3 h-10 w-full px-3 rounded-xl text-[14px] font-medium transition-all cursor-pointer",
-        active ? "bg-gradient-to-r from-accent/16 to-accent/4 text-fg" : "text-muted hover:text-fg hover:bg-white/5",
+        "group relative flex items-center gap-3 h-9 w-full px-3 rounded-lg text-[14px] font-medium transition-colors cursor-pointer",
+        active ? "bg-white/[0.07] text-fg" : "text-muted hover:text-fg hover:bg-white/[0.04]",
       )}
     >
-      {active && <span className="nav-active-bar absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-full bg-accent" />}
       <span className={cx("transition-colors", active ? "text-accent" : "text-faint group-hover:text-muted")}>{icon}</span>
       <span className="flex-1 text-left">{label}</span>
       {badge}
     </button>
   );
+}
+
+function NavGroup({ children }: { children: ReactNode }) {
+  return <div className="px-3 pt-5 pb-1.5 text-[11px] font-medium text-faint">{children}</div>;
 }
 
 function isActive(route: Route, page: Route["page"]): boolean {
@@ -115,35 +120,34 @@ export function Sidebar() {
   const awaiting = useStore(app, (s) => s.premium.awaitingPayment);
   const account = activeAccount();
   useEffect(() => {
+    // New or switched-to accounts without a face yet: look it up now rather than at next start.
     if (account && !account.skinUrl) void refreshAccountSkin(account).catch(() => undefined);
   }, [account?.id, account?.skinUrl]);
   void accounts;
   void activeId;
   return (
-    <aside className="relative z-10 w-[232px] shrink-0 flex flex-col border-r border-white/5 glass">
-      <div className="flex items-center gap-3 px-5 pt-5 pb-6">
-        <BloodMark size={34} />
-        <div>
-          <Wordmark height={21} />
-          <div className="text-[10.5px] text-faint mt-1.5 tracking-[0.18em] uppercase">Built for frames</div>
-        </div>
+    <aside className="relative z-10 w-[220px] shrink-0 flex flex-col border-r border-line glass">
+      <div className="flex items-center gap-2.5 px-5 h-16">
+        <BloodMark size={24} />
+        <Wordmark height={15} />
       </div>
-      <nav className="px-3 space-y-1">
-        <NavItem icon={<Icon.Home size={19} />} label="Home" active={isActive(route, "home")} onClick={() => navigate({ page: "home" })} />
+      <nav className="px-3 flex flex-col gap-0.5">
+        <NavItem icon={<Icon.Home size={18} />} label="Home" active={isActive(route, "home")} onClick={() => navigate({ page: "home" })} />
         <NavItem
-          icon={<Icon.Library size={19} />}
+          icon={<Icon.Library size={18} />}
           label="Library"
           active={isActive(route, "library")}
           onClick={() => navigate({ page: "library" })}
-          badge={runningCount > 0 ? <span className="h-2 w-2 rounded-full bg-accent shadow-[0_0_8px] shadow-accent" title="Running" /> : undefined}
+          badge={runningCount > 0 ? <span className="h-1.5 w-1.5 rounded-full bg-accent" title="Running" /> : undefined}
         />
-        <NavItem icon={<Icon.Hud size={19} />} label="MOTION Mods" active={isActive(route, "mods")} onClick={() => navigate({ page: "mods" })} />
-        <NavItem icon={<Icon.Gauge size={19} />} label="Performance" active={isActive(route, "performance")} onClick={() => navigate({ page: "performance" })} />
-        <NavItem icon={<Icon.Compass size={19} />} label="Browse" active={isActive(route, "browse")} onClick={() => navigate({ page: "browse" })} />
-        <NavItem icon={<Icon.Paint size={19} />} label="Visuals" active={isActive(route, "customize")} onClick={() => navigate({ page: "customize" })} />
-        <NavItem icon={<Icon.User size={19} />} label="My Skin" active={isActive(route, "skins")} onClick={() => navigate({ page: "skins" })} />
+        <NavItem icon={<Icon.Compass size={18} />} label="Browse" active={isActive(route, "browse")} onClick={() => navigate({ page: "browse" })} />
+        <NavGroup>MOTION</NavGroup>
+        <NavItem icon={<Icon.Hud size={18} />} label="MOTION Mods" active={isActive(route, "mods")} onClick={() => navigate({ page: "mods" })} />
+        <NavItem icon={<Icon.Gauge size={18} />} label="Performance" active={isActive(route, "performance")} onClick={() => navigate({ page: "performance" })} />
+        <NavItem icon={<Icon.Paint size={18} />} label="Visuals" active={isActive(route, "customize")} onClick={() => navigate({ page: "customize" })} />
+        <NavItem icon={<Icon.User size={18} />} label="My Skin" active={isActive(route, "skins")} onClick={() => navigate({ page: "skins" })} />
         <NavItem
-          icon={<Icon.Crown size={19} />}
+          icon={<Icon.Crown size={18} />}
           label="Premium"
           active={isActive(route, "premium")}
           onClick={() => navigate({ page: "premium" })}
@@ -152,26 +156,33 @@ export function Sidebar() {
       </nav>
       <div className="flex-1" />
       <TaskTray />
-      <div className="p-3 border-t border-white/5 space-y-1">
+      <div className="p-3 border-t border-line flex items-center gap-1">
         <button
           type="button"
           onClick={() => navigate({ page: "accounts" })}
-          className={cx("flex items-center gap-3 w-full p-2 rounded-xl transition-colors cursor-pointer", route.page === "accounts" ? "bg-accent/12" : "hover:bg-white/5")}
+          title="Accounts"
+          className={cx("flex flex-1 min-w-0 items-center gap-2.5 p-1.5 rounded-lg transition-colors cursor-pointer", route.page === "accounts" ? "bg-white/[0.07]" : "hover:bg-white/[0.04]")}
         >
-          <Avatar account={account} size={30} />
+          <Avatar account={account} size={28} />
           <div className="min-w-0 text-left">
-            <div className="text-[13.5px] font-semibold truncate flex items-center gap-1.5">
+            <div className="text-[13px] font-semibold truncate flex items-center gap-1.5">
               {account?.username ?? "Sign in"}
               {premium && (
-                <span className="text-amber-200" title="MOTION Premium supporter">
-                  <Icon.Crown size={13} />
+                <span className="text-amber-200 shrink-0" title="MOTION Premium supporter">
+                  <Icon.Crown size={12} />
                 </span>
               )}
             </div>
-            <div className="text-[11.5px] text-faint">{account ? (premium ? "Premium supporter" : "Microsoft account") : "Add an account to play"}</div>
+            <div className="text-[12px] text-faint truncate">{account ? (premium ? "Premium" : "Microsoft account") : "Add an account to play"}</div>
           </div>
         </button>
-        <NavItem icon={<Icon.Settings size={19} />} label="Settings" active={isActive(route, "settings")} onClick={() => navigate({ page: "settings" })} />
+        <IconButton
+          label="Settings"
+          onClick={() => navigate({ page: "settings" })}
+          className={cx("h-9 w-9 shrink-0", isActive(route, "settings") && "bg-white/[0.07] text-fg")}
+        >
+          <Icon.Settings size={18} />
+        </IconButton>
       </div>
     </aside>
   );
@@ -183,11 +194,11 @@ function TaskTray() {
   return (
     <div className="mx-3 mb-3 space-y-2">
       {tasks.slice(-3).map((t) => (
-        <div key={t.id} className="rounded-xl border border-line bg-panel-2 p-3 animate-in">
+        <div key={t.id} className="rounded-lg border border-line bg-panel-2 p-3 animate-in">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] font-semibold truncate">{t.title}</div>
-              <div className="text-[11.5px] text-muted truncate">{t.stage}</div>
+              <div className="text-[13px] font-semibold truncate">{t.title}</div>
+              <div className="text-[12px] text-muted truncate">{t.stage}</div>
             </div>
             {t.cancellable && (
               <IconButton
@@ -219,12 +230,12 @@ export function Toasts() {
     info: { icon: <Icon.Info size={17} />, c: "text-info" },
   };
   return (
-    <div className="fixed bottom-5 right-5 z-[60] flex flex-col gap-2.5 w-[380px]">
+    <div className="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 w-[360px]">
       {toasts.map((t) => (
-        <div key={t.id} className="flex gap-3 rounded-2xl border border-line-strong bg-raised/95 backdrop-blur p-4 shadow-2xl shadow-black/50 animate-in">
+        <div key={t.id} className="flex gap-3 rounded-xl border border-line-strong bg-raised p-3.5 shadow-xl shadow-black/40 animate-in">
           <div className={cx("mt-0.5", tone[t.kind].c)}>{tone[t.kind].icon}</div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[13.5px]">{t.title}</div>
+            <div className="font-semibold text-[14px]">{t.title}</div>
             {t.message && <div className="text-[13px] text-muted mt-0.5 leading-relaxed selectable">{t.message}</div>}
             {t.action && (
               <button
@@ -253,10 +264,10 @@ export function DragOverlay() {
   if (!active) return null;
   return (
     <div className="fixed inset-0 z-[70] pointer-events-none p-4">
-      <div className="h-full w-full rounded-3xl border-2 border-dashed border-accent/70 bg-accent/5 grid place-items-center animate-pop">
+      <div className="h-full w-full rounded-xl border-2 border-dashed border-accent/60 bg-bg/80 grid place-items-center animate-in">
         <div className="text-center">
-          <Icon.Upload size={40} className="mx-auto text-accent" />
-          <div className="font-display text-xl font-semibold mt-3">Drop to add</div>
+          <Icon.Upload size={32} className="mx-auto text-accent" />
+          <div className="font-display text-lg font-semibold mt-3">Drop to add</div>
           <div className="text-muted mt-1">.jar mods, resource/shader pack .zip files, or a .mrpack modpack</div>
         </div>
       </div>

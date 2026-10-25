@@ -44,8 +44,8 @@ function HitRow({ hit, type, target, installed }: { hit: SearchHit; type: Browse
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2 min-w-0">
-          <span className="font-semibold text-[15px] truncate group-hover:text-accent transition-colors">{hit.title}</span>
-          <span className="text-[12.5px] text-faint truncate">by {hit.author}</span>
+          <span className="font-semibold text-[16px] truncate group-hover:text-accent transition-colors">{hit.title}</span>
+          <span className="text-[13px] text-faint truncate">by {hit.author}</span>
         </div>
         <p className="text-[13px] text-muted mt-0.5 line-clamp-2">{hit.description}</p>
         <div className="flex items-center gap-3 mt-2 text-[12px] text-faint flex-wrap">
@@ -202,7 +202,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           {!hits ? (
             <div className="space-y-3">
               {Array.from({ length: 6 }, (_, i) => (
-                <Skeleton key={i} className="h-[104px] rounded-2xl" />
+                <Skeleton key={i} className="h-[104px] rounded-xl" />
               ))}
             </div>
           ) : hits.length === 0 ? (
@@ -213,7 +213,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
             </Card>
           ) : (
             <>
-              <div className="text-[12.5px] text-faint mb-2">{formatCount(total)} results</div>
+              <div className="text-[13px] text-faint mb-2">{formatCount(total)} results</div>
               <div className="space-y-3">
                 {hits.map((h) => (
                   <HitRow key={h.project_id} hit={h} type={type} target={effectiveTarget} installed={installed.has(h.project_id)} />
@@ -233,7 +233,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
         <aside className="space-y-5 sticky top-0">
           {type !== "modpack" && (
             <Card className="p-4">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold mb-2">Install to</div>
+              <div className="text-[13px] text-muted font-medium mb-2">Install to</div>
               <Select
                 value={effectiveTarget?.id ?? ""}
                 onChange={setTargetId}
@@ -242,7 +242,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
               {effectiveTarget && (
                 <div className="flex items-center gap-2.5 mt-3">
                   <InstanceIcon inst={effectiveTarget} size={32} />
-                  <div className="text-[12.5px] text-muted min-w-0">
+                  <div className="text-[13px] text-muted min-w-0">
                     Showing only content for <span className="text-fg">{effectiveTarget.gameVersion}</span>
                     {type === "mod" && <> · {loaderLabel(effectiveTarget)}</>}
                   </div>
@@ -252,7 +252,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           )}
           {!effectiveTarget && (
             <Card className="p-4 space-y-3">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold">Filters</div>
+              <div className="text-[13px] text-muted font-medium">Filters</div>
               <Select value={gameVersion} onChange={setGameVersion} options={[{ value: "", label: "Any Minecraft version" }, ...releaseVersions.map((v) => ({ value: v.version, label: v.version }))]} />
               {(type === "mod" || type === "modpack") && (
                 <Select
@@ -276,7 +276,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           )}
           {catOptions.length > 0 && (
             <Card className="p-4">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold mb-2">Categories</div>
+              <div className="text-[13px] text-muted font-medium mb-2">Categories</div>
               <div className="flex flex-wrap gap-1.5">
                 {catOptions.map((c) => {
                   const on = categories.includes(c.name);
@@ -286,7 +286,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
                       type="button"
                       onClick={() => setCategories((cs) => (on ? cs.filter((x) => x !== c.name) : [...cs, c.name]))}
                       className={cx(
-                        "h-7 px-2.5 rounded-lg text-[12.5px] capitalize border transition-colors cursor-pointer",
+                        "h-7 px-2.5 rounded-lg text-[13px] capitalize border transition-colors cursor-pointer",
                         on ? "bg-accent/15 border-accent/40 text-accent" : "bg-panel-2 border-line text-muted hover:text-fg",
                       )}
                     >
@@ -297,7 +297,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
               </div>
             </Card>
           )}
-          <p className="text-[11.5px] text-faint leading-relaxed">
+          <p className="text-[12px] text-faint leading-relaxed">
             Content is provided by Modrinth and its creators under their own licences. Files are downloaded from Modrinth and checked against their published hashes.
           </p>
         </aside>

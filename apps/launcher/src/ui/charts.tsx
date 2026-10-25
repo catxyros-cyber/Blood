@@ -52,8 +52,8 @@ export function Sparkline({
 export function Metric({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "warn" | "good" }) {
   return (
     <div>
-      <div className="text-[11.5px] uppercase tracking-[0.08em] text-faint font-semibold">{label}</div>
-      <div className={`font-display text-[22px] font-semibold tabular-nums mt-0.5 ${tone === "warn" ? "text-warn" : tone === "good" ? "text-accent" : ""}`}>{value}</div>
+      <div className="text-[13px] text-faint font-medium">{label}</div>
+      <div className={`font-display text-[24px] font-semibold tabular-nums mt-0.5 ${tone === "warn" ? "text-warn" : tone === "good" ? "text-accent" : ""}`}>{value}</div>
       {sub && <div className="text-[12px] text-muted">{sub}</div>}
     </div>
   );

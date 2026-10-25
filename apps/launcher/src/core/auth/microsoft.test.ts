@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { minecraftSessionFromMs, pollDeviceCode, refreshMsToken, requestDeviceCode } from "./microsoft";
+import { minecraftSessionFromMs, pollDeviceCode, publicSkinUrl, refreshMsToken, requestDeviceCode, skinUrlFromSessionProfile } from "./microsoft";
 import { FakePlatform, json } from "../test/fakePlatform";
 
 function authRoutes(p: FakePlatform, opts: { xstsError?: number; noProfile?: boolean; notApproved?: boolean } = {}) {
@@ -133,4 +133,25 @@ test("skin URLs are served over https (the launcher only loads https images)", a
   assert.equal(secureSkinUrl("http://textures.minecraft.net/texture/abc"), "https://textures.minecraft.net/texture/abc");
   assert.equal(secureSkinUrl("https://textures.minecraft.net/texture/abc"), "https://textures.minecraft.net/texture/abc");
   assert.equal(secureSkinUrl(undefined), undefined);
+});
+
+const texturesProperty = (textures: unknown) => ({ properties: [{ name: "textures", value: btoa(JSON.stringify({ textures })) }] });
+
+test("skinUrlFromSessionProfile reads the skin from a public profile", () => {
+  const url = skinUrlFromSessionProfile(texturesProperty({ SKIN: { url: "http://textures.minecraft.net/texture/abc" } }));
+  assert.equal(url, "https://textures.minecraft.net/texture/abc");
+  assert.equal(skinUrlFromSessionProfile(texturesProperty({})), undefined, "default skin");
+  assert.equal(skinUrlFromSessionProfile(texturesProperty({ SKIN: { url: "https://evil.example/x.png" } })), undefined, "other hosts");
+  assert.equal(skinUrlFromSessionProfile({ properties: [{ name: "textures", value: "not base64 json" }] }), undefined);
+  assert.equal(skinUrlFromSessionProfile(null), undefined);
+});
+
+test("publicSkinUrl asks the session server by undashed UUID", async () => {
+  const p = new FakePlatform();
+  p.route("https://sessionserver.mojang.com/session/minecraft/profile/0123456789abcdef0123456789abcdef", () =>
+    json(texturesProperty({ SKIN: { url: "http://textures.minecraft.net/texture/face" } })),
+  );
+  const http = (req: Parameters<typeof p.request>[0]) => p.request(req);
+  assert.equal(await publicSkinUrl(http, "01234567-89ab-cdef-0123-456789abcdef"), "https://textures.minecraft.net/texture/face");
+  assert.equal(await publicSkinUrl(http, "not-a-uuid"), undefined);
 });
