@@ -44,8 +44,7 @@
   "bundle": {
     "active": true,
     "targets": [
-      "nsis",
-      "msi"
+      "nsis"
     ],
     "publisher": "MOTION",
     "copyright": "© 2026 MOTION. Not affiliated with Mojang Studios or Microsoft.",
