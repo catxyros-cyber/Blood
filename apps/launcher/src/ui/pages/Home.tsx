@@ -27,7 +27,8 @@ import { perfStates } from "../../services/bloodMods";
 import { activeLayout, HUD_WIDGETS, widgetVisible } from "../../core/bloomclient/modules";
 import type { ContentItem } from "../../services/content";
 
-export function PlayButton({ inst, size = "lg" }: { inst: Instance; size?: "lg" | "md" }) {
+/** `quiet` renders a neutral button, for lists where many installations each have one. */
+export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instance; size?: "lg" | "md"; quiet?: boolean }) {
   const running = useStore(app, (s) => Boolean(s.running[inst.id]));
   const task = useStore(app, (s) => s.tasks.find((t) => t.id === `launch-${inst.id}`));
   const big = size === "lg";
@@ -63,11 +64,12 @@ export function PlayButton({ inst, size = "lg" }: { inst: Instance; size?: "lg" 
       type="button"
       onClick={() => void play(inst.id)}
       className={cx(
-        "play-button font-semibold flex items-center justify-center transition-[filter] cursor-pointer",
-        big ? "h-12 w-44 text-[16px] gap-2.5" : "h-10 w-32 text-[14px] gap-2",
+        "font-semibold flex items-center justify-center cursor-pointer",
+        quiet ? "rounded-lg border border-line-strong bg-raised hover:bg-line-strong transition-colors" : "play-button transition-[filter]",
+        big ? "h-12 w-44 text-[16px] gap-2.5" : quiet ? "h-9 w-24 text-[13.5px] gap-1.5" : "h-10 w-32 text-[14px] gap-2",
       )}
     >
-      <Icon.Play size={big ? 18 : 15} />
+      <Icon.Play size={big ? 18 : quiet ? 13 : 15} className={quiet ? "text-accent" : undefined} />
       Play
     </button>
   );
@@ -188,8 +190,8 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
           <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
         </div>
-        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[264px] shrink-0 hidden lg:block">
-          <div className="flex items-center justify-between mb-3.5">
+        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[272px] shrink-0 hidden lg:block">
+          <div className="flex items-center justify-between gap-3 mb-3.5 whitespace-nowrap">
             <div className="text-[13px] font-semibold">This installation</div>
             <span className={cx("text-[11px] font-semibold inline-flex items-center gap-1", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
               <span className={cx("h-1.5 w-1.5 rounded-full", summary?.filesReady ? "bg-accent" : "bg-faint")} />
@@ -641,8 +643,9 @@ export function HomePage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-[13.5px] truncate">{i.name}</div>
                       <div className="text-[12.5px] text-muted truncate">
-                        {i.gameVersion} · {loaderLabel(i)} · {isRunning(i.id) ? "Running now" : timeAgo(i.lastPlayedAt)}
+                        {i.gameVersion} · {loaderLabel(i)}
                       </div>
+                      <div className="text-[12px] text-faint truncate">{isRunning(i.id) ? "Running now" : `Played ${timeAgo(i.lastPlayedAt)}`}</div>
                     </div>
                     <IconButton label="Open installation" onClick={(e) => { e.stopPropagation(); navigate({ page: "instance", id: i.id }); }}>
                       <Icon.ChevronDown size={16} className="-rotate-90" />
@@ -662,8 +665,6 @@ export function HomePage() {
         </div>
         <aside className="space-y-8">
           <LauncherStatus />
-          <LicenseCard compact />
-          <TeamCard />
           {inst && <BloomClientCard inst={inst} />}
           {inst && (
             <section>
@@ -678,6 +679,8 @@ export function HomePage() {
               <p className="text-[12px] text-faint mt-3 leading-relaxed">Real-world FPS depends on your hardware, settings, world and mods.</p>
             </section>
           )}
+          <TeamCard />
+          <LicenseCard compact />
           <UpgradeCard />
         </aside>
       </div>

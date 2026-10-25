@@ -88,7 +88,7 @@ export function SettingsPage({ section }: { section?: string }) {
           <Section id="appearance" title="Appearance">
             <div>
               <div className="font-medium mb-2">Theme</div>
-              <div className="grid grid-cols-5 gap-2.5">
+              <div className="grid grid-cols-6 gap-2">
                 {THEMES.map((t) => (
                   <button
                     key={t.id}

@@ -145,11 +145,7 @@ export function SkinsPage() {
   return (
     <div>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            <Icon.User size={26} /> My Skin
-          </span>
-        }
+        title="My Skin"
         subtitle="Browse MOTION community skins, then preview, edit and apply one to your Minecraft account."
         actions={
           <div className="flex gap-2">

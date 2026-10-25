@@ -209,15 +209,15 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
       <Presets inst={inst} disabled={!clientReady} onApplied={() => setTick((t) => t + 1)} />
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="inline-flex p-1 rounded-xl bg-panel-2 border border-line">
+        <div className="inline-flex p-0.5 rounded-lg bg-panel-2 border border-line">
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
               type="button"
               onClick={() => navigate({ page: "mods", instanceId: inst.id, category: c.value })}
               className={cx(
-                "h-8 px-3 rounded-lg text-[13px] font-medium transition-all cursor-pointer inline-flex items-center gap-1.5",
-                category === c.value ? "bg-accent text-accent-ink shadow-sm" : "text-muted hover:text-fg",
+                "h-8 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5",
+                category === c.value ? "bg-raised text-fg" : "text-muted hover:text-fg",
               )}
             >
               {c.icon}

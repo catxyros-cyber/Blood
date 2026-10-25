@@ -53,11 +53,7 @@ export function CustomizePage({ instanceId }: { instanceId?: string }) {
   return (
     <div>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            <BloodMark size={30} /> Visuals
-          </span>
-        }
+        title="Visuals"
         subtitle="Skies, weather, particles and visual profiles for MOTION Client. Everything is client-side and visual only. HUD modules live in MOTION Mods."
         actions={
           <Select

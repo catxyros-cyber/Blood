@@ -89,7 +89,7 @@ function InstanceCard({ inst, selected }: { inst: Instance; selected: boolean })
           {inst.totalPlayMs ? <span className="text-[11.5px] text-faint self-center">{formatPlaytime(inst.totalPlayMs)}</span> : null}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
-          <PlayButton inst={inst} size="md" />
+          <PlayButton inst={inst} size="md" quiet />
         </div>
       </div>
       <RenameModal inst={inst} open={renaming} onClose={() => setRenaming(false)} />
