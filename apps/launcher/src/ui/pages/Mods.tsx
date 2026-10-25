@@ -97,12 +97,7 @@ export function ModsPage({ instanceId, category = "all" }: { instanceId?: string
   return (
     <>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            MOTION Mods
-            <span className="h-[3px] w-10 rounded-full accent-rule" />
-          </span>
-        }
+        title="MOTION Mods"
         subtitle={<>Built-in HUD modules, performance mods and quality-of-life switches. Settings are kept separately for each installation.</>}
         actions={
           <Select
@@ -271,7 +266,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 
 function ClientBanner({ inst, client, running, problems, onChanged }: { inst: Instance; client: ClientStatus | null; running: boolean; problems: number; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
-  if (!client) return <Skeleton className="h-[74px] rounded-2xl" />;
+  if (!client) return <Skeleton className="h-[74px] rounded-xl" />;
   const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
@@ -379,7 +374,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">Presets</h2>
+        <h2 className="text-[14px] font-semibold text-fg">Presets</h2>
         <Menu
           trigger={
             <Button size="sm" variant="ghost" icon={<Icon.Undo size={14} />}>
@@ -470,7 +465,7 @@ function ModuleCard({
     labels.push("All versions");
   }
   return (
-    <Card className={cx("p-4 transition-colors", on && !blocked && "border-accent/30 bg-gradient-to-br from-accent/[0.06] to-transparent")}>
+    <Card className={cx("p-4 transition-colors", on && !blocked && "border-line-strong")}>
       <div className="flex items-start gap-3">
         <div className={cx("h-10 w-10 rounded-xl grid place-items-center shrink-0 transition-colors", on && !blocked ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>{moduleIcon(m)}</div>
         <div className="min-w-0 flex-1">
@@ -479,7 +474,7 @@ function ModuleCard({
           </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {labels.map((l) => (
-              <span key={l} className="text-[10.5px] uppercase tracking-[0.06em] text-faint border border-line rounded px-1.5 h-[18px] inline-flex items-center">
+              <span key={l} className="text-[11px] text-faint border border-line rounded px-1.5 h-[18px] inline-flex items-center">
                 {l}
               </span>
             ))}

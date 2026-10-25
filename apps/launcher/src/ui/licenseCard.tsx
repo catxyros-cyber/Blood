@@ -57,7 +57,7 @@ export function LicenseCard({ compact = false }: { compact?: boolean }) {
   const showEntry = status === "none" || status === "expired" || status === "revoked";
 
   return (
-    <Card className={cx("p-5", status === "active" && "border-amber-300/25 bg-gradient-to-br from-amber-300/[0.05] to-panel")}>
+    <Card className={cx("p-5", status === "active" && "border-amber-300/25")}>
       <div className="flex items-center gap-2">
         <Icon.Key size={17} className={status === "active" ? "text-amber-200" : "text-accent"} />
         <h3 className="font-semibold text-[14.5px] flex-1">Premium key</h3>

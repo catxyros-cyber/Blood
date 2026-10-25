@@ -374,7 +374,7 @@ function ModsOverview({ inst }: { inst: Instance }) {
       </Card>
     );
   }
-  if (!mods) return <Skeleton className="h-[150px] rounded-2xl" />;
+  if (!mods) return <Skeleton className="h-[150px] rounded-xl" />;
   const enabled = mods.filter((m) => m.enabled).length;
   const disabled = mods.length - enabled;
   const problems = compatibility(inst, mods).filter((i) => i.severity === "error").length;

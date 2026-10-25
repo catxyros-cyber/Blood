@@ -236,7 +236,7 @@ export function SkinsPage() {
               <button
                 type="button"
                 onClick={() => void upload()}
-                className="w-full rounded-2xl border-2 border-dashed border-line-strong hover:border-accent/60 bg-panel-2/60 py-7 grid place-items-center text-center cursor-pointer transition-colors mb-5"
+                className="w-full rounded-xl border-2 border-dashed border-line-strong hover:border-accent/60 bg-panel-2/60 py-7 grid place-items-center text-center cursor-pointer transition-colors mb-5"
               >
                 <Icon.Upload size={26} className="text-accent" />
                 <div className="font-semibold mt-2">Drop PNG skins anywhere on this page</div>

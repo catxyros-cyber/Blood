@@ -52,7 +52,7 @@ function Picker({ kind, title, items, current, busy, onPick }: {
 }) {
   return (
     <div>
-      <div className="text-[12.5px] font-semibold text-muted uppercase tracking-wide mb-2">{title}</div>
+      <div className="text-[12.5px] font-medium text-muted mb-2">{title}</div>
       <div className="flex flex-wrap gap-3">
         <button
           type="button"

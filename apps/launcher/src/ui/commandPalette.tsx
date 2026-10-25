@@ -140,9 +140,9 @@ export function CommandPalette() {
 
   let lastGroup = "";
   return (
-    <div className="fixed inset-0 z-[60] bg-black/55 backdrop-blur-[2px] flex justify-center pt-[12vh] px-6" onMouseDown={close}>
+    <div className="fixed inset-0 z-[60] bg-black/60 flex justify-center pt-[12vh] px-6" onMouseDown={close}>
       <div
-        className="w-full max-w-[600px] h-fit max-h-[70vh] flex flex-col rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60 animate-pop overflow-hidden"
+        className="w-full max-w-[600px] h-fit max-h-[70vh] flex flex-col rounded-xl border border-line-strong bg-panel shadow-2xl shadow-black/60 animate-pop overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -186,7 +186,7 @@ export function CommandPalette() {
               lastGroup = c.group;
               return (
                 <div key={c.id}>
-                  {header && <div className="px-4 pt-2.5 pb-1 text-[11px] uppercase tracking-[0.1em] text-faint">{header}</div>}
+                  {header && <div className="px-4 pt-2.5 pb-1 text-[12.5px] text-faint font-medium">{header}</div>}
                   <button
                     type="button"
                     data-i={i}

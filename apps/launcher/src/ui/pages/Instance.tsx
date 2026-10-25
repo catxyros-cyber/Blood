@@ -80,41 +80,45 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
   const setTab = (t: Tab) => navigate({ page: "instance", id, tab: t });
   return (
     <div className="animate-in">
-      <button type="button" className="flex items-center gap-1 text-muted hover:text-fg text-[13px] mb-4 cursor-pointer" onClick={() => navigate({ page: "library" })}>
+      <button type="button" className="flex items-center gap-1 text-muted hover:text-fg text-[13px] mb-5 cursor-pointer" onClick={() => navigate({ page: "library" })}>
         <Icon.ChevronLeft size={16} /> Library
       </button>
-      <div className="flex items-center gap-5 mb-6">
-        <InstanceIcon inst={inst} size={72} />
+      <div className="flex items-center gap-4 mb-7">
+        <InstanceIcon inst={inst} size={56} />
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-[26px] font-semibold tracking-tight truncate">{inst.name}</h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1.5">
-            <Badge tone="accent">Minecraft {inst.gameVersion}</Badge>
-            <Badge>{loaderLabel(inst)}</Badge>
-            {inst.modpack && <Badge tone="info">{inst.modpack.name}{inst.modpack.version ? ` ${inst.modpack.version}` : ""}</Badge>}
-            {inst.performancePreset && <Badge>Preset: {PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "Custom"}</Badge>}
+          <h1 className="font-display text-[24px] font-semibold tracking-tight truncate">{inst.name}</h1>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[13px] text-muted">
+            {[
+              `Minecraft ${inst.gameVersion}`,
+              loaderLabel(inst),
+              inst.modpack ? `${inst.modpack.name}${inst.modpack.version ? ` ${inst.modpack.version}` : ""}` : null,
+              inst.performancePreset ? `${PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "Custom"} preset` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
             {inst.bloomClient?.enabled && (
-              <Badge tone="accent">
-                <Icon.Motion size={12} /> MOTION Client
-              </Badge>
+              <span className="inline-flex items-center gap-1 text-fg/80">
+                · <Icon.Motion size={12} className="text-accent" /> MOTION Client
+              </span>
             )}
           </div>
           <LiveStats instanceId={inst.id} />
         </div>
         <div className="flex items-center gap-2">
-          <Button icon={<Icon.Hud size={16} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
+          <Button size="lg" className="h-10" icon={<Icon.Hud size={16} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
             MOTION Mods
-          </Button>
-          <Button icon={<Icon.Paint size={16} />} onClick={() => navigate({ page: "customize", instanceId: inst.id })}>
-            Visuals
           </Button>
           <PlayButton inst={inst} size="md" />
           <Menu
             trigger={
-              <IconButton label="More" className="h-11 w-11 border border-line">
+              <IconButton label="More" className="h-10 w-10 border border-line">
                 <Icon.More size={18} />
               </IconButton>
             }
-            items={instanceMenu(inst, { onRename: () => setRenaming(true) }).filter((x) => x === "divider" || x.label !== "Open")}
+            items={[
+              { label: "Visuals", icon: <Icon.Paint size={15} />, onClick: () => navigate({ page: "customize", instanceId: inst.id }) },
+              ...instanceMenu(inst, { onRename: () => setRenaming(true) }).filter((x) => x === "divider" || x.label !== "Open"),
+            ]}
           />
         </div>
       </div>
@@ -130,7 +134,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
           { value: "settings", label: "Settings" },
         ]}
       />
-      <div className="mt-5">
+      <div className="mt-6">
         {tab === "content" && <ModsTab inst={inst} />}
         {(tab === "resourcepacks" || tab === "shaderpacks") && <PacksTab inst={inst} kind={tab} />}
         {tab === "worlds" && <WorldsTab inst={inst} />}
@@ -467,7 +471,7 @@ function PacksTab({ inst, kind }: { inst: Instance; kind: "resourcepacks" | "sha
       </div>
       {error && <Callout tone="danger">{error}</Callout>}
       {!items ? (
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-40 rounded-xl" />
       ) : items.length === 0 ? (
         <Card>
           <EmptyState icon={shader ? <Icon.Sun size={24} /> : <Icon.Paint size={24} />} title={`No ${label}s yet`}>
@@ -533,7 +537,7 @@ function WorldsTab({ inst }: { inst: Instance }) {
           Worlds
         </SectionTitle>
         {!worlds ? (
-          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-32 rounded-xl" />
         ) : worlds.length === 0 ? (
           <Card>
             <EmptyState icon={<Icon.Map size={24} />} title="No worlds yet">
@@ -561,7 +565,7 @@ function WorldsTab({ inst }: { inst: Instance }) {
           </Button>
         </div>
         {!servers ? (
-          <Skeleton className="h-20 rounded-2xl" />
+          <Skeleton className="h-20 rounded-xl" />
         ) : servers.length === 0 ? (
           <p className="text-[13px] text-muted">Servers you add in Minecraft's Multiplayer screen show up here, so you can join them straight from MOTION.</p>
         ) : (
@@ -614,7 +618,7 @@ function WorldCard({ inst, world, canPlay, busy }: { inst: Instance; world: Worl
       {d?.icon ? (
         <img src={d.icon} alt="" className="h-11 w-11 rounded-lg shrink-0 object-cover" draggable={false} />
       ) : (
-        <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500/25 to-sky-500/10 grid place-items-center text-accent shrink-0">
+        <div className="h-11 w-11 rounded-lg bg-raised border border-line grid place-items-center text-muted shrink-0">
           <Icon.Map size={20} />
         </div>
       )}
@@ -649,7 +653,7 @@ function CrashDoctor({ inst }: { inst: Instance }) {
   if (running || !session || session.exitCode === 0 || session.exitCode === null || !session.crash || hidden === session.endedAt) return null;
   const found = session.crash;
   return (
-    <div className="mb-3 rounded-2xl border border-danger/30 bg-danger/[0.06] p-4 animate-in">
+    <div className="mb-3 rounded-xl border border-danger/30 bg-danger/[0.06] p-4 animate-in">
       <div className="flex items-start gap-3">
         <span className="text-danger mt-0.5">
           <Icon.Alert size={18} />
@@ -764,7 +768,7 @@ function LogsTab({ inst }: { inst: Instance }) {
         </IconButton>
       </div>
       <CrashDoctor inst={inst} />
-      <div ref={box} className="h-[460px] overflow-auto rounded-2xl border border-line bg-[#070908] p-4 font-mono text-[12px] leading-[1.6] selectable">
+      <div ref={box} className="h-[460px] overflow-auto rounded-xl border border-line bg-[#070908] p-4 font-mono text-[12px] leading-[1.6] selectable">
         {lines.length === 0 ? (
           <div className="text-faint">{running ? "Waiting for output…" : "No log yet. Press Play to start the game; its output appears here."}</div>
         ) : (
@@ -998,7 +1002,7 @@ function SettingsTab({ inst }: { inst: Instance }) {
         </Card>
 
         {dirty && (
-          <div className="flex items-center gap-2 sticky bottom-0 py-3 px-4 -mx-1 rounded-2xl border border-line-strong bg-raised/95 backdrop-blur shadow-2xl shadow-black/40 animate-in">
+          <div className="flex items-center gap-2 sticky bottom-0 py-3 px-4 -mx-1 rounded-xl border border-line-strong bg-raised shadow-xl shadow-black/30 animate-in">
             <span className="text-[13px] text-muted flex-1">You have unsaved changes.</span>
             <Button
               variant="ghost"

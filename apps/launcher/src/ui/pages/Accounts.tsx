@@ -145,7 +145,7 @@ function CodeSignInModal({ open, onClose }: { open: boolean; onClose: () => void
             <p className="text-muted text-[13.5px]">Your browser opened Microsoft's sign-in page. Enter this code there:</p>
             <button
               type="button"
-              className="mt-4 mx-auto flex items-center gap-3 font-mono text-[30px] font-bold tracking-[0.18em] px-6 py-3 rounded-2xl bg-panel-2 border border-line-strong hover:border-accent/50 cursor-pointer selectable"
+              className="mt-4 mx-auto flex items-center gap-3 font-mono text-[30px] font-bold tracking-[0.18em] px-6 py-3 rounded-xl bg-panel-2 border border-line-strong hover:border-accent/50 cursor-pointer selectable"
               onClick={() =>
                 void navigator.clipboard.writeText(code.userCode).then(() => {
                   setCopied(true);

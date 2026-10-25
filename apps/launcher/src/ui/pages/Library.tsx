@@ -61,17 +61,17 @@ function InstanceCard({ inst, selected }: { inst: Instance; selected: boolean })
   const [renaming, setRenaming] = useState(false);
   return (
     <Card
-      className={cx("p-4 group relative", selected && "border-accent/40")}
+      className={cx("p-4 group relative", selected && "border-line-strong")}
       onClick={() => navigate({ page: "instance", id: inst.id })}
     >
       <div className="flex items-start gap-3.5">
-        <InstanceIcon inst={inst} size={54} />
+        <InstanceIcon inst={inst} size={48} />
         <div className="min-w-0 flex-1">
-          <div className="font-semibold truncate text-[15px]">{inst.name}</div>
+          <div className="font-semibold truncate text-[14.5px]">{inst.name}</div>
           <div className="text-[12.5px] text-muted truncate mt-0.5">
             {inst.gameVersion} · {loaderLabel(inst)}
           </div>
-          <div className="text-[12px] text-faint mt-1">{running ? <span className="text-accent">● Running</span> : inst.lastPlayedAt ? `Played ${timeAgo(inst.lastPlayedAt)}` : "Not played yet"}</div>
+          <div className="text-[12px] text-faint mt-1">{running ? <span className="text-accent">Running</span> : inst.lastPlayedAt ? `Played ${timeAgo(inst.lastPlayedAt)}` : "Not played yet"}</div>
         </div>
         <Menu
           trigger={
@@ -85,7 +85,7 @@ function InstanceCard({ inst, selected }: { inst: Instance; selected: boolean })
       <div className="flex items-center justify-between mt-4">
         <div className="flex gap-1.5 flex-wrap">
           {inst.modpack && <Badge tone="info">{inst.modpack.name}</Badge>}
-          {selected && <Badge tone="accent">Selected</Badge>}
+          {selected && <Badge>Selected</Badge>}
           {inst.totalPlayMs ? <span className="text-[11.5px] text-faint self-center">{formatPlaytime(inst.totalPlayMs)}</span> : null}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
@@ -151,7 +151,7 @@ export function LibraryPage() {
         </Card>
       ) : (
         <>
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-6">
             <TextInput value={query} onChange={setQuery} placeholder="Search installations" icon={<Icon.Search size={16} />} className="w-80" />
             <div className="flex-1" />
             <Segmented
@@ -164,7 +164,7 @@ export function LibraryPage() {
               ]}
             />
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(330px,1fr))] gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-3">
             {shown.map((i) => (
               <div key={i.id} onDoubleClick={() => updateSettings({ selectedInstanceId: i.id })}>
                 <InstanceCard inst={i} selected={i.id === (selectedId ?? instances[0]?.id)} />

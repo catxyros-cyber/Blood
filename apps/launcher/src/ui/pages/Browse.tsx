@@ -202,7 +202,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           {!hits ? (
             <div className="space-y-3">
               {Array.from({ length: 6 }, (_, i) => (
-                <Skeleton key={i} className="h-[104px] rounded-2xl" />
+                <Skeleton key={i} className="h-[104px] rounded-xl" />
               ))}
             </div>
           ) : hits.length === 0 ? (
@@ -233,7 +233,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
         <aside className="space-y-5 sticky top-0">
           {type !== "modpack" && (
             <Card className="p-4">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold mb-2">Install to</div>
+              <div className="text-[12.5px] text-muted font-medium mb-2">Install to</div>
               <Select
                 value={effectiveTarget?.id ?? ""}
                 onChange={setTargetId}
@@ -252,7 +252,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           )}
           {!effectiveTarget && (
             <Card className="p-4 space-y-3">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold">Filters</div>
+              <div className="text-[12.5px] text-muted font-medium">Filters</div>
               <Select value={gameVersion} onChange={setGameVersion} options={[{ value: "", label: "Any Minecraft version" }, ...releaseVersions.map((v) => ({ value: v.version, label: v.version }))]} />
               {(type === "mod" || type === "modpack") && (
                 <Select
@@ -276,7 +276,7 @@ export function BrowsePage({ type = "mod", instanceId }: { type?: BrowseType; in
           )}
           {catOptions.length > 0 && (
             <Card className="p-4">
-              <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold mb-2">Categories</div>
+              <div className="text-[12.5px] text-muted font-medium mb-2">Categories</div>
               <div className="flex flex-wrap gap-1.5">
                 {catOptions.map((c) => {
                   const on = categories.includes(c.name);

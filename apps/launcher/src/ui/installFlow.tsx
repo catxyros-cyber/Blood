@@ -139,7 +139,7 @@ export function InstallPlanHost() {
           </Callout>
         ))}
         <div>
-          <div className="text-[12px] uppercase tracking-[0.08em] text-muted font-semibold mb-2">Will be installed</div>
+          <div className="text-[12.5px] text-muted font-medium mb-2">Will be installed</div>
           <div className="space-y-1.5">
             {plan.installs.map((i) => (
               <div key={i.projectId} className="flex items-center gap-2.5 text-[13.5px] rounded-lg bg-panel-2 border border-line px-3 py-2">

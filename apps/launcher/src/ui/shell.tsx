@@ -263,7 +263,7 @@ export function DragOverlay() {
   if (!active) return null;
   return (
     <div className="fixed inset-0 z-[70] pointer-events-none p-4">
-      <div className="h-full w-full rounded-2xl border-2 border-dashed border-accent/60 bg-bg/80 grid place-items-center animate-in">
+      <div className="h-full w-full rounded-xl border-2 border-dashed border-accent/60 bg-bg/80 grid place-items-center animate-in">
         <div className="text-center">
           <Icon.Upload size={32} className="mx-auto text-accent" />
           <div className="font-display text-lg font-semibold mt-3">Drop to add</div>

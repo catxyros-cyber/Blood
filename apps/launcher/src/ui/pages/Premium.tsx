@@ -99,7 +99,7 @@ export function PremiumPage() {
                 const featured = id === "yearly";
                 const suffix = id === "monthly" ? "/ month" : id === "yearly" ? "/ year" : "once";
                 return (
-                  <Card key={id} className={cx("p-5 flex flex-col", featured && "border-accent/45 bg-gradient-to-b from-accent/[0.06] to-panel")}>
+                  <Card key={id} className={cx("p-5 flex flex-col", featured && "border-accent/40")}>
                     <div className="flex items-center gap-2">
                       <div className="font-display font-semibold text-[17px]">{PLAN_COPY[id].title}</div>
                       {featured && saving > 0 && <Badge tone="accent">Save {saving}%</Badge>}
@@ -127,7 +127,7 @@ export function PremiumPage() {
 
           {/* Features */}
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-[1fr_90px_90px] px-5 py-3 text-[12px] uppercase tracking-[0.08em] text-muted font-semibold bg-panel-2 border-b border-line">
+            <div className="grid grid-cols-[1fr_90px_90px] px-5 py-3 text-[12.5px] text-muted font-medium bg-panel-2 border-b border-line">
               <span>Feature</span>
               <span className="text-center">Free</span>
               <span className="text-center">Premium</span>
@@ -280,7 +280,7 @@ export function PremiumWelcome() {
       }
     >
       <div className="text-center py-2">
-        <div className="mx-auto h-16 w-16 rounded-2xl bg-amber-300/10 text-amber-200 grid place-items-center">
+        <div className="mx-auto h-16 w-16 rounded-xl bg-amber-300/10 text-amber-200 grid place-items-center">
           <Icon.Crown size={30} />
         </div>
         <p className="text-muted mt-4">Thank you for supporting MOTION! Competitive and Extreme FPS presets, GC analytics, any accent colour and cloud sync are now unlocked on every PC you sign in to.</p>

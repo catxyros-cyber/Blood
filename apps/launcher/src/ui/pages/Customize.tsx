@@ -122,7 +122,7 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
   }, [view]);
   const bool: Bool = (key, fallback) => get<boolean>(key, fallback) === true;
 
-  if (!st) return <Skeleton className="h-64 rounded-2xl" />;
+  if (!st) return <Skeleton className="h-64 rounded-xl" />;
   const installed = st.enabled;
 
   return (
@@ -245,7 +245,7 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
                       type="button"
                       title={t.name}
                       onClick={() => void write({ settings: { "ui.theme": t.id } })}
-                      className={cx("h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer", active ? "border-fg" : "border-transparent")}
+                      className={cx("h-8 w-8 rounded-full border-2 transition-colors cursor-pointer", active ? "border-fg" : "border-transparent")}
                       style={{ background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 40%, #1a1a1a))` }}
                     />
                   );
@@ -285,10 +285,9 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
 }) {
   const sup = st.support;
   return (
-    <Card className="p-5 relative overflow-hidden">
-      <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full accent-gradient opacity-[0.12] blur-2xl pointer-events-none" />
-      <div className="relative flex items-start gap-4">
-        <div className="h-12 w-12 rounded-2xl bg-accent/15 grid place-items-center shrink-0">
+    <Card className="p-5">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-xl bg-raised border border-line grid place-items-center shrink-0">
           <BloodMark size={30} />
         </div>
         <div className="flex-1 min-w-0">
@@ -402,7 +401,7 @@ function SkyboxSection({ inst, view, custom, onPick, onImported }: {
             >
               <div className="relative aspect-[16/9] bg-raised">
                 {s.preview ? (
-                  <img src={s.preview} alt="" className="absolute inset-0 h-full w-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
+                  <img src={s.preview} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 ) : s.id === "none" ? (
                   <div className="absolute inset-0 bg-gradient-to-b from-[#78a7ff] to-[#c0d8ff]" />
                 ) : (

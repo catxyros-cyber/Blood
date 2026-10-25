@@ -27,8 +27,8 @@ const SECTIONS = [
 function Section({ id, title, children, description }: { id: string; title: string; children: ReactNode; description?: string }) {
   return (
     <section id={`settings-${id}`} className="scroll-mt-6">
-      <h2 className="font-display text-[18px] font-semibold">{title}</h2>
-      {description && <p className="text-[13px] text-muted mt-0.5">{description}</p>}
+      <h2 className="font-display text-[16px] font-semibold">{title}</h2>
+      {description && <p className="text-[13px] text-muted mt-1">{description}</p>}
       <Card className="p-5 mt-3 space-y-5">{children}</Card>
     </section>
   );
@@ -84,7 +84,7 @@ export function SettingsPage({ section }: { section?: string }) {
           ))}
         </nav>
 
-        <div className="space-y-8 max-w-3xl">
+        <div className="space-y-10 max-w-3xl">
           <Section id="appearance" title="Appearance">
             <div>
               <div className="font-medium mb-2">Theme</div>
@@ -94,7 +94,7 @@ export function SettingsPage({ section }: { section?: string }) {
                     key={t.id}
                     type="button"
                     onClick={() => set({ theme: t.id })}
-                    className={cx("rounded-xl overflow-hidden border-2 text-left transition-all cursor-pointer", s.theme === t.id ? "border-accent" : "border-transparent hover:border-line-strong")}
+                    className={cx("rounded-lg overflow-hidden border-2 text-left transition-colors cursor-pointer", s.theme === t.id ? "border-accent" : "border-transparent hover:border-line-strong")}
                   >
                     <div className="relative aspect-[16/9]">
                       <img src={`/backgrounds/${t.id}-thumb.jpg`} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -121,7 +121,7 @@ export function SettingsPage({ section }: { section?: string }) {
                     type="button"
                     aria-label={`Accent ${c}`}
                     onClick={() => set({ accent: c, accentFromTheme: false })}
-                    className={cx("h-8 w-8 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer", !s.accentFromTheme && s.accent === c ? "border-fg" : "border-transparent")}
+                    className={cx("h-8 w-8 rounded-full border-2 transition-colors cursor-pointer", !s.accentFromTheme && s.accent === c ? "border-fg" : "border-transparent")}
                     style={{ background: c }}
                   />
                 ))}
@@ -143,7 +143,7 @@ export function SettingsPage({ section }: { section?: string }) {
                 <div className="font-medium">Accent intensity</div>
                 <span className="text-[12.5px] text-muted">{s.accentIntensity <= 25 ? "Subtle" : s.accentIntensity <= 75 ? "Balanced" : "Vivid"}</span>
               </div>
-              <div className="text-[13px] text-muted mb-2">How saturated the accent is and how much buttons and highlights glow. 0% is completely flat.</div>
+              <div className="text-[13px] text-muted mb-2">How saturated the accent colour is. 0% is fully muted.</div>
               <Slider value={s.accentIntensity} min={0} max={100} step={5} format={(v) => `${v}%`} onChange={(v) => set({ accentIntensity: v })} />
             </div>
             <BackgroundRows />
