@@ -198,6 +198,8 @@ public final class MotionTitleScreen extends Screen {
             slim = own.slim();
             avatarTexture = own.texture();
         } else {
+            // Not loaded yet (or the last try failed): ask again; ProfileSkin paces its retries.
+            dev.bloom.client.game.ProfileSkin.fetch(minecraft.getUser().getProfileId());
             Supplier<PlayerSkin> lookup = skinLookup;
             PlayerSkin skin = lookup == null ? null : lookup.get();
             if (skin == null || skin.body() == null) skin = DefaultPlayerSkin.get(minecraft.getUser().getProfileId());

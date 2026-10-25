@@ -400,3 +400,31 @@ export function secureSkinUrl(url: string | undefined | null): string | undefine
   if (!url) return undefined;
   return url.replace(/^http:\/\/textures\.minecraft\.net\//i, "https://textures.minecraft.net/");
 }
+
+/**
+ * The skin URL in a public session-server profile
+ * (sessionserver.mojang.com/session/minecraft/profile/<uuid>), whose "textures" property is
+ * base64 JSON. Returns undefined for a missing/default skin or anything malformed.
+ */
+export function skinUrlFromSessionProfile(profile: unknown): string | undefined {
+  const props = (profile as { properties?: { name?: string; value?: string }[] } | null)?.properties;
+  const raw = Array.isArray(props) ? props.find((p) => p?.name === "textures")?.value : undefined;
+  if (typeof raw !== "string") return undefined;
+  try {
+    const json = typeof atob === "function" ? atob(raw) : Buffer.from(raw, "base64").toString("utf8");
+    const url = (JSON.parse(json) as { textures?: { SKIN?: { url?: unknown } } }).textures?.SKIN?.url;
+    return typeof url === "string" && /^https?:\/\/textures\.minecraft\.net\//i.test(url) ? secureSkinUrl(url) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** A player's current skin from Mojang's public profile service: no sign-in or token needed. */
+export async function publicSkinUrl(http: Http, uuid: string): Promise<string | undefined> {
+  const id = uuid.replace(/-/g, "").toLowerCase();
+  if (!/^[0-9a-f]{32}$/.test(id)) return undefined;
+  const res = await http({ method: "GET", url: `https://sessionserver.mojang.com/session/minecraft/profile/${id}`, timeoutMs: 10_000 });
+  if (res.status !== 200 || !res.body) return undefined;
+  return skinUrlFromSessionProfile(JSON.parse(res.body));
+}
+

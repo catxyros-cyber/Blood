@@ -456,19 +456,25 @@ public class BloomMenuScreen extends Screen implements Host {
             if (!compact) Ui.text(g, Ui.ellipsize(c.label(), iw - 30), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));
             y += itemH + 1;
         }
-        // Active profile chip at the bottom
+        // You (face and name), then the active visual profile, at the bottom
         if (!compact) {
+            int py = wy + wh - 42;
+            dev.bloom.client.game.PlayerFace.draw(g, wx + 8, py + 2, 12, Theme.alpha(0xFFFFFFFF, t));
+            String you = net.minecraft.client.Minecraft.getInstance().getUser().getName();
+            Ui.text(g, Ui.ellipsize(you, sidebar - 32), wx + 25, py + 4, Theme.alpha(p.text(), t));
             var prof = BloomClient.get().profiles().active();
             int by = wy + wh - 22;
             boolean over = Ui.inside(mx, my, wx + 4, by, sidebar - 9, 16);
             Ui.smallPanel(g, wx + 4, by, sidebar - 9, 16, over ? p.surfaceActive() : p.surface());
             Ui.icon(g, "profiles", wx + 8, by + 3, 10, Theme.accentArgb());
             Ui.text(g, Ui.ellipsize(prof.name(), sidebar - 32), wx + 21, by + 4, p.textDim());
+        } else {
+            dev.bloom.client.game.PlayerFace.draw(g, wx + (sidebar - 12) / 2 - 1, wy + wh - 20, 12, Theme.alpha(0xFFFFFFFF, t));
         }
     }
 
     private int itemHeight() {
-        return Math.min(visualsMenu ? 22 : 20, (wh - 70) / nav.size());
+        return Math.min(visualsMenu ? 22 : 20, (wh - 92) / nav.size());
     }
 
     private void drawPetals(GuiGraphics g, float dt, float t) {

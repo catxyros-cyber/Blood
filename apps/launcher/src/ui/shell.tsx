@@ -120,6 +120,7 @@ export function Sidebar() {
   const awaiting = useStore(app, (s) => s.premium.awaitingPayment);
   const account = activeAccount();
   useEffect(() => {
+    // New or switched-to accounts without a face yet: look it up now rather than at next start.
     if (account && !account.skinUrl) void refreshAccountSkin(account).catch(() => undefined);
   }, [account?.id, account?.skinUrl]);
   void accounts;

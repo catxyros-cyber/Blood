@@ -8,6 +8,7 @@ import { getInstance, loadInstances, selectedInstance } from "../services/instan
 import { events } from "../services/native";
 import { loadAnnouncements, loadPlans, refreshPremium } from "../services/premium";
 import { useStore } from "../services/store";
+import { refreshAllAccountSkins } from "../services/accounts";
 import { pullSync, watchForChanges } from "../services/sync";
 import { startAutoUpdates } from "../services/updater";
 import { startLicenseChecks } from "../services/license";
@@ -45,6 +46,8 @@ function startServices() {
   void loadAnnouncements();
   startAutoUpdates();
   startLicenseChecks();
+  // Faces in the sidebar and account list follow skin changes made anywhere.
+  void refreshAllAccountSkins();
 
   // Refresh Premium whenever the active Minecraft account changes.
   let account = app.get().settings.activeAccountId;

@@ -17,6 +17,7 @@ import {
   type DeviceCode,
   type MinecraftSession,
   type MsTokens,
+  publicSkinUrl,
   secureSkinUrl,
 } from "../core/auth/microsoft";
 import { BloomError, toBloomError } from "../core/platform";
@@ -105,25 +106,30 @@ async function storeSession(s: MinecraftSession) {
   await native.secretSet(mcKey(s.uuid), JSON.stringify({ accessToken: s.accessToken, expiresAt: s.expiresAt }));
 }
 
-/** Backfill the active Minecraft skin for accounts saved by older launcher builds. */
+/**
+ * Keep an account's skin (its face in the sidebar and account list) current. Mojang's public
+ * profile service is asked first: it needs no sign-in, so it works even when the stored session
+ * has expired, and it picks up skins changed elsewhere. The account's own session is the fallback.
+ */
 export async function refreshAccountSkin(account: Account): Promise<void> {
-  if (account.skinUrl) return;
+  let skinUrl = await publicSkinUrl(http, account.id).catch(() => undefined);
 
-  let skinUrl: string | undefined;
-  const cachedRaw = await native.secretGet(mcKey(account.id)).catch(() => null);
-  if (cachedRaw) {
-    try {
-      const cached = JSON.parse(cachedRaw) as { accessToken: string; expiresAt: number };
-      if (tokenValid(cached.expiresAt)) {
-        const profile = await minecraftProfile(http, cached.accessToken);
-        skinUrl = secureSkinUrl(profile.skins?.find((skin) => skin.state === "ACTIVE")?.url);
+  if (!skinUrl) {
+    const cachedRaw = await native.secretGet(mcKey(account.id)).catch(() => null);
+    if (cachedRaw) {
+      try {
+        const cached = JSON.parse(cachedRaw) as { accessToken: string; expiresAt: number };
+        if (tokenValid(cached.expiresAt)) {
+          const profile = await minecraftProfile(http, cached.accessToken);
+          skinUrl = secureSkinUrl(profile.skins?.find((skin) => skin.state === "ACTIVE")?.url);
+        }
+      } catch {
+        // Falls through to the stored Microsoft refresh token below.
       }
-    } catch {
-      // A missing/expired cache is repaired through the stored Microsoft refresh token below.
     }
   }
 
-  if (!skinUrl) {
+  if (!skinUrl && !account.skinUrl) {
     const refresh = await native.secretGet(refreshKey(account.id)).catch(() => null);
     if (!refresh) return;
     const ms = await refreshMsToken(http, msClientId(), refresh);
@@ -135,9 +141,14 @@ export async function refreshAccountSkin(account: Account): Promise<void> {
 
   if (!skinUrl) return;
   const current = app.get().accounts.find((candidate) => candidate.id === account.id);
-  if (!current || current.skinUrl) return;
-  app.set((state) => ({ accounts: state.accounts.map((candidate) => candidate.id === account.id ? { ...candidate, skinUrl } : candidate) }));
+  if (!current || current.skinUrl === skinUrl) return;
+  app.set((state) => ({ accounts: state.accounts.map((candidate) => (candidate.id === account.id ? { ...candidate, skinUrl } : candidate)) }));
   await saveAccounts();
+}
+
+/** Refresh every saved account's face once (at startup). Failures are silent: the old face stays. */
+export async function refreshAllAccountSkins(): Promise<void> {
+  for (const account of app.get().accounts) await refreshAccountSkin(account).catch(() => undefined);
 }
 export interface LaunchCredentials {
   username: string;
