@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.29",
+    "date": "2026-10-25",
+    "notes": "MOTION Client now runs on Minecraft 1.21.10, 1.21.11, 26.1 (26.1–26.1.2), 26.2 and 26.3, with better 3D avatars, backgrounds and player icons\n\nMOTION Client 0.2.23."
+  },
+  {
     "version": "1.0.28",
     "date": "2026-10-24",
     "notes": "Crash Doctor, Worlds & servers, Ctrl+K, Zoom, hit effects, waypoints, health indicators"
