@@ -68,6 +68,9 @@ public final class MotionTitleScreen extends Screen {
         lastFrameNanos = nanos;
         long now = System.currentTimeMillis();
         float walkIn = entering ? Math.min(1f, (now - enterStartedAt) / (float) WALK_IN_MS) : 0f;
+        // Smoke test only: hold the walk-in at one point so a screenshot can catch it.
+        String pin = entering ? System.getProperty("motion.smoke.walkAt") : null;
+        if (pin != null && !pin.isEmpty()) walkIn = Float.parseFloat(pin);
         if (entering && walkIn >= 1f) {
             entering = false;
             entered = true;
