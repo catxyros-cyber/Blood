@@ -65,7 +65,7 @@
 
           <div class="card u-mt20">
             <h3>Capes</h3>
-            <p class="muted">Publish capes for MOTION players. Use Minecraft's cape layout: 64×32, or <b>HD</b> up to 2048×1024 (recommended for still capes; 1024×512 for animated ones). Any other picture (a wallpaper, a 4K artwork) is wrapped onto an HD cape for you. PNG, JPG, WebP or an <b>animated GIF</b> (up to 64 frames); for animations you can also upload a PNG strip with the frames stacked top to bottom. Only players using MOTION see these capes.</p>
+            <p class="muted">Publish capes for MOTION players. Use Minecraft's cape layout: 64×32, or <b>HD</b> up to 2048×1024 (recommended for still capes; 1024×512 for animated ones). Any other picture (a wallpaper, a 4K artwork) is wrapped onto an HD cape for you. PNG, JPG, WebP, an <b>animated GIF</b> or a <b>video</b> (MP4, WebM or MOV: up to 64 frames are taken from the start time you choose, about 5 seconds at the default speed, and loop in game); for animations you can also upload a PNG strip with the frames stacked top to bottom. Only players using MOTION see these capes.</p>
             <form class="admin-form u-mt16" data-cape-form>
               <div class="row">
                 <label class="grow">Cape name
@@ -77,11 +77,14 @@
                     <option value="premium">Premium only</option>
                   </select>
                 </label>
-                <label>Image
-                  <input type="file" name="file" accept="image/png,image/gif,image/webp,image/jpeg" required />
+                <label>Image or video
+                  <input type="file" name="file" accept="image/png,image/gif,image/webp,image/jpeg,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v" required />
                 </label>
                 <label>Frame time (ms)
-                  <input type="number" name="frameMs" min="20" max="5000" step="10" placeholder="from the GIF" />
+                  <input type="number" name="frameMs" min="20" max="5000" step="10" placeholder="from the file" />
+                </label>
+                <label>Video start (s)
+                  <input type="number" name="start" min="0" step="0.1" placeholder="0" />
                 </label>
                 <button class="btn btn-primary" type="submit">Publish</button>
               </div>
