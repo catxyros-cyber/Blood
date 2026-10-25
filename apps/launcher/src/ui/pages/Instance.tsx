@@ -87,7 +87,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
         <InstanceIcon inst={inst} size={56} />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-[24px] font-semibold tracking-tight truncate">{inst.name}</h1>
-          <div className="flex flex-wrap items-center gap-y-1 mt-1 text-[13px] text-muted">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-[13px] text-muted">
             {[
               `Minecraft ${inst.gameVersion}`,
               loaderLabel(inst),
@@ -98,9 +98,8 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
               .filter((x): x is string => Boolean(x))
               .map((part, i) => (
                 // Each detail stays on one line; the row wraps between them.
-                <span key={part} className="whitespace-nowrap">
-                  {i > 0 && <span className="mx-1.5 text-faint">·</span>}
-                  {part === "MOTION Client" ? <span className="text-fg/80">{part}</span> : part}
+                <span key={part} className={cx("whitespace-nowrap", part === "MOTION Client" && "text-fg/80", i === 0 && "text-fg/80")}>
+                  {part}
                 </span>
               ))}
           </div>
