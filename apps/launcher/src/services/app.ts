@@ -93,7 +93,7 @@ export const DEFAULT_SETTINGS: Settings = {
   accentFromTheme: true,
   accentIntensity: 70,
   background: { mode: "theme", custom: null, dim: 0.78, blur: 12 },
-  petals: true,
+  petals: false,
   reduceMotion: false,
   startPage: "home",
   onLaunch: "minimize",

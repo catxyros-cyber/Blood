@@ -16,14 +16,13 @@ import { Badge, Button, Card, cx, formatBytes, gb, IconButton, Menu, Modal, Prog
 import { Icon } from "../icons";
 import { InstanceIcon, loaderLabel, NewInstanceModal } from "../instanceParts";
 import { Markdown } from "../markdown";
-import { Avatar } from "../shell";
 import { BloodMark } from "../icons";
 import { native } from "../../services/native";
 import { UpgradeCard } from "../premiumParts";
 import { LicenseCard } from "../licenseCard";
 import { TeamCard } from "../teamCard";
 import { installSummary, type InstallSummary } from "../../services/dashboard";
-import { checkForUpdate, installUpdate, updateState } from "../../services/updater";
+import { installUpdate, updateState } from "../../services/updater";
 import { perfStates } from "../../services/bloodMods";
 import { activeLayout, HUD_WIDGETS, widgetVisible } from "../../core/bloomclient/modules";
 import type { ContentItem } from "../../services/content";
@@ -34,7 +33,7 @@ export function PlayButton({ inst, size = "lg" }: { inst: Instance; size?: "lg" 
   const big = size === "lg";
   if (task) {
     return (
-      <div className={cx("rounded-2xl bg-raised border border-line-strong px-5 flex flex-col justify-center", big ? "h-16 w-72" : "h-10 w-48")}>
+      <div className={cx("rounded-[10px] bg-raised border border-line-strong px-4 flex flex-col justify-center", big ? "h-12 w-64" : "h-10 w-48")}>
         <div className="flex items-center justify-between text-[13px] mb-2">
           <span className="font-semibold truncate">{task.stage}</span>
           <span className="text-muted tabular-nums">{task.progress !== null ? `${Math.round(task.progress * 100)}%` : ""}</span>
@@ -49,34 +48,28 @@ export function PlayButton({ inst, size = "lg" }: { inst: Instance; size?: "lg" 
         type="button"
         onClick={() => void stopGame(inst.id)}
         className={cx(
-          "group rounded-2xl border border-white/10 glass font-display font-semibold flex items-center justify-center gap-3 transition-all cursor-pointer hover:border-danger/50 hover:text-danger",
-          big ? "h-14 w-56 text-lg" : "h-10 w-32 text-[14px]",
+          "group rounded-[10px] border border-line-strong bg-panel font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer hover:border-danger/50 hover:text-danger",
+          big ? "h-12 w-44 text-[15px]" : "h-10 w-32 text-[14px]",
         )}
       >
-        <span className="relative flex h-2.5 w-2.5">
-          <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping group-hover:bg-danger" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent group-hover:bg-danger" />
-        </span>
+        <span className="inline-flex rounded-full h-2 w-2 bg-accent group-hover:bg-danger" />
         <span className="group-hover:hidden">Playing</span>
         <span className="hidden group-hover:inline">Stop game</span>
       </button>
     );
   }
   return (
-    <span className="play-glow-wrap inline-flex">
-      <button
-        type="button"
-        onClick={() => void play(inst.id)}
-        className={cx(
-          "play-button font-display font-extrabold flex items-center justify-center transition-all cursor-pointer hover:-translate-y-px active:translate-y-0",
-          big ? "h-14 w-56 text-[20px] tracking-[0.18em] gap-3" : "h-10 w-32 text-[14px] tracking-[0.1em] gap-2",
-        )}
-        style={big ? undefined : { clipPath: "polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px))" }}
-      >
-        <Icon.Play size={big ? 22 : 15} />
-        PLAY
-      </button>
-    </span>
+    <button
+      type="button"
+      onClick={() => void play(inst.id)}
+      className={cx(
+        "play-button font-semibold flex items-center justify-center transition-[filter] cursor-pointer",
+        big ? "h-12 w-44 text-[16px] gap-2.5" : "h-10 w-32 text-[14px] gap-2",
+      )}
+    >
+      <Icon.Play size={big ? 18 : 15} />
+      Play
+    </button>
   );
 }
 
@@ -91,7 +84,7 @@ export function LiveStats({ instanceId }: { instanceId: string }) {
   const last = run.stats?.[run.stats.length - 1];
   const up = Math.floor((Date.now() - run.startedAt) / 1000);
   return (
-    <div className="flex gap-6 text-[13px] text-muted mt-4">
+    <div className="flex gap-5 text-[13px] text-muted mt-4">
       <span className="flex items-center gap-1.5">
         <Icon.Clock size={15} /> {Math.floor(up / 60)}:{String(up % 60).padStart(2, "0")}
       </span>
@@ -113,7 +106,6 @@ export function LiveStats({ instanceId }: { instanceId: string }) {
 function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
   const instances = useStore(app, (s) => s.instances);
   const settings = useStore(app, (s) => s.settings);
-  const running = useStore(app, (s) => Boolean(s.running[inst.id]));
   const [modCount, setModCount] = useState<number | null>(null);
   const [client, setClient] = useState<ClientStatus | null>(null);
   const [summary, setSummary] = useState<InstallSummary | null>(null);
@@ -135,16 +127,16 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
     .filter(Boolean)
     .join(" · ");
   return (
-    <section className="relative px-10 pt-6 pb-10 min-h-[460px] flex flex-col">
+    <section className="relative px-10 pt-6 pb-10 min-h-[440px] flex flex-col">
       <HomeTopBar />
       <div className="flex-1 min-h-10" />
-      <div className="flex items-end justify-between gap-8">
+      <div className="flex items-end justify-between gap-10">
         <div className="min-w-0 max-w-[680px]">
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <Menu
               align="left"
               trigger={
-                <button type="button" className="chip rounded-full h-7 px-3 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-accent/50 transition-colors" title="Switch Minecraft version">
+                <button type="button" className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-white/25 transition-colors" title="Switch Minecraft version">
                   <Icon.Cube size={13} /> Minecraft {inst.gameVersion} <Icon.ChevronDown size={12} className="opacity-70" />
                 </button>
               }
@@ -160,11 +152,11 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
                 { label: "Play another version…", icon: <Icon.Plus size={15} />, onClick: onCreate },
               ]}
             />
-            <span className="chip rounded-full h-7 px-3 inline-flex items-center text-[12.5px] font-medium">{loaderLabel(inst)}</span>
-            {inst.modpack && <span className="chip rounded-full h-7 px-3 inline-flex items-center text-[12.5px] font-medium">{inst.modpack.name}</span>}
+            <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[12.5px] font-medium">{loaderLabel(inst)}</span>
+            {inst.modpack && <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[12.5px] font-medium">{inst.modpack.name}</span>}
             {client?.enabled && (
-              <span className="rounded-full h-7 px-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold bg-accent text-accent-ink shadow-[0_4px_18px_-4px] shadow-accent/60">
-                <Icon.Motion size={13} /> MOTION Client {client.installedVersion}
+              <span className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium">
+                <Icon.Motion size={13} className="text-accent" /> MOTION Client {client.installedVersion}
               </span>
             )}
           </div>
@@ -172,10 +164,8 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             align="left"
             trigger={
               <button type="button" className="flex items-center gap-3 cursor-pointer group text-left">
-                <h1 className="font-display text-[46px] leading-[1.05] font-bold tracking-tight truncate drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]">{inst.name}</h1>
-                <span className="chip h-9 w-9 rounded-full grid place-items-center group-hover:text-accent transition-colors shrink-0">
-                  <Icon.ChevronDown size={18} />
-                </span>
+                <h1 className="font-display text-[40px] leading-[1.1] font-bold tracking-tight truncate">{inst.name}</h1>
+                <Icon.ChevronDown size={22} className="text-fg/60 group-hover:text-fg transition-colors shrink-0 mt-1" />
               </button>
             }
             items={[
@@ -188,19 +178,19 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
               { label: "Manage installations", icon: <Icon.Library size={15} />, onClick: () => navigate({ page: "library" }) },
             ]}
           />
-          <div className="text-[14px] text-fg/75 mt-2">{played}</div>
-          <div className="flex flex-wrap items-center gap-2.5 mt-6">
+          <div className="text-[13.5px] text-fg/70 mt-1.5">{played}</div>
+          <div className="flex flex-wrap items-center gap-2 mt-6">
             <PlayButton inst={inst} />
-            <HeroAction icon={<Icon.Hud size={17} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} accent />
-            <HeroAction icon={<Icon.Puzzle size={17} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
-            <HeroAction icon={<Icon.Gauge size={17} />} label="Optimize" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
+            <HeroAction icon={<Icon.Hud size={16} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} />
+            <HeroAction icon={<Icon.Puzzle size={16} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
+            <HeroAction icon={<Icon.Gauge size={16} />} label="Optimize" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
           </div>
           <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
         </div>
-        <div className="glass rounded-2xl border border-white/10 p-4 w-[280px] shrink-0 hidden lg:block">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-[11px] uppercase tracking-[0.12em] text-faint font-semibold">This installation</div>
+        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[264px] shrink-0 hidden lg:block">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="text-[13px] font-semibold">This installation</div>
             <span className={cx("text-[11px] font-semibold inline-flex items-center gap-1", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
               <span className={cx("h-1.5 w-1.5 rounded-full", summary?.filesReady ? "bg-accent" : "bg-faint")} />
               {summary ? (summary.filesReady ? "Ready" : "Downloads on play") : "…"}
@@ -218,16 +208,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
               warn={summary?.javaError}
             />
             <QuickStat label="Preset" value={PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "None"} />
-            <QuickStat label="Loader" value={loaderLabel(inst)} />
-            <QuickStat label="Last start" value={inst.lastLaunch?.startupMs ? `${(inst.lastLaunch.startupMs / 1000).toFixed(1)} s` : "—"} />
           </div>
-          <button
-            type="button"
-            onClick={() => navigate({ page: "performance", instanceId: inst.id })}
-            className="mt-4 w-full h-8 rounded-lg bg-white/6 hover:bg-white/10 transition-colors text-[12.5px] font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Icon.Gauge size={14} /> {running ? "Live performance" : "Optimize"}
-          </button>
         </div>
       </div>
     </section>
@@ -241,7 +222,7 @@ function JumpBackIn({ inst }: { inst: Instance }) {
   if (!recent.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-2 mt-4">
-      <span className="text-[12px] uppercase tracking-[0.12em] text-fg/55 mr-1">Jump back in</span>
+      <span className="text-[12.5px] text-fg/60 mr-1">Jump back in</span>
       {recent.map((r) => (
         <button
           key={`${r.kind}:${r.target}`}
@@ -249,7 +230,7 @@ function JumpBackIn({ inst }: { inst: Instance }) {
           disabled={busy}
           title={r.kind === "server" ? `Join ${r.target}` : `Open the world ${r.name}`}
           onClick={() => void play(inst.id, { quickPlay: r.kind === "server" ? { kind: "server", address: r.target } : { kind: "world", folder: r.target }, quickPlayName: r.name })}
-          className="chip rounded-full h-8 pl-2.5 pr-3.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-accent/60 hover:text-accent transition-colors disabled:opacity-50 disabled:pointer-events-none max-w-[220px]"
+          className="chip rounded-md h-7 pl-2 pr-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-white/25 transition-colors disabled:opacity-50 disabled:pointer-events-none max-w-[220px]"
         >
           {r.kind === "server" ? <Icon.Globe size={14} /> : <Icon.Map size={14} />}
           <span className="truncate">{r.name}</span>
@@ -259,17 +240,14 @@ function JumpBackIn({ inst }: { inst: Instance }) {
   );
 }
 
-function HeroAction({ icon, label, onClick, accent }: { icon: ReactNode; label: string; onClick: () => void; accent?: boolean }) {
+function HeroAction({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={cx(
-        "h-14 px-4 rounded-2xl inline-flex items-center gap-2 text-[14px] font-semibold transition-all cursor-pointer border backdrop-blur-md hover:-translate-y-px",
-        accent ? "bg-accent/18 border-accent/35 text-fg hover:bg-accent/26" : "bg-white/8 border-white/12 hover:bg-white/14",
-      )}
+      className="h-12 px-4 rounded-[10px] inline-flex items-center gap-2 text-[13.5px] font-medium transition-colors cursor-pointer border border-white/10 bg-black/35 hover:bg-black/50 hover:border-white/20"
     >
-      <span className={accent ? "text-accent" : "text-fg/80"}>{icon}</span>
+      <span className="text-fg/70">{icon}</span>
       {label}
     </button>
   );
@@ -278,44 +256,21 @@ function HeroAction({ icon, label, onClick, accent }: { icon: ReactNode; label: 
 function QuickStat({ label, value, warn }: { label: string; value: string; warn?: string }) {
   return (
     <div className="min-w-0" title={warn ?? value}>
-      <div className="text-faint text-[11.5px]">{label}</div>
-      <div className={cx("font-semibold truncate", warn && "text-warn")}>{value}</div>
+      <div className="text-faint text-[12px]">{label}</div>
+      <div className={cx("font-medium truncate mt-0.5", warn && "text-warn")}>{value}</div>
     </div>
   );
 }
 
-function greeting(): string {
-  const h = new Date().getHours();
-  return h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-}
-
+/** Signed out: the one thing to do first. Signed in, the account lives in the sidebar. */
 function HomeTopBar() {
   const account = activeAccount();
+  if (account) return null;
   return (
-    <div className="flex items-center justify-between">
-      <div className="text-[14px] text-fg/80 drop-shadow">
-        {account ? (
-          <>
-            {greeting()}, <span className="font-semibold text-fg">{account.username}</span>
-          </>
-        ) : (
-          "Welcome to MOTION"
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {account ? (
-          <button type="button" className="cursor-pointer rounded-lg ring-1 ring-white/15 hover:ring-accent/60 transition" onClick={() => navigate({ page: "accounts" })} title="Accounts">
-            <Avatar account={account} size={34} />
-          </button>
-        ) : (
-          <Button variant="primary" icon={<Icon.User size={16} />} onClick={() => navigate({ page: "accounts" })}>
-            Sign in with Microsoft
-          </Button>
-        )}
-        <IconButton label="Settings" onClick={() => navigate({ page: "settings" })} className="h-9 w-9 chip rounded-lg">
-          <Icon.Settings size={18} />
-        </IconButton>
-      </div>
+    <div className="flex items-center justify-end">
+      <Button variant="primary" icon={<Icon.User size={16} />} onClick={() => navigate({ page: "accounts" })}>
+        Sign in with Microsoft
+      </Button>
     </div>
   );
 }
@@ -333,16 +288,14 @@ function BloomClientCard({ inst }: { inst: Instance }) {
   const layout = view ? activeLayout(view.hud) : null;
   const shown = layout ? HUD_WIDGETS.filter((w) => widgetVisible(layout, w.id)) : [];
   return (
-    <Card className="overflow-hidden">
-      <div className="relative h-24 overflow-hidden" style={{ background: "radial-gradient(120% 140% at 85% 0%, color-mix(in srgb, var(--bloom-accent) 55%, transparent), transparent 60%), linear-gradient(160deg, var(--raised), var(--panel))" }}>
-        <img src="/motion-mark.svg" alt="" className="absolute -right-4 -top-5 h-32 w-32 opacity-25 rotate-12" draggable={false} />
-        <div className="absolute left-4 bottom-3 flex items-center gap-2">
-          <BloodMark size={22} />
-          <div className="font-display font-bold text-[16px] tracking-tight">MOTION Client</div>
-          {st?.enabled && <Badge tone="accent">v{st.installedVersion}</Badge>}
-        </div>
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <BloodMark size={18} />
+        <div className="font-semibold text-[14px]">MOTION Client</div>
+        <span className="flex-1" />
+        {st?.enabled && <Badge tone="accent">v{st.installedVersion}</Badge>}
       </div>
-      <div className="p-4">
+      <div>
         {!st ? (
           <Skeleton className="h-14 rounded-lg" />
         ) : st.enabled ? (
@@ -358,11 +311,11 @@ function BloomClientCard({ inst }: { inst: Instance }) {
             </div>
             {layout && (
               <div className="mt-3">
-                <div className="text-[11px] uppercase tracking-[0.1em] text-faint font-semibold mb-1.5">HUD · {layout.name}</div>
+                <div className="text-[12px] text-faint mb-1.5">HUD · {layout.name}</div>
                 <div className="flex flex-wrap gap-1">
                   {shown.length ? (
                     shown.map((w) => (
-                      <span key={w.id} className="h-6 px-2 rounded-md bg-accent/10 border border-accent/20 text-[11.5px] inline-flex items-center">
+                      <span key={w.id} className="h-6 px-2 rounded-md bg-raised border border-line text-[11.5px] text-muted inline-flex items-center">
                         {w.name}
                       </span>
                     ))
@@ -430,7 +383,7 @@ function ModsOverview({ inst }: { inst: Instance }) {
     <Card className="p-4">
       <div className="flex items-baseline gap-4">
         <div>
-          <span className="font-display text-[26px] font-bold tabular-nums">{enabled}</span>
+          <span className="font-display text-[22px] font-semibold tabular-nums">{enabled}</span>
           <span className="text-[12.5px] text-muted ml-1.5">enabled</span>
         </div>
         <div className="text-[12.5px] text-faint">{disabled} disabled</div>
@@ -465,75 +418,36 @@ function ModsOverview({ inst }: { inst: Instance }) {
   );
 }
 
-/** Launcher version and update state. */
+/** An update that's downloading or ready to install (Settings → Updates has the full controls). */
 function LauncherStatus() {
   const version = useStore(app, (s) => s.paths?.version);
-  const auto = useStore(app, (s) => s.settings.autoUpdate);
   const u = useStore(updateState, (x) => x);
+  if (u.status !== "available" && u.status !== "downloading" && u.status !== "ready" && u.status !== "installing") return null;
   const label =
-    u.status === "checking"
-      ? "Checking for updates…"
-      : u.status === "available"
-        ? `Version ${u.version} found`
-        : u.status === "downloading"
-          ? `Downloading ${u.version}${u.progress !== undefined ? ` · ${Math.round(u.progress * 100)}%` : ""}`
-          : u.status === "ready"
-            ? `${u.version} downloaded · installs when you're not playing`
-            : u.status === "installing"
-              ? `Installing ${u.version}…`
-              : u.status === "current"
-                ? "Up to date"
-                : u.status === "unavailable"
-                  ? u.error && /pubkey|endpoint|REPLACE_WITH/i.test(u.error) ? "Updates aren't set up in this build" : "Couldn't reach the update server"
-                  : auto
-                    ? "Automatic updates on"
-                    : "Automatic updates are off";
+    u.status === "available"
+      ? `Version ${u.version} found`
+      : u.status === "downloading"
+        ? `Downloading ${u.version}${u.progress !== undefined ? ` · ${Math.round(u.progress * 100)}%` : ""}`
+        : u.status === "ready"
+          ? `${u.version} is ready to install`
+          : `Installing ${u.version}…`;
   return (
     <Card className="p-4 flex items-center gap-3">
-      <div className={cx("h-9 w-9 rounded-lg grid place-items-center shrink-0", u.status === "ready" || u.status === "available" ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>
-        {u.status === "checking" || u.status === "downloading" || u.status === "installing" ? <Spinner size={15} /> : <Icon.Sync size={17} />}
+      <div className="h-9 w-9 rounded-lg grid place-items-center shrink-0 bg-accent/12 text-accent">
+        {u.status === "downloading" || u.status === "installing" ? <Spinner size={15} /> : <Icon.Sync size={17} />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] font-semibold">MOTION {version ?? ""}</div>
-        <div className={cx("text-[12px] truncate", u.status === "ready" || u.status === "available" ? "text-accent" : "text-faint")} title={label}>
+        <div className="text-[12px] truncate text-muted" title={label}>
           {label}
         </div>
       </div>
-      {u.status === "ready" ? (
+      {u.status === "ready" && (
         <Button size="sm" variant="primary" onClick={() => void installUpdate()}>
           Restart now
         </Button>
-      ) : (
-        <Button size="sm" variant="ghost" disabled={u.status === "checking" || u.status === "downloading" || u.status === "installing"} onClick={() => void checkForUpdate(true)}>
-          Check
-        </Button>
       )}
     </Card>
-  );
-}
-
-function QuickAccess({ inst }: { inst?: Instance }) {
-  const tiles: { icon: ReactNode; label: string; hint: string; go: () => void }[] = [
-    { icon: <Icon.Hud size={18} />, label: "MOTION Mods", hint: "HUD & modules", go: () => navigate({ page: "mods", instanceId: inst?.id }) },
-    { icon: <Icon.Gauge size={18} />, label: "Optimize", hint: "FPS & memory", go: () => navigate({ page: "performance", instanceId: inst?.id }) },
-    { icon: <Icon.User size={18} />, label: "Accounts", hint: "Microsoft sign-in", go: () => navigate({ page: "accounts" }) },
-    { icon: <Icon.Settings size={18} />, label: "Settings", hint: "Launcher & Java", go: () => navigate({ page: "settings" }) },
-  ];
-  return (
-    <div className="grid grid-cols-4 gap-3">
-      {tiles.map((t) => (
-        <button
-          key={t.label}
-          type="button"
-          onClick={t.go}
-          className="group text-left rounded-2xl border border-line bg-panel hover:border-accent/40 hover:bg-gradient-to-br hover:from-accent/[0.07] hover:to-transparent transition-colors p-3.5 cursor-pointer"
-        >
-          <span className="h-8 w-8 rounded-lg bg-raised text-muted group-hover:text-accent group-hover:bg-accent/12 grid place-items-center transition-colors">{t.icon}</span>
-          <div className="font-semibold text-[13.5px] mt-2.5">{t.label}</div>
-          <div className="text-[12px] text-faint">{t.hint}</div>
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -594,26 +508,19 @@ function Recommendations({ inst }: { inst: Instance }) {
   }
   if (tips.length === 0) tips.push({ title: "Looking good", body: "No obvious improvements for this installation. Real-world FPS still depends on your hardware, world and settings." });
   return (
-    <div className="space-y-2.5">
-      {tips.slice(0, 3).map((t) => (
-        <Card key={t.title} className="p-4">
-          <div className="flex gap-3">
-            <div className="h-8 w-8 rounded-lg bg-accent/10 text-accent grid place-items-center shrink-0">
-              <Icon.Sparkle size={16} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[13.5px]">{t.title}</div>
-              <div className="text-[13px] text-muted mt-0.5 leading-relaxed">{t.body}</div>
-              {t.action && (
-                <button type="button" onClick={t.action.run} className="text-[13px] font-semibold text-accent mt-2 hover:underline cursor-pointer">
-                  {t.action.label} →
-                </button>
-              )}
-            </div>
-          </div>
-        </Card>
+    <Card className="divide-y divide-line">
+      {tips.slice(0, 2).map((t) => (
+        <div key={t.title} className="p-4">
+          <div className="font-semibold text-[13.5px]">{t.title}</div>
+          <div className="text-[13px] text-muted mt-1 leading-relaxed">{t.body}</div>
+          {t.action && (
+            <button type="button" onClick={t.action.run} className="text-[13px] font-medium text-accent mt-2 hover:underline cursor-pointer">
+              {t.action.label}
+            </button>
+          )}
+        </div>
       ))}
-    </div>
+    </Card>
   );
 }
 
@@ -624,11 +531,10 @@ function Announcements() {
   return (
     <section>
       <SectionTitle>From MOTION</SectionTitle>
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {items.slice(0, 3).map((a) => (
           <Card key={a.id} className="p-4">
             <div className="flex items-center gap-2">
-              <BloodMark size={18} />
               <div className="font-semibold">{a.title}</div>
               {a.premiumOnly && <Badge tone="warn">Early access</Badge>}
               <span className="flex-1" />
@@ -636,8 +542,8 @@ function Announcements() {
             </div>
             <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{a.body}</p>
             {a.url && (
-              <button type="button" className="text-[13px] font-semibold text-accent mt-2 hover:underline cursor-pointer" onClick={() => void native.openUrl(a.url!)}>
-                Read more →
+              <button type="button" className="text-[13px] font-medium text-accent mt-2 hover:underline cursor-pointer" onClick={() => void native.openUrl(a.url!)}>
+                Read more
               </button>
             )}
           </Card>
@@ -668,18 +574,18 @@ function News() {
           n ? (
             <Card key={n.id} className="overflow-hidden group" onClick={() => setOpen(n)}>
               <div className="h-28 bg-raised overflow-hidden">
-                {n.image && <img src={n.image} alt="" className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />}
+                {n.image && <img src={n.image} alt="" className="h-full w-full object-cover" />}
               </div>
               <div className="p-3.5">
-                <div className="flex items-center gap-2 text-[11.5px] text-faint">
-                  <Badge tone={n.type === "release" ? "accent" : "warn"}>{n.type}</Badge>
-                  {n.date && timeAgo(n.date)}
+                <div className="font-semibold truncate">{n.title}</div>
+                <div className="text-[12px] text-faint mt-1 capitalize">
+                  {n.type}
+                  {n.date && ` · ${timeAgo(n.date)}`}
                 </div>
-                <div className="font-semibold mt-2 truncate">{n.title}</div>
               </div>
             </Card>
           ) : (
-            <Skeleton key={i} className="h-[178px] rounded-2xl" />
+            <Skeleton key={i} className="h-[172px] rounded-xl" />
           ),
         )}
       </div>
@@ -710,13 +616,11 @@ export function HomePage() {
       {inst ? (
         <Hero inst={inst} onCreate={() => setCreating(true)} />
       ) : (
-        <section className="relative px-10 pt-6 pb-10 min-h-[460px] flex flex-col">
+        <section className="relative px-10 pt-6 pb-10 min-h-[440px] flex flex-col">
           <HomeTopBar />
           <div className="flex-1" />
-          <h1 className="font-display text-[46px] font-bold tracking-tight leading-tight">
-            Welcome to <span className="text-gradient">MOTION</span>
-          </h1>
-          <p className="text-fg/80 mt-2 max-w-xl">Create an installation to get started. Pick a Minecraft version and a loader — Fabric is recommended for MOTION Client and performance mods. MOTION downloads the game and the right Java for you.</p>
+          <h1 className="font-display text-[40px] font-bold tracking-tight leading-tight">Welcome to MOTION</h1>
+          <p className="text-fg/75 mt-2 max-w-xl leading-relaxed">Create an installation to get started. Pick a Minecraft version and a loader (Fabric is recommended for MOTION Client and performance mods). MOTION downloads the game and the right Java for you.</p>
           <div className="mt-6">
             <Button variant="primary" size="lg" icon={<Icon.Plus size={18} />} onClick={() => setCreating(true)}>
               New installation
@@ -725,28 +629,23 @@ export function HomePage() {
         </section>
       )}
 
-      <div className="px-10 pb-10 grid grid-cols-[1fr_340px] gap-6">
-        <div className="space-y-8 min-w-0">
-          <section>
-            <SectionTitle>Quick access</SectionTitle>
-            <QuickAccess inst={inst} />
-          </section>
+      <div className="px-10 pb-12 grid grid-cols-[1fr_320px] gap-8">
+        <div className="space-y-10 min-w-0">
           {recent.length > 0 && (
             <section>
               <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "library" })}>View all</Button>}>Recently played</SectionTitle>
               <div className="grid grid-cols-2 gap-3">
                 {recent.map((i) => (
-                  <Card key={i.id} className={cx("p-3.5 flex items-center gap-3", i.id === inst?.id && "border-accent/40")} onClick={() => updateSettings({ selectedInstanceId: i.id })}>
-                    <InstanceIcon inst={i} size={42} />
+                  <Card key={i.id} className={cx("p-3 flex items-center gap-3", i.id === inst?.id && "border-line-strong bg-raised/60")} onClick={() => updateSettings({ selectedInstanceId: i.id })}>
+                    <InstanceIcon inst={i} size={40} />
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold truncate">{i.name}</div>
+                      <div className="font-semibold text-[13.5px] truncate">{i.name}</div>
                       <div className="text-[12.5px] text-muted truncate">
-                        {i.gameVersion} · {loaderLabel(i)}
+                        {i.gameVersion} · {loaderLabel(i)} · {isRunning(i.id) ? "Running now" : timeAgo(i.lastPlayedAt)}
                       </div>
-                      <div className="text-[12px] text-faint">{isRunning(i.id) ? "Running now" : `${timeAgo(i.lastPlayedAt)} · ${formatPlaytime(i.totalPlayMs)}`}</div>
                     </div>
-                    <IconButton label="Open" onClick={(e) => { e.stopPropagation(); navigate({ page: "instance", id: i.id }); }}>
-                      <Icon.Folder size={16} />
+                    <IconButton label="Open installation" onClick={(e) => { e.stopPropagation(); navigate({ page: "instance", id: i.id }); }}>
+                      <Icon.ChevronDown size={16} className="-rotate-90" />
                     </IconButton>
                   </Card>
                 ))}
@@ -761,26 +660,24 @@ export function HomePage() {
             </section>
           )}
         </div>
-        <aside className="space-y-6">
+        <aside className="space-y-8">
+          <LauncherStatus />
           <LicenseCard compact />
           <TeamCard />
           {inst && <BloomClientCard inst={inst} />}
           {inst && (
             <section>
-              <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })}>Open</Button>}>Installed mods</SectionTitle>
+              <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })}>Manage</Button>}>Installed mods</SectionTitle>
               <ModsOverview inst={inst} />
             </section>
           )}
-          <LauncherStatus />
-          <section>
-            <SectionTitle action={inst && <Button size="sm" variant="ghost" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>Open</Button>}>
-              Performance tips
-            </SectionTitle>
-            {inst ? <Recommendations inst={inst} /> : <div className="text-muted text-[13px]">Create an installation to see tips.</div>}
-            <p className="text-[12px] text-faint mt-4 leading-relaxed">
-              MOTION never promises a specific frame rate. Real-world FPS depends on your hardware, settings, world and installed mods.
-            </p>
-          </section>
+          {inst && (
+            <section>
+              <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>Open</Button>}>Performance tips</SectionTitle>
+              <Recommendations inst={inst} />
+              <p className="text-[12px] text-faint mt-3 leading-relaxed">Real-world FPS depends on your hardware, settings, world and mods.</p>
+            </section>
+          )}
           <UpgradeCard />
         </aside>
       </div>

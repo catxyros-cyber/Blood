@@ -12,11 +12,11 @@ export function cx(...c: (string | false | null | undefined)[]): string {
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-accent-ink hover:brightness-110 active:brightness-95 font-semibold",
-  secondary: "bg-raised text-fg hover:bg-line-strong border border-line",
-  ghost: "text-muted hover:text-fg hover:bg-raised",
-  danger: "bg-danger/15 text-danger hover:bg-danger/25 border border-danger/30",
-  outline: "border border-line-strong text-fg hover:border-accent/60 hover:bg-accent/5",
+  primary: "bg-accent text-accent-ink hover:brightness-107 active:brightness-95 font-semibold",
+  secondary: "bg-raised text-fg hover:bg-line-strong border border-line font-medium",
+  ghost: "text-muted hover:text-fg hover:bg-raised font-medium",
+  danger: "bg-danger/12 text-danger hover:bg-danger/20 border border-danger/25 font-medium",
+  outline: "border border-line-strong text-fg hover:bg-raised font-medium",
 };
 
 export function Button({
@@ -28,12 +28,12 @@ export function Button({
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md" | "lg"; icon?: ReactNode; loading?: boolean }) {
-  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-sm gap-2 rounded-[10px]", lg: "h-11 px-5 text-[15px] gap-2.5 rounded-xl" };
+  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-[13.5px] gap-2 rounded-lg", lg: "h-11 px-5 text-[14.5px] gap-2 rounded-[10px]" };
   return (
     <button
       type="button"
       className={cx(
-        "inline-flex items-center justify-center whitespace-nowrap transition-all duration-150 disabled:opacity-45 disabled:pointer-events-none cursor-pointer",
+        "inline-flex items-center justify-center whitespace-nowrap transition-colors duration-150 disabled:opacity-45 disabled:pointer-events-none cursor-pointer",
         sizes[size],
         VARIANTS[variant],
         className,
@@ -69,7 +69,7 @@ export function Card({ className, children, onClick }: { className?: string; chi
   return (
     <div
       onClick={onClick}
-      className={cx("rounded-2xl border border-line bg-panel", onClick && "cursor-pointer hover:border-line-strong transition-colors", className)}
+      className={cx("rounded-xl border border-line bg-panel", onClick && "cursor-pointer hover:border-line-strong transition-colors", className)}
     >
       {children}
     </div>
@@ -78,10 +78,10 @@ export function Card({ className, children, onClick }: { className?: string; chi
 
 export function PageHeader({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="flex items-end justify-between gap-6 mb-6">
+    <div className="flex items-end justify-between gap-6 mb-7">
       <div className="min-w-0">
-        <h1 className="font-display text-[26px] font-semibold tracking-tight leading-tight truncate">{title}</h1>
-        {subtitle && <p className="text-muted mt-1">{subtitle}</p>}
+        <h1 className="font-display text-[24px] font-semibold tracking-tight leading-tight truncate">{title}</h1>
+        {subtitle && <p className="text-muted text-[13.5px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
@@ -91,7 +91,7 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">{children}</h2>
+      <h2 className="text-[14px] font-semibold text-fg">{children}</h2>
       {action}
     </div>
   );
@@ -133,9 +133,9 @@ export function ProgressBar({ value, className }: { value: number | null; classN
 export function EmptyState({ icon, title, children, action }: { icon?: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center text-center py-16 px-6 animate-in">
-      <div className="h-14 w-14 rounded-2xl bg-raised border border-line grid place-items-center text-accent mb-4">{icon ?? <Icon.Sparkle size={24} />}</div>
-      <h3 className="font-display text-lg font-semibold">{title}</h3>
-      {children && <p className="text-muted mt-1.5 max-w-md">{children}</p>}
+      <div className="h-12 w-12 rounded-xl bg-raised border border-line grid place-items-center text-muted mb-4">{icon ?? <Icon.Sparkle size={22} />}</div>
+      <h3 className="font-display text-[16px] font-semibold">{title}</h3>
+      {children && <p className="text-muted text-[13.5px] mt-1.5 max-w-md leading-relaxed">{children}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -154,7 +154,7 @@ export function Callout({ tone = "info", title, children, action }: { tone?: "in
   };
   const icon = tone === "danger" || tone === "warn" ? <Icon.Alert size={17} /> : <Icon.Info size={17} />;
   return (
-    <div className={cx("flex gap-3 rounded-xl border px-4 py-3", tones[tone])}>
+    <div className={cx("flex gap-3 rounded-lg border px-4 py-3", tones[tone])}>
       <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 text-fg">
         {title && <div className="font-semibold mb-0.5 break-words">{title}</div>}
@@ -190,7 +190,7 @@ export function TextInput({ value, onChange, placeholder, className, icon, autoF
   mono?: boolean;
 }) {
   return (
-    <div className={cx("flex items-center gap-2 h-9 px-3 rounded-[10px] bg-panel-2 border border-line focus-within:border-accent/60 transition-colors", className)}>
+    <div className={cx("flex items-center gap-2 h-9 px-3 rounded-lg bg-panel-2 border border-line focus-within:border-line-strong transition-colors", className)}>
       {icon && <span className="text-faint">{icon}</span>}
       <input
         autoFocus={autoFocus}
@@ -216,7 +216,7 @@ export function Select<T extends string>({ value, onChange, options, className }
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none h-9 pl-3 pr-9 rounded-[10px] bg-panel-2 border border-line hover:border-line-strong focus:border-accent/60 outline-none cursor-pointer"
+        className="w-full appearance-none h-9 pl-3 pr-9 rounded-lg bg-panel-2 border border-line hover:border-line-strong focus:border-line-strong outline-none cursor-pointer"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} disabled={o.disabled} className="bg-panel">
@@ -253,7 +253,7 @@ export function Toggle({ checked, onChange, label, description, disabled }: {
   );
   if (!label) return sw;
   return (
-    <div className="flex items-center justify-between gap-6 py-1">
+    <div className="flex items-center justify-between gap-6 py-1.5">
       <div className="min-w-0">
         <div className="font-medium">{label}</div>
         {description && <div className="text-[13px] text-muted mt-0.5">{description}</div>}
@@ -313,15 +313,15 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
 
 export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div className="inline-flex p-1 rounded-xl bg-panel-2 border border-line">
+    <div className="inline-flex p-0.5 rounded-lg bg-panel-2 border border-line">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
           className={cx(
-            "h-7 px-3 rounded-lg text-[13px] font-medium transition-all cursor-pointer",
-            value === o.value ? "bg-raised text-fg shadow-sm" : "text-muted hover:text-fg",
+            "h-7 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer",
+            value === o.value ? "bg-raised text-fg" : "text-muted hover:text-fg",
           )}
         >
           {o.label}
@@ -356,7 +356,7 @@ export function Menu({ trigger, items, align = "right" }: {
       {open && (
         <div
           className={cx(
-            "absolute z-40 mt-1 min-w-48 rounded-xl border border-line-strong bg-raised p-1 shadow-2xl shadow-black/50 animate-pop",
+            "absolute z-40 mt-1 min-w-48 rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop",
             align === "right" ? "right-0" : "left-0",
           )}
         >
@@ -373,7 +373,7 @@ export function Menu({ trigger, items, align = "right" }: {
                   it.onClick();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-lg text-left text-[13px] cursor-pointer disabled:opacity-40",
+                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-md text-left text-[13px] cursor-pointer disabled:opacity-40",
                   it.danger ? "text-danger hover:bg-danger/10" : "text-fg hover:bg-line-strong",
                 )}
               >
@@ -408,21 +408,21 @@ export function Modal({ open, onClose, title, children, footer, width = 520 }: {
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-[2px] p-6" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-6" onMouseDown={onClose}>
       <div
-        className="w-full max-h-[85vh] flex flex-col rounded-2xl border border-line-strong bg-panel shadow-2xl shadow-black/60 animate-pop"
+        className="w-full max-h-[85vh] flex flex-col rounded-xl border border-line-strong bg-panel shadow-2xl shadow-black/50 animate-pop"
         style={{ maxWidth: width }}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
-          <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+          <h2 className="font-display text-[16px] font-semibold">{title}</h2>
           <IconButton label="Close" onClick={onClose}>
             <Icon.Close size={16} />
           </IconButton>
         </div>
-        <div className="px-5 pb-4 overflow-y-auto">{children}</div>
+        <div className="px-5 pb-5 overflow-y-auto">{children}</div>
         {footer && <div className="flex justify-end gap-2 px-5 py-3.5 border-t border-line">{footer}</div>}
       </div>
     </div>
