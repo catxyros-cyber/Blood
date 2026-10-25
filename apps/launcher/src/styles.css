@@ -244,6 +244,15 @@ textarea,
   animation-duration: 0.001ms !important;
   transition-duration: 0.001ms !important;
 }
+/* The operating system's "reduce motion" counts too, whatever the launcher setting says. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 /* Range slider */
 input[type="range"].bloom-range {
@@ -370,9 +379,6 @@ input[type="range"].bloom-range::-webkit-slider-thumb {
 }
 .text-gradient {
   color: var(--fg);
-}
-.backdrop-art {
-  transition: opacity 400ms ease;
 }
 .hero-fade {
   background: linear-gradient(to bottom, transparent 0%, transparent 45%, color-mix(in srgb, var(--bg) 75%, transparent) 78%, var(--bg) 100%);

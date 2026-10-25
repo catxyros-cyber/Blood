@@ -7,7 +7,7 @@ import { API_URL } from "../../services/premium";
 import { useStore } from "../../services/store";
 import { checkForUpdate } from "../../services/updater";
 import { Button, Card, confirm, cx, Field, gb, PageHeader, Segmented, Select, Slider, TextInput, Toggle } from "../components";
-import { forgetCustomBackground } from "../backdrop";
+import { forgetCustomBackground, themeArt } from "../backdrop";
 import { Icon } from "../icons";
 import { PremiumBadge, usePremium } from "../premiumParts";
 import { MemoryControl } from "./Instance";
@@ -97,7 +97,7 @@ export function SettingsPage({ section }: { section?: string }) {
                     className={cx("rounded-lg overflow-hidden border-2 text-left transition-colors cursor-pointer", s.theme === t.id ? "border-accent" : "border-transparent hover:border-line-strong")}
                   >
                     <div className="relative aspect-[16/9]">
-                      <img src={`/backgrounds/${t.id}-thumb.jpg`} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      <img src={themeArt(t.id).thumb} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                       <span className="absolute right-1.5 bottom-1.5 h-4 w-4 rounded-full border border-white/40" style={{ background: t.accent }} />
                     </div>
                     <div className="px-2 py-1.5 text-[13px] font-medium bg-panel-2">{t.name}</div>

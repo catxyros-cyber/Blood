@@ -105,7 +105,24 @@ export async function installedProjects(inst: Instance): Promise<Set<string>> {
   return new Set(Object.values(index.files).map((f) => f.projectId));
 }
 
+const listing = new Map<string, Promise<ContentItem[]>>();
+
+/**
+ * Items in an installation's content folder. Calls made while one is already running for the same
+ * folder share its result (Home alone asks for the mods list from several cards at once), so the
+ * folder is read and its index parsed once. Each caller gets its own array.
+ */
 export async function listContent(inst: Instance, kind: ContentKind): Promise<ContentItem[]> {
+  const key = `${inst.id}\u0000${contentDir(inst, kind)}`;
+  let running = listing.get(key);
+  if (!running) {
+    running = readContent(inst, kind).finally(() => listing.delete(key));
+    listing.set(key, running);
+  }
+  return [...(await running)];
+}
+
+async function readContent(inst: Instance, kind: ContentKind): Promise<ContentItem[]> {
   const p = P();
   const dir = contentDir(inst, kind);
   const entries = (await p.list(dir)).filter((e) => accepts(kind, e.name, e.isDir));

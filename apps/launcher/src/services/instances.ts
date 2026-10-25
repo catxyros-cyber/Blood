@@ -6,19 +6,20 @@ import { native } from "./native";
 export async function loadInstances(): Promise<Instance[]> {
   const p = P();
   const l = L();
-  const dirs = await p.list(l.instances);
+  const dirs = (await p.list(l.instances)).filter((d) => d.isDir);
+  // Read every installation's file at once rather than one after another.
+  const texts = await Promise.all(dirs.map((d) => p.readText(instanceMetaPath(l, p.sep, d.name)).catch(() => null)));
   const out: Instance[] = [];
-  for (const d of dirs) {
-    if (!d.isDir) continue;
-    const text = await p.readText(instanceMetaPath(l, p.sep, d.name)).catch(() => null);
-    if (!text) continue;
+  dirs.forEach((d, i) => {
+    const text = texts[i];
+    if (!text) return;
     try {
       const inst = JSON.parse(text) as Instance;
       if (inst.id === d.name) out.push(inst);
     } catch {
       console.warn(`Skipping unreadable installation ${d.name}`);
     }
-  }
+  });
   return out.sort((a, b) => (b.lastPlayedAt ?? b.createdAt) - (a.lastPlayedAt ?? a.createdAt));
 }
 

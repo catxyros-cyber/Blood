@@ -1,0 +1,84 @@
+# Temporary (launcher redesign): renders the launcher UI in a browser with a mocked backend and
+# publishes before/after screenshots to the ci-logs/launcher-ui branch. Removed once the redesign lands.
+name: UI preview
+on:
+  push:
+    branches: [launcher-clean-ui]
+permissions:
+  contents: write
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: |
+          npm ci --no-audit --no-fund --ignore-scripts
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw" && npm init -y >/dev/null && npm i playwright@1.56.1 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+      - name: Typecheck
+        id: tsc
+        continue-on-error: true
+        run: npm run typecheck -w @bloom/launcher 2>&1 | tee "$RUNNER_TEMP/tsc.txt"
+      - name: Launcher tests
+        continue-on-error: true
+        run: npm test -w @bloom/launcher > "$RUNNER_TEMP/tests.txt" 2>&1
+      - name: Screenshots and benchmark
+        run: |
+          set +e
+          PAGES=(
+            'home+tall={"page":"home"}'
+            'home-empty@empty={"page":"home"}'
+            'home~1040x680={"page":"home"}'
+            'library={"page":"library"}'
+            'instance={"page":"instance","id":"motion-pvp"}'
+            'instance-settings+tall={"page":"instance","id":"motion-pvp","tab":"settings"}'
+            'mods={"page":"mods"}'
+            'performance={"page":"performance"}'
+            'visuals={"page":"customize"}'
+            'skins={"page":"skins"}'
+            'premium={"page":"premium"}'
+            'settings+tall={"page":"settings"}'
+            'accounts={"page":"accounts"}'
+            'home-crimson@theme=crimson={"page":"home"}'
+            'home-obsidian@theme=obsidian={"page":"home"}'
+            'home-ash@theme=ash={"page":"home"}'
+            'home-ember@theme=ember={"page":"home"}'
+            'home-mono@theme=mono={"page":"home"}'
+            'library-crimson@theme=crimson={"page":"library"}'
+          )
+          serve() { # <dir with apps/launcher> <log>
+            cp -r "$GITHUB_WORKSPACE/apps/launcher/preview" "$1/apps/launcher/" 2>/dev/null
+            (cd "$1/apps/launcher" && npx vite --port 1420 --strictPort > "$2" 2>&1 &)
+            for i in $(seq 60); do curl -s localhost:1420 >/dev/null && break; sleep 1; done
+          }
+          stop() { pkill -f "vite --port 1420"; sleep 2; }
+          cp "$GITHUB_WORKSPACE/apps/launcher/preview/shoot.mjs" "$GITHUB_WORKSPACE/apps/launcher/preview/bench.mjs" "$RUNNER_TEMP/pw/"
+          mkdir -p "$RUNNER_TEMP/out/after" "$RUNNER_TEMP/out/bench"
+          serve "$GITHUB_WORKSPACE" "$RUNNER_TEMP/out/after/vite.log"
+          (cd "$RUNNER_TEMP/pw" && node shoot.mjs "$RUNNER_TEMP/out/after" "${PAGES[@]}") > "$RUNNER_TEMP/out/after/errors.txt" 2>&1
+          (cd "$RUNNER_TEMP/pw" && node bench.mjs http://localhost:1420 "$RUNNER_TEMP/out/bench/after.json" after) > "$RUNNER_TEMP/out/bench/after.log" 2>&1
+          stop
+          git worktree add -q "$RUNNER_TEMP/main" origin/main
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RUNNER_TEMP/main/node_modules"
+          serve "$RUNNER_TEMP/main" "$RUNNER_TEMP/out/bench/before-vite.log"
+          (cd "$RUNNER_TEMP/pw" && node bench.mjs http://localhost:1420 "$RUNNER_TEMP/out/bench/before.json" before) > "$RUNNER_TEMP/out/bench/before.log" 2>&1
+          stop
+          # Production bundles: what the installer ships, and what's parsed at startup.
+          (cd "$GITHUB_WORKSPACE/apps/launcher" && npx vite build --outDir "$RUNNER_TEMP/dist-after" --emptyOutDir) > "$RUNNER_TEMP/out/bench/build-after.log" 2>&1
+          (cd "$RUNNER_TEMP/main/apps/launcher" && npx vite build --outDir "$RUNNER_TEMP/dist-before" --emptyOutDir) > "$RUNNER_TEMP/out/bench/build-before.log" 2>&1
+          for d in before after; do (cd "$RUNNER_TEMP/dist-$d" && find . -type f -printf "%s %p\n" | sort -k2) > "$RUNNER_TEMP/out/bench/dist-$d.txt"; done
+      - name: Publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          cd "$RUNNER_TEMP/out" && cp "$RUNNER_TEMP/tsc.txt" . 2>/dev/null; tail -30 "$RUNNER_TEMP/tests.txt" > tests.txt 2>/dev/null
+          git init -q && git checkout -q -b log && git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "UI preview for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD:refs/heads/ci-logs/launcher-ui

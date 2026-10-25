@@ -76,10 +76,13 @@ export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instanc
 export function LiveStats({ instanceId }: { instanceId: string }) {
   const run = useStore(app, (s) => s.running[instanceId]);
   const [, tick] = useState(0);
+  const live = Boolean(run);
   useEffect(() => {
+    // The uptime clock only needs to tick while the game runs.
+    if (!live) return;
     const t = setInterval(() => tick((n) => n + 1), 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [live]);
   if (!run) return null;
   const last = run.stats?.[run.stats.length - 1];
   const up = Math.floor((Date.now() - run.startedAt) / 1000);

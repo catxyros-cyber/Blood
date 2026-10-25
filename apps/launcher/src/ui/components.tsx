@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { createStore, useStore } from "../services/store";
 import { Icon } from "./icons";
 
@@ -211,20 +212,156 @@ export function Select<T extends string>({ value, onChange, options, className }
   options: { value: T; label: string; disabled?: boolean }[];
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number } | null>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const typed = useRef({ text: "", at: 0 });
+  const selected = options.findIndex((o) => o.value === value);
+  const current = options[selected];
+
+  const place = () => {
+    const r = button.current?.getBoundingClientRect();
+    if (!r) return;
+    const below = window.innerHeight - r.bottom - 8;
+    const above = r.top - 8;
+    const want = Math.min(300, options.length * 32 + 8);
+    const down = below >= want || below >= above;
+    setPos({ left: r.left, width: r.width, ...(down ? { top: r.bottom + 4 } : { bottom: window.innerHeight - r.top + 4 }), maxHeight: Math.max(120, Math.min(300, down ? below : above)) });
+  };
+  const show = () => {
+    place();
+    setActive(selected >= 0 ? selected : options.findIndex((o) => !o.disabled));
+    setOpen(true);
+  };
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) button.current?.focus({ preventScroll: true });
+  };
+  const choose = (i: number) => {
+    const o = options[i];
+    if (!o || o.disabled) return;
+    close(true);
+    if (o.value !== value) onChange(o.value);
+  };
+  const move = (from: number, dir: 1 | -1) => {
+    for (let k = 1; k <= options.length; k++) {
+      const i = (from + dir * k + options.length * 2) % options.length;
+      if (!options[i]?.disabled) return i;
+    }
+    return from;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!list.current?.contains(e.target as Node) && !button.current?.contains(e.target as Node)) setOpen(false);
+    };
+    // The list floats over the page; anything moving underneath it closes it.
+    const onScroll = (e: Event) => {
+      if (!list.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onResize = () => setOpen(false);
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [open]);
+  useLayoutEffect(() => {
+    if (!open) return;
+    list.current?.focus({ preventScroll: true });
+  }, [open]);
+  useEffect(() => {
+    if (open && active >= 0) list.current?.querySelector<HTMLElement>(`[data-i="${active}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [open, active]);
+
+  const onListKey = (e: ReactKeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => move(a < 0 ? (e.key === "ArrowDown" ? -1 : 0) : a, e.key === "ArrowDown" ? 1 : -1));
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      setActive(e.key === "Home" ? move(-1, 1) : move(options.length, -1));
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      choose(active);
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    } else if (e.key.length === 1) {
+      // Type to jump, like a native list.
+      const now = Date.now();
+      typed.current = { text: (now - typed.current.at < 700 ? typed.current.text : "") + e.key.toLowerCase(), at: now };
+      const hit = options.findIndex((o) => !o.disabled && o.label.toLowerCase().startsWith(typed.current.text));
+      if (hit >= 0) setActive(hit);
+    }
+  };
+
   return (
     <div className={cx("relative", className)}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as T)}
-        className="w-full appearance-none h-9 pl-3 pr-9 rounded-lg bg-panel-2 border border-line hover:border-line-strong focus:border-line-strong outline-none cursor-pointer"
+      <button
+        ref={button}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => (open ? close(false) : show())}
+        onKeyDown={(e) => {
+          if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            show();
+          }
+        }}
+        className={cx(
+          "w-full h-9 pl-3 pr-9 rounded-lg bg-panel-2 border text-left truncate cursor-pointer outline-none transition-colors",
+          open ? "border-line-strong" : "border-line hover:border-line-strong focus-visible:border-line-strong",
+        )}
       >
-        {options.map((o) => (
-          <option key={o.value} value={o.value} disabled={o.disabled} className="bg-panel">
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <Icon.ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none" />
+        {current?.label ?? ""}
+      </button>
+      <Icon.ChevronDown size={16} className={cx("absolute right-3 top-1/2 -translate-y-1/2 text-faint pointer-events-none transition-transform duration-150", open && "rotate-180")} />
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={list}
+            role="listbox"
+            tabIndex={-1}
+            aria-activedescendant={active >= 0 ? `opt-${active}` : undefined}
+            onKeyDown={onListKey}
+            className="fixed z-[80] overflow-y-auto rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop outline-none"
+            style={{ left: pos.left, minWidth: pos.width, maxWidth: Math.max(pos.width, 420), top: pos.top, bottom: pos.bottom, maxHeight: pos.maxHeight }}
+          >
+            {options.map((o, i) => (
+              <div
+                key={o.value}
+                id={`opt-${i}`}
+                data-i={i}
+                role="option"
+                aria-selected={o.value === value}
+                aria-disabled={o.disabled || undefined}
+                onMouseMove={() => !o.disabled && active !== i && setActive(i)}
+                onClick={() => choose(i)}
+                className={cx(
+                  "flex items-center gap-2 h-8 pl-2 pr-3 rounded-md text-[13px] whitespace-nowrap",
+                  o.disabled ? "opacity-40 cursor-default" : "cursor-pointer",
+                  i === active && !o.disabled && "bg-line-strong",
+                )}
+              >
+                <span className="w-4 shrink-0 text-accent">{o.value === value && <Icon.Check size={14} />}</span>
+                <span className="truncate">{o.label}</span>
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -341,40 +478,89 @@ export function Menu({ trigger, items, align = "right" }: {
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const close = (refocus: boolean) => {
+    setOpen(false);
+    if (refocus) (ref.current?.querySelector("button, [tabindex]") as HTMLElement | null)?.focus();
+  };
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => {
+    const onDown = (e: MouseEvent) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
-    window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
   }, [open]);
+  useLayoutEffect(() => {
+    if (!open || !panel.current) return;
+    // Open upwards when there isn't room below (rows near the bottom of the window).
+    const h = panel.current.offsetHeight;
+    const trig = ref.current?.getBoundingClientRect();
+    if (trig) setUp(trig.bottom + 4 + h > window.innerHeight - 8 && trig.top > h + 8);
+    // Focus the menu so arrows and Escape work; no item is highlighted until the keyboard moves.
+    panel.current.focus({ preventScroll: true });
+  }, [open]);
+  const onKey = (e: ReactKeyboardEvent) => {
+    const buttons: HTMLButtonElement[] = panel.current ? Array.from(panel.current.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")) : [];
+    const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      close(true);
+    } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const next = e.key === "ArrowDown" ? (at + 1) % buttons.length : (at <= 0 ? buttons.length : at) - 1;
+      buttons[next]?.focus();
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      buttons[e.key === "Home" ? 0 : buttons.length - 1]?.focus();
+    } else if (e.key === "Tab") {
+      setOpen(false);
+    }
+  };
   return (
     <div className="relative" ref={ref} onClick={(e) => e.stopPropagation()}>
-      <div onClick={() => setOpen((o) => !o)}>{trigger}</div>
+      <div
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" && !open) {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+      >
+        {trigger}
+      </div>
       {open && (
         <div
+          ref={panel}
+          role="menu"
+          tabIndex={-1}
+          onKeyDown={onKey}
           className={cx(
-            "absolute z-40 mt-1 min-w-48 rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop",
+            "absolute z-40 min-w-48 rounded-lg border border-line-strong bg-raised p-1 shadow-xl shadow-black/40 animate-pop outline-none",
             align === "right" ? "right-0" : "left-0",
+            up ? "bottom-full mb-1 origin-bottom" : "top-full mt-1 origin-top",
           )}
         >
           {items.map((it, i) =>
             it === "divider" ? (
-              <div key={i} className="my-1 h-px bg-line" />
+              <div key={i} role="separator" className="my-1 h-px bg-line" />
             ) : (
               <button
                 key={i}
                 type="button"
+                role="menuitem"
                 disabled={it.disabled}
                 onClick={() => {
                   setOpen(false);
                   it.onClick();
                 }}
                 className={cx(
-                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-md text-left text-[13px] cursor-pointer disabled:opacity-40",
-                  it.danger ? "text-danger hover:bg-danger/10" : "text-fg hover:bg-line-strong",
+                  "flex w-full items-center gap-2.5 h-8 px-2.5 rounded-md text-left text-[13px] cursor-pointer disabled:opacity-40 outline-none",
+                  it.danger ? "text-danger hover:bg-danger/10 focus-visible:bg-danger/10" : "text-fg hover:bg-line-strong focus-visible:bg-line-strong",
                 )}
               >
                 <span className="text-muted">{it.icon}</span>
@@ -400,17 +586,52 @@ export function Modal({ open, onClose, title, children, footer, width = 520 }: {
   footer?: ReactNode;
   width?: number;
 }) {
+  const box = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const before = document.activeElement as HTMLElement | null;
+    // Focus the first control that asked for it, else the dialog itself.
+    const t = requestAnimationFrame(() => {
+      const el = box.current;
+      if (!el || el.contains(document.activeElement)) return;
+      (el.querySelector<HTMLElement>("[autofocus], [data-autofocus]") ?? el).focus({ preventScroll: true });
+    });
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return closeRef.current();
+      if (e.key !== "Tab" || !box.current) return;
+      // Keep Tab inside the dialog.
+      const f: HTMLElement[] = [];
+      box.current
+        .querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')
+        .forEach((x) => {
+          if (x.offsetParent !== null) f.push(x);
+        });
+      if (!f.length) return;
+      const first = f[0]!, last = f[f.length - 1]!;
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === box.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+    return () => {
+      cancelAnimationFrame(t);
+      window.removeEventListener("keydown", onKey);
+      before?.focus?.({ preventScroll: true });
+    };
+  }, [open]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/65 p-6" onMouseDown={onClose}>
       <div
-        className="w-full max-h-[85vh] flex flex-col rounded-xl border border-line-strong bg-panel shadow-2xl shadow-black/50 animate-pop"
+        ref={box}
+        tabIndex={-1}
+        className="w-full max-h-[85vh] flex flex-col rounded-xl border border-line-strong bg-panel shadow-2xl shadow-black/50 animate-pop outline-none"
         style={{ maxWidth: width }}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"

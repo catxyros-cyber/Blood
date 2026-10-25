@@ -456,7 +456,9 @@ export async function boot(loadInstances: () => Promise<Instance[]>) {
   try {
     const paths = await native.appPaths();
     platform = createPlatform(paths);
-    const stored = migrateSettings(await readJson<Partial<Settings>>(settingsPath(), {}), { rebrand: true });
+    // Settings, accounts and installations don't depend on each other: read them together.
+    const [storedRaw, accounts, instances] = await Promise.all([readJson<Partial<Settings>>(settingsPath(), {}), readJson<Account[]>(accountsPath(), []), loadInstances()]);
+    const stored = migrateSettings(storedRaw, { rebrand: true });
     const settings: Settings = {
       ...DEFAULT_SETTINGS,
       ...stored,
@@ -464,8 +466,6 @@ export async function boot(loadInstances: () => Promise<Instance[]>) {
       background: { ...DEFAULT_SETTINGS.background, ...(stored.background ?? {}) },
     };
     applyTheme(settings);
-    const accounts = await readJson<Account[]>(accountsPath(), []);
-    const instances = await loadInstances();
     app.set({ paths, settings, accounts, instances, ready: true, route: { page: settings.startPage } });
     wireDownloadProgress();
     void events.onDrag((e) => app.set({ dragActive: e.kind === "enter" }));
