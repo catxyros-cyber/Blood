@@ -31,6 +31,8 @@ public class SmokeTest implements FabricClientGameTest {
         log("title screen ok");
         // Into the title screen's own menu (any click enters it).
         context.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        context.waitTicks(16);
+        context.takeScreenshot("01a_walk_in");
         context.waitTicks(60);
         context.takeScreenshot("01b_title_menu");
 

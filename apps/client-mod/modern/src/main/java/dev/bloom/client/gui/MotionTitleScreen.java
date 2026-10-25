@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 
 /** MOTION title screen: restrained entry splash followed by a custom main menu. */
 public final class MotionTitleScreen extends Screen {
-    private static final long WALK_IN_MS = 1_500L;
+    private static final long WALK_IN_MS = 2_200L;
     private static final Identifier BRAND_MARK = Identifier.fromNamespaceAndPath(
             "bloomclient", "textures/gui/sprites/logo.png");
     private static final int BRAND_MARK_SIZE = 256;
@@ -96,7 +96,9 @@ public final class MotionTitleScreen extends Screen {
         int menuX = Math.max(38, Math.round(width * 0.20f));
         int logoY = height / 2 - 140;
         int menuY = height / 2 - 36;
-        float reveal = entering ? easeOutCubic(walkIn) : 1f;
+        // The menu settles in 1.5 s while the character is still walking.
+        float menuIn = entering ? Math.min(1f, walkIn * WALK_IN_MS / 1500f) : 1f;
+        float reveal = entering ? easeOutCubic(menuIn) : 1f;
 
         // The brand mark travels from the entry splash into its menu position as the menu opens.
         float logoProgress = entered ? 1f : reveal;
@@ -117,14 +119,14 @@ public final class MotionTitleScreen extends Screen {
             int promptY = Math.round(height * 0.47f + 48 + (logoY + 98 - (height * 0.47f + 48)) * reveal);
             centerText(g, "Press to enter", promptX, promptY, (promptAlpha << 24) | 0x00D7DDD9);
         }
-        if (entered || walkIn > 0.2f) {
-            int subtitleAlpha = entered ? 255 : Math.round(255 * Math.min(1f, (walkIn - 0.2f) / 0.5f));
+        if (entered || menuIn > 0.2f) {
+            int subtitleAlpha = entered ? 255 : Math.round(255 * Math.min(1f, (menuIn - 0.2f) / 0.5f));
             centerText(g, "JAVA EDITION", menuX + 86, logoY + 80, (subtitleAlpha << 24) | 0x009FA6A2);
         }
 
         for (int i = 0; i < MENU_ITEMS.length; i++) {
             int rowY = menuY + i * 34;
-            float rowReveal = entered ? 1f : Math.max(0f, Math.min(1f, (walkIn - i * 0.075f) / 0.78f));
+            float rowReveal = entered ? 1f : Math.max(0f, Math.min(1f, (menuIn - i * 0.075f) / 0.78f));
             int alpha = Math.round(255 * easeOutCubic(rowReveal));
             int rowX = menuX - 10;
             int rowW = 192;
@@ -144,12 +146,23 @@ public final class MotionTitleScreen extends Screen {
             centerText(g, MENU_ITEMS[i], menuX + 86, rowY + 4, color);
         }
 
-        float t = easeOutCubic(reveal);
+        // The character walks in from the right, side-on, then slows and turns to face you.
+        float travel = entering ? 1f - (1f - walkIn) * (1f - walkIn) : 1f;
         float targetX = width * 0.79f;
-        float x = entering ? width + 100f + (targetX - width - 100f) * t : targetX;
-        float stride = entering ? (1f - walkIn) * (float) Math.sin(now * 0.016f) : (float) Math.sin(now * 0.0015f) * 0.025f;
-        float y = height * 0.30f + (entering ? (1f - t) * 36f : 0f);
-        drawUserAvatar(g, x, y, walkIn, stride, now);
+        float x = targetX + (width + 60f - targetX) * (1f - travel);
+        float turn = entering ? 1f - smoothstep(0.72f, 1f, walkIn) : 0f;
+        float walkSpeed = entering ? 0.9f * (1f - smoothstep(0.65f, 0.95f, walkIn)) : 0f;
+        float bob = walkSpeed * Math.abs((float) Math.sin(now * 0.018f * 0.6662f)) * 2.5f;
+        float y = height * 0.30f - bob;
+        drawUserAvatar(g, x, y, walkSpeed, -18f + turn * WALK_TURN, now);
+    }
+
+    /** Degrees the character turns to walk side-on (towards the left of the screen). */
+    private static final float WALK_TURN = -62f;
+
+    private static float smoothstep(float a, float b, float v) {
+        float t = Math.max(0f, Math.min(1f, (v - a) / (b - a)));
+        return t * t * (3f - 2f * t);
     }
 
     /**
@@ -186,7 +199,7 @@ public final class MotionTitleScreen extends Screen {
                 .exceptionally(error -> null);
     }
 
-    private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkIn, float stride, long now) {
+    private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkSpeed, float rotY, long now) {
         Minecraft minecraft = Minecraft.getInstance();
         boolean slim;
         dev.bloom.client.game.ProfileSkin.Skin own = dev.bloom.client.game.ProfileSkin.get();
@@ -227,7 +240,7 @@ public final class MotionTitleScreen extends Screen {
         state.yRot = -6f;
         state.xRot = -3f;
         state.walkAnimationPos = now * 0.018f;
-        state.walkAnimationSpeed = entering ? Math.max(0f, 0.72f * (1f - walkIn)) : Math.abs(stride) * 0.03f;
+        state.walkAnimationSpeed = walkSpeed;
         state.ageInTicks = now / 50f;
         avatarModel.setupAnim(state);
 
@@ -237,13 +250,14 @@ public final class MotionTitleScreen extends Screen {
         int y0 = Math.round(Math.max(10f, top - height * 0.07f));
         int x1 = x0 + viewWidth;
         int y1 = Math.min(height - 12, y0 + viewHeight);
-        float modelScale = (y1 - y0) / 1.9f;
+        // Same framing as Minecraft's own skin preview: the whole figure, centred in the box.
+        float modelScale = 0.97f * (y1 - y0) / 2.125f;
 //#if MC >= 26.2
         // 26.2 draws GUI skins from a plain model; it shares the posed player model's parts.
         g.submitSkinRenderState(new net.minecraft.client.model.Model.Simple(avatarModel.root(), net.minecraft.client.renderer.rendertype.RenderTypes::entityTranslucent),
-                avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+                avatarTexture, modelScale, 4f, rotY, -1.0625f, x0, y0, x1, y1);
 //#else
-        g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+        g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, rotY, -1.0625f, x0, y0, x1, y1);
 //#endif
 
         String name = minecraft.getUser().getName();
