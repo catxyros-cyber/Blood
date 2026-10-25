@@ -8,6 +8,9 @@
   "compatibilityLevel": "${mixin_compat}",
   "mixins": [],
   "client": [
+//#if MC >= 26.3 && SMOKE
+    "SmokeDisplayMixin",
+//#endif
     "AbstractClientPlayerMixin",
     "AvatarRendererMixin",
     "ScreenBackgroundMixin",
