@@ -23,10 +23,21 @@ async function fresh(query = "") {
 
 const result = { label, boot: [], bootIpc: null, homeIpc: [], bgBytes: null, bgFiles: null, decode: [], scroll: [], idle: [], heap: [], domNodes: [] };
 
-// Warm the dev server's transform cache so the first measured boot isn't compiling modules.
-{ const { ctx, page } = await fresh("many&lat=2"); await page.waitForSelector("#bloom-main", { timeout: 60000 }); await page.waitForTimeout(2000); await ctx.close(); }
+// Warm the dev server: visit every page so it has compiled (and pre-bundled) everything the app
+// loads lazily; it reloads the page when it finds new dependencies, which mustn't land mid-run.
+{
+  const { ctx, page } = await fresh("many&lat=2");
+  await page.waitForSelector("#bloom-main", { timeout: 60000 });
+  for (const p of ["library", "settings", "mods", "performance", "customize", "skins", "browse", "accounts", "premium", "home"]) {
+    await page.evaluate((p) => import("/src/services/app.ts").then(({ navigate }) => navigate({ page: p })), p).catch(() => undefined);
+    await page.waitForTimeout(1200);
+  }
+  await page.waitForTimeout(6000);
+  await ctx.close();
+}
 
-for (let i = 0; i < RUNS; i++) {
+for (let i = 0, attempts = 0; i < RUNS; i++) {
+ try {
   // Startup: from navigation to the app shell, with a 2 ms delay per backend call.
   const { ctx, page, bytes } = await fresh("many&lat=2");
   await page.waitForSelector("#bloom-main", { timeout: 60000 });
@@ -77,6 +88,13 @@ for (let i = 0; i < RUNS; i++) {
   });
   result.scroll.push(frames);
   await ctx.close();
+ } catch (e) {
+  // A dev-server reload during a run: discard the run and do it again.
+  if (++attempts > 6) throw e;
+  console.error(`run ${i} retried: ${e.message.split("\n")[0]}`);
+  for (const k of ["boot", "homeIpc", "idle", "heap", "domNodes", "scroll"]) result[k] = result[k].slice(0, i);
+  i--;
+ }
 }
 
 // Decoding the background image once (fetch + decode), as the app does on Home.

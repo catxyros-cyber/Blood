@@ -20,7 +20,7 @@ if (!params.has("empty")) {
   fs.set(`${D}/instances/motion-pvp/saves/Survival/level.dat`, "nbt");
   fs.set(`${D}/instances/motion-pvp/saves/Creative test/level.dat`, "nbt");
   fs.set(`${D}/accounts.json`, JSON.stringify([{ id: "a1", username: "Tonmoy", xuid: "x", addedAt: now, lastVerifiedAt: now }]));
-  fs.set(`${D}/settings.json`, JSON.stringify({ activeAccountId: "a1", selectedInstanceId: "motion-pvp", theme: params.get("theme") ?? "motion" }));
+  fs.set(`${D}/settings.json`, JSON.stringify({ activeAccountId: "a1", selectedInstanceId: "motion-pvp", brand: "motion", theme: params.get("theme") ?? "motion" }));
 }
 
 function list(path: string) {
