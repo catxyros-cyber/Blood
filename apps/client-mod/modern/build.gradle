@@ -224,6 +224,8 @@ sourceSets {
     main {
         java.srcDirs = smoke ? [ppJava, sharedCore, ppSmoke] : [ppJava, sharedCore]
         resources.srcDirs = [ppRes, sharedRes]
+        // Test-only assets (e.g. a wing texture, since CI has no MOTION server) in smoke builds.
+        if (smoke) resources.srcDir('src/smoke/resources')
     }
 }
 tasks.named('compileJava') { dependsOn preprocessSources, syncCore }
@@ -307,6 +309,7 @@ tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.Client
     // MOTION records which of its (optional, so silently skippable) hooks ran; the test lists the rest.
     jvmArgs.add('-Dmotion.smoke=true')
     jvmArgs.add('-Dmotion.smoke.avatar=sahur')
+    jvmArgs.add('-Dmotion.smoke.wings=angel')
     // CI provides a 24-bit display with GLX (26.3's SDL window needs one); otherwise Loom starts Xvfb.
     useXVFB = System.getenv('DISPLAY') == null
 }

@@ -28,17 +28,10 @@ import java.util.function.Supplier;
 
 /** MOTION title screen: restrained entry splash followed by a custom main menu. */
 public final class MotionTitleScreen extends Screen {
-    private static final long WALK_IN_MS = 1_500L;
-    private static final int BACKGROUND_WIDTH = 3840;
-    private static final int BACKGROUND_HEIGHT = 2160;
-    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath(
-            "bloomclient", "textures/gui/motion_title_bg.png");
+    private static final long WALK_IN_MS = 2_200L;
     private static final Identifier BRAND_MARK = Identifier.fromNamespaceAndPath(
             "bloomclient", "textures/gui/sprites/logo.png");
     private static final int BRAND_MARK_SIZE = 256;
-    private static final Identifier DOLLAR = Identifier.fromNamespaceAndPath(
-            "bloomclient", "textures/gui/sprites/dollar.png");
-    private static final int DOLLAR_SIZE = 64;
     private static final String[] MENU_ITEMS = {"Singleplayer", "Multiplayer", "Minecraft Settings", "MOTION Client", "Quit Game"};
 
     private boolean entered;
@@ -50,6 +43,9 @@ public final class MotionTitleScreen extends Screen {
     private Boolean avatarModelSlim;
     private Identifier avatarTexture;
     private boolean skinLookupStarted;
+    private final float[] hover = new float[MENU_ITEMS.length];
+    private long lastFrameNanos = System.nanoTime();
+    private float frameDt;
 
     public MotionTitleScreen() { super(Component.literal("MOTION Client")); }
 
@@ -67,8 +63,14 @@ public final class MotionTitleScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        long nanos = System.nanoTime();
+        frameDt = Math.min(0.1f, (nanos - lastFrameNanos) / 1_000_000_000f);
+        lastFrameNanos = nanos;
         long now = System.currentTimeMillis();
         float walkIn = entering ? Math.min(1f, (now - enterStartedAt) / (float) WALK_IN_MS) : 0f;
+        // Smoke test only: hold the walk-in at one point so a screenshot can catch it.
+        String pin = entering ? System.getProperty("motion.smoke.walkAt") : null;
+        if (pin != null && !pin.isEmpty()) walkIn = Float.parseFloat(pin);
         if (entering && walkIn >= 1f) {
             entering = false;
             entered = true;
@@ -97,7 +99,9 @@ public final class MotionTitleScreen extends Screen {
         int menuX = Math.max(38, Math.round(width * 0.20f));
         int logoY = height / 2 - 140;
         int menuY = height / 2 - 36;
-        float reveal = entering ? easeOutCubic(walkIn) : 1f;
+        // The menu settles in 1.5 s while the character is still walking.
+        float menuIn = entering ? Math.min(1f, walkIn * WALK_IN_MS / 1500f) : 1f;
+        float reveal = entering ? easeOutCubic(menuIn) : 1f;
 
         // The brand mark travels from the entry splash into its menu position as the menu opens.
         float logoProgress = entered ? 1f : reveal;
@@ -118,52 +122,60 @@ public final class MotionTitleScreen extends Screen {
             int promptY = Math.round(height * 0.47f + 48 + (logoY + 98 - (height * 0.47f + 48)) * reveal);
             centerText(g, "Press to enter", promptX, promptY, (promptAlpha << 24) | 0x00D7DDD9);
         }
-        if (entered || walkIn > 0.2f) {
-            int subtitleAlpha = entered ? 255 : Math.round(255 * Math.min(1f, (walkIn - 0.2f) / 0.5f));
+        if (entered || menuIn > 0.2f) {
+            int subtitleAlpha = entered ? 255 : Math.round(255 * Math.min(1f, (menuIn - 0.2f) / 0.5f));
             centerText(g, "JAVA EDITION", menuX + 86, logoY + 80, (subtitleAlpha << 24) | 0x009FA6A2);
         }
 
         for (int i = 0; i < MENU_ITEMS.length; i++) {
             int rowY = menuY + i * 34;
-            float rowReveal = entered ? 1f : Math.max(0f, Math.min(1f, (walkIn - i * 0.075f) / 0.78f));
+            float rowReveal = entered ? 1f : Math.max(0f, Math.min(1f, (menuIn - i * 0.075f) / 0.78f));
             int alpha = Math.round(255 * easeOutCubic(rowReveal));
             int rowX = menuX - 10;
             int rowW = 192;
-            boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 3 && mouseY < rowY + 24;
-            if (hovered) {
-                g.fillGradient(rowX, rowY - 3, rowX + rowW, rowY + 24, (alpha / 5 << 24) | 0xDDE3DF, (alpha / 8 << 24) | 0x9CA59F);
+            boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 4 && mouseY < rowY + 22;
+            hover[i] = Anim.approach(hover[i], hovered ? 1f : 0f, 18f, frameDt);
+            float hv = hover[i];
+            // A quiet glass button; hover brightens it and draws the accent edge.
+            Ui.panel(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0x0E1311, Math.round(alpha * (0.55f + 0.2f * hv))));
+            if (hv > 0.01f) {
+                Ui.panel(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0xFFFFFF, Math.round(alpha * 0.10f * hv)));
+                Ui.panelBorder(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(Theme.accentArgb() & 0xFFFFFF, Math.round(alpha * 0.85f * hv)));
+            } else {
+                Ui.panelBorder(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0xFFFFFF, Math.round(alpha * 0.08f)));
             }
-            int color = hovered ? 0xFFF9FAF9 : (alpha << 24) | (i == 0 ? 0xE4E8E5 : 0xC5CBC7);
+            int base = i == 0 ? 0xF2F4F3 : 0xD3D8D5;
+            int color = (alpha << 24) | Theme.lerp(base, 0xFFFFFF, hv) & 0xFFFFFF;
             centerText(g, MENU_ITEMS[i], menuX + 86, rowY + 4, color);
         }
 
-        float t = easeOutCubic(reveal);
+        // The character walks in from the right, side-on, then slows and turns to face you.
+        float travel = entering ? 1f - (1f - walkIn) * (1f - walkIn) : 1f;
         float targetX = width * 0.79f;
-        float x = entering ? width + 100f + (targetX - width - 100f) * t : targetX;
-        float stride = entering ? (1f - walkIn) * (float) Math.sin(now * 0.016f) : (float) Math.sin(now * 0.0015f) * 0.025f;
-        float y = height * 0.22f + (entering ? (1f - t) * 36f : 0f);
-        drawUserAvatar(g, x, y, walkIn, stride, now);
+        float x = targetX + (width + 60f - targetX) * (1f - travel);
+        float turn = entering ? 1f - smoothstep(0.72f, 1f, walkIn) : 0f;
+        float walkSpeed = entering ? 0.55f * (1f - smoothstep(0.65f, 0.95f, walkIn)) : 0f;
+        float bob = walkSpeed * Math.abs((float) Math.sin(now * 0.018f * 0.6662f)) * 2.5f;
+        float y = height * 0.30f - bob;
+        drawUserAvatar(g, x, y, walkSpeed, -18f + turn * WALK_TURN, now);
     }
 
-    /** Full-resolution charcoal and satin-curtain artwork; small $ marks drift down over the curtain. */
+    /** Degrees the character turns to walk side-on (towards the left of the screen). */
+    private static final float WALK_TURN = -62f;
+
+    private static float smoothstep(float a, float b, float v) {
+        float t = Math.max(0f, Math.min(1f, (v - a) / (b - a)));
+        return t * t * (3f - 2f * t);
+    }
+
+    /**
+     * The theme's landscape at the window's own resolution (see TitleArt), shaded on the left where
+     * the menu sits and towards the bottom, so text stays readable on every theme.
+     */
     private void drawMotionBackdrop(GuiGraphics g, long time) {
-        g.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, 0, 0, 0f, 0f, width, height,
-                BACKGROUND_WIDTH, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, 0xFFFFFFFF);
-        for (int i = 0; i < 9; i++) {
-            float phase = time * (0.00012f + (i % 3) * 0.000025f);
-            int x = Math.round(width * (0.77f + (i % 5) * 0.045f + (float) Math.sin(phase + i) * 0.012f));
-            int y = Math.floorMod(i * 97 + (int) (time * (0.012f + (i % 3) * 0.004f)), Math.max(1, height + 42)) - 21;
-            int size = 9 + (i * 5) % 9;
-            int alpha = i % 2 == 0 ? 0xB0 : 0x70;
-            int tint = i % 3 == 0 ? 0x9CFFC4 : 0xE4E9E6;
-            drawDollar(g, x, y, size, (alpha << 24) | tint, phase * 40f + i);
-        }
-    }
-
-    /** A small $ mark that slowly sways (drawn from the dollar sprite, tinted). */
-    private void drawDollar(GuiGraphics g, int cx, int cy, int size, int color, float sway) {
-        int s = Math.max(4, Math.round(size * (1f + 0.08f * (float) Math.sin(sway))));
-        g.blit(RenderPipelines.GUI_TEXTURED, DOLLAR, cx - s / 2, cy - s / 2, 0f, 0f, s, s, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, color);
+        if (!dev.bloom.client.game.TitleArt.draw(g, width, height)) g.fill(0, 0, width, height, 0xFF0B0F0D);
+        Ui.gradientBand(g, 0, 0, Math.round(width * 0.62f), height, 0xC8070908, 0x00070908, 40);
+        g.fillGradient(0, height * 2 / 3, width, height, 0x00000000, 0x8C000000);
     }
 
     private void drawBrandMark(GuiGraphics g, int cx, int cy, int size, int color) {
@@ -173,7 +185,7 @@ public final class MotionTitleScreen extends Screen {
     }
 
     private void centerText(GuiGraphics g, String text, int cx, int y, int color) {
-        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+        Ui.textCentered(g, text, cx, y, color);
     }
 
     /** Fetch the skin for Minecraft's active account off-thread; the default skin is shown meanwhile. */
@@ -190,7 +202,7 @@ public final class MotionTitleScreen extends Screen {
                 .exceptionally(error -> null);
     }
 
-    private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkIn, float stride, long now) {
+    private void drawUserAvatar(GuiGraphics g, float centerX, float top, float walkSpeed, float rotY, long now) {
         Minecraft minecraft = Minecraft.getInstance();
         boolean slim;
         dev.bloom.client.game.ProfileSkin.Skin own = dev.bloom.client.game.ProfileSkin.get();
@@ -231,30 +243,39 @@ public final class MotionTitleScreen extends Screen {
         state.yRot = -6f;
         state.xRot = -3f;
         state.walkAnimationPos = now * 0.018f;
-        state.walkAnimationSpeed = entering ? Math.max(0f, 0.72f * (1f - walkIn)) : Math.abs(stride) * 0.03f;
+        state.walkAnimationSpeed = walkSpeed;
         state.ageInTicks = now / 50f;
         avatarModel.setupAnim(state);
 
-        int viewHeight = Math.round(Math.min(height * 0.76f, 650f));
+        int viewHeight = Math.round(Math.min(height * 0.6f, 520f));
         int viewWidth = Math.round(viewHeight * 0.78f);
         int x0 = Math.round(centerX - viewWidth / 2f);
         int y0 = Math.round(Math.max(10f, top - height * 0.07f));
         int x1 = x0 + viewWidth;
         int y1 = Math.min(height - 12, y0 + viewHeight);
-        float modelScale = (y1 - y0) / 1.9f;
+        // Same framing as Minecraft's own skin preview: the whole figure, centred in the box.
+        float modelScale = 0.97f * (y1 - y0) / 2.125f;
 //#if MC >= 26.2
         // 26.2 draws GUI skins from a plain model; it shares the posed player model's parts.
         g.submitSkinRenderState(new net.minecraft.client.model.Model.Simple(avatarModel.root(), net.minecraft.client.renderer.rendertype.RenderTypes::entityTranslucent),
-                avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+                avatarTexture, modelScale, 4f, rotY, -1.0625f, x0, y0, x1, y1);
 //#else
-        g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, -18f, 0.9f, x0, y0, x1, y1);
+        g.submitSkinRenderState(avatarModel, avatarTexture, modelScale, 4f, rotY, -1.0625f, x0, y0, x1, y1);
 //#endif
 
         String name = minecraft.getUser().getName();
-        int nameY = Math.max(12, y0 - 14);
-        int nameX = Math.round(centerX - font.width(name) / 2f);
-        g.drawString(font, name, nameX, nameY, 0xFFE8EAE9, false);
-        g.fill(nameX, nameY + 10, nameX + font.width(name), nameY + 11, 0xAAE8EAE9);
+        // A soft shadow under the feet, then a name tag like the one players see in game.
+        int shadowW = Math.round(viewHeight * 0.34f);
+        int feetY = y1 - Math.round(viewHeight * 0.02f);
+        for (int i = 0; i < 4; i++) {
+            int rw = Math.round(shadowW * (1f - i * 0.2f)), rh = 2 + (3 - i);
+            g.fill(Math.round(centerX - rw / 2f), feetY - rh / 2, Math.round(centerX + rw / 2f), feetY + rh / 2, 0x22000000);
+        }
+        int nameW = Ui.width(name);
+        int nameY = Math.max(10, y0 - 16);
+        int nameX = Math.round(centerX - nameW / 2f);
+        Ui.panel(g, nameX - 5, nameY - 3, nameW + 10, 15, 0x66000000);
+        Ui.text(g, name, nameX, nameY, 0xFFF2F4F3);
     }
     private static float easeOutCubic(float value) {
         float inverse = 1f - value;

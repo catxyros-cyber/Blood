@@ -89,6 +89,16 @@ public final class CapeManager {
 
     /** Wings texture for a player, or null (none, off, or still downloading). */
     public static Identifier wingsFor(UUID uuid) {
+        // Test hook (CI smoke test, no server): a bundled wing on the local player.
+        String smoke = System.getProperty("motion.smoke.wings");
+        if (smoke != null && BloomSettings.WINGS.on()) {
+            var me = net.minecraft.client.Minecraft.getInstance().player;
+            if (me != null && uuid.equals(me.getUUID())) {
+                Identifier t = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "textures/smoke/" + smoke + ".png");
+                WING_SIZE.putIfAbsent(t.getPath(), new float[]{640f, 316f});
+                return t;
+            }
+        }
         if (API == null || !BloomSettings.WINGS.on()) return null;
         String id = DIRECTORY.wingsOf(uuid.toString());
         if (id == null) return null;

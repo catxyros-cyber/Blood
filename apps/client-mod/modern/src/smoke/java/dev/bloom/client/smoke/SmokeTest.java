@@ -23,10 +23,20 @@ public class SmokeTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         log("start");
+        // A desktop-sized window (GUI scale 3), so screenshots show text and art as players see them.
+        context.getInput().resizeWindow(1600, 900);
         context.waitForScreen(MotionTitleScreen.class);
         context.waitTicks(60);
         context.takeScreenshot("01_title");
         log("title screen ok");
+        // Into the title screen's own menu (any click enters it).
+        System.setProperty("motion.smoke.walkAt", "0.4");
+        context.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        context.waitTicks(10);
+        context.takeScreenshot("01a_walk_in");
+        System.setProperty("motion.smoke.walkAt", "");
+        context.waitTicks(60);
+        context.takeScreenshot("01b_title_menu");
 
         context.setScreen(() -> new BloomMenuScreen(null));
         context.waitTicks(30);
@@ -51,6 +61,13 @@ public class SmokeTest implements FabricClientGameTest {
             context.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
             context.waitTicks(20);
             context.takeScreenshot("05_back");
+            // Wings on the plain player model: drop the forced 3D avatar.
+            System.setProperty("motion.smoke.avatar", "");
+            context.waitTicks(30);
+            context.takeScreenshot("05b_wings_back");
+            context.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+            context.waitTicks(20);
+            context.takeScreenshot("05c_wings_front");
             context.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 
             context.setScreen(() -> new BloomMenuScreen(null));

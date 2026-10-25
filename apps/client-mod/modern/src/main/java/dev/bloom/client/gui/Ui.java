@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
@@ -29,6 +31,50 @@ public final class Ui {
 
     public static Font font() {
         return Minecraft.getInstance().font;
+    }
+
+    // ------------------------------------------------------------------ text
+    // MOTION's menus draw text in Inter (assets/bloomclient/font). TrueType glyphs are rasterised at
+    // `oversample` x their size, so there is one font definition per GUI scale (ui_1 … ui_6) and the
+    // one matching the current scale is used: one texel per screen pixel, so text stays sharp.
+    private static Style style = Style.EMPTY;
+    private static int styleScale = -1;
+    private static boolean styleSmooth;
+    private static int guiScale = 2;
+
+    public static Style style() {
+        boolean smooth = dev.bloom.client.core.settings.BloomSettings.SMOOTH_TEXT.on();
+        // GUI scale = framebuffer pixels per GUI unit, read off the open screen (the same on every
+        // Minecraft version); toasts drawn with no screen open keep the last value.
+        var screen = dev.bloom.client.Mc.screen();
+        if (screen != null && screen.width > 0) {
+            int fb = dev.bloom.client.render.Draw.mainTarget().width;
+            guiScale = Math.max(1, Math.min(6, Math.round(fb / (float) screen.width)));
+        }
+        int scale = guiScale;
+        if (scale != styleScale || smooth != styleSmooth) {
+            styleScale = scale;
+            styleSmooth = smooth;
+            style = smooth ? Style.EMPTY.withFont(new FontDescription.Resource(Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "ui_" + scale))) : Style.EMPTY;
+        }
+        return style;
+    }
+
+    public static FormattedCharSequence styled(String s) {
+        return FormattedCharSequence.forward(s == null ? "" : s, style());
+    }
+
+    public static int width(String s) {
+        return font().width(styled(s));
+    }
+
+    public static int width(FormattedCharSequence s) {
+        return font().width(s);
+    }
+
+    /** The longest start of {@code s} that fits in {@code maxWidth}. */
+    public static String substr(String s, int maxWidth) {
+        return font().getSplitter().plainHeadByWidth(s, maxWidth, style());
     }
 
     /** A blended sprite draw with a colour tint. */
@@ -56,8 +102,9 @@ public final class Ui {
 
     /** Draws a string and returns the x just after it (GuiGraphics#drawString returns nothing any more). */
     public static int string(GuiGraphics g, Font font, String s, int x, int y, int argb, boolean shadow) {
-        g.drawString(font, s, x, y, argb, shadow);
-        return x + font.width(s) + (shadow ? 1 : 0);
+        FormattedCharSequence t = styled(s);
+        g.drawString(font, t, x, y, argb, shadow);
+        return x + font.width(t) + (shadow ? 1 : 0);
     }
 
     /** Rounded panel (radius ~4px). */
@@ -98,26 +145,30 @@ public final class Ui {
     }
 
     public static void text(GuiGraphics g, String s, int x, int y, int argb) {
+        g.drawString(font(), styled(s), x, y, argb, false);
+    }
+
+    public static void text(GuiGraphics g, FormattedCharSequence s, int x, int y, int argb) {
         g.drawString(font(), s, x, y, argb, false);
     }
 
     public static void textCentered(GuiGraphics g, String s, int cx, int y, int argb) {
-        g.drawString(font(), s, cx - font().width(s) / 2, y, argb, false);
+        FormattedCharSequence t = styled(s);
+        g.drawString(font(), t, cx - font().width(t) / 2, y, argb, false);
     }
 
     /** Text cut to {@code maxWidth} with an ellipsis. */
     public static String ellipsize(String s, int maxWidth) {
-        Font f = font();
-        if (f.width(s) <= maxWidth) return s;
+        if (width(s) <= maxWidth) return s;
         String dots = "…";
-        int w = maxWidth - f.width(dots);
+        int w = maxWidth - width(dots);
         if (w <= 0) return dots;
-        return f.plainSubstrByWidth(s, w) + dots;
+        return substr(s, w) + dots;
     }
 
     public static List<FormattedCharSequence> wrap(String s, int width) {
         if (s == null || s.isEmpty()) return new ArrayList<>();
-        return font().split(Component.literal(s), Math.max(10, width));
+        return font().split(Component.literal(s).withStyle(style()), Math.max(10, width));
     }
 
     /** Draws wrapped text, at most {@code maxLines}; returns the height used. */

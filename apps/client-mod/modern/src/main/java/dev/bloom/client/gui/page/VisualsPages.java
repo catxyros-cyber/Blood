@@ -233,7 +233,7 @@ public final class VisualsPages {
                 if (active) {
                     Ui.panelBorder(g, cx, cy, cw, ch, Theme.accentArgb());
                     if (pr.modified()) {
-                        int bw = Ui.font().width("EDITED") + 6;
+                        int bw = Ui.width("EDITED") + 6;
                         Ui.smallPanel(g, cx + 4, cy + 4, bw, 10, Theme.accentArgb());
                         Ui.text(g, "EDITED", cx + 7, cy + 5, Theme.onAccent());
                     }

@@ -16,7 +16,6 @@ import { app, endTask, errorMessage, L, P, path, reportError, startTask, toast, 
 import { getInstance, saveInstance } from "./instances";
 import { native, events } from "./native";
 import { applyPendingPreset, writeOverlayConfig } from "./performance";
-import { compatibility, listContent } from "./content";
 
 const MAX_LOG_LINES = 5000;
 const parsers = new Map<string, LogParser>();
@@ -69,7 +68,6 @@ export function gcLogPath(instanceId: string): string {
 
 export interface PlayOptions {
   repair?: boolean;
-  ignoreModProblems?: boolean;
   /** Join this server or open this world once the game has loaded. */
   quickPlay?: QuickPlay;
   /** Display name for the quick-play target (server or world name), remembered for "Jump back in". */
@@ -87,24 +85,8 @@ export async function play(instanceId: string, opts: PlayOptions = {}) {
     return;
   }
 
-  // Catch mod problems that would crash the game (missing dependencies, wrong loader or
-  // Minecraft version, known conflicts) before spending time on the launch.
-  if (!opts.ignoreModProblems && inst.loader !== "vanilla") {
-    const mods = await listContent(inst, "mods").catch(() => null);
-    const errors = mods ? compatibility(inst, mods).filter((i) => i.severity === "error") : [];
-    if (errors.length > 0) {
-      toast(
-        {
-          kind: "error",
-          title: `${errors.length} mod problem${errors.length === 1 ? "" : "s"} in ${inst.name}`,
-          message: `${errors.slice(0, 2).map((e) => e.message).join(" ")} Review them in the installation's Mods tab, or launch anyway.`,
-          action: { label: "Launch anyway", run: () => void play(instanceId, { ...opts, ignoreModProblems: true }) },
-        },
-        15000,
-      );
-      return;
-    }
-  }
+  // Mods are not checked before launching: a mod that doesn't work shows up in the game's
+  // log (Logs tab) and in Fabric's own error screen, and the Crash Doctor explains crashes.
 
   const taskId = `launch-${instanceId}`;
   startTask({ id: taskId, title: opts.repair ? `Repairing ${inst.name}` : `Launching ${inst.name}`, instanceId, cancellable: true, stage: "Signing in" });

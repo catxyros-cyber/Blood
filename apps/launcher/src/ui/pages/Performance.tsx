@@ -357,7 +357,6 @@ function ModRecommendations({ inst }: { inst: Instance }) {
       .catch(() => setStatus([]));
   }, [inst.id, inst.loader, inst.gameVersion, items?.length]);
 
-  const issues = items ? compatibility(inst, items).filter((i) => i.kind === "known_conflict") : [];
   const ids = new Set((items ?? []).filter((m) => m.enabled).map((m) => m.meta?.id ?? ""));
   const heavy = HEAVY_MODS.filter((h) => h.modIds.some((id) => ids.has(id)));
 
@@ -392,13 +391,6 @@ function ModRecommendations({ inst }: { inst: Instance }) {
         </Callout>
       ) : (
         <>
-          {issues.map((i, n) => (
-            <div key={n} className="mb-3">
-              <Callout tone={i.severity === "error" ? "danger" : "warn"} title={i.message}>
-                {i.fix} <span className="text-faint">({i.files.join(", ")})</span>
-              </Callout>
-            </div>
-          ))}
           <Card className="divide-y divide-line overflow-hidden">
             {!status
               ? Array.from({ length: 4 }, (_, i) => (

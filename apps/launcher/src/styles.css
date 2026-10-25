@@ -439,3 +439,47 @@ input[type="range"].bloom-range::-webkit-slider-thumb {
 :root[data-motion="reduce"] .wing-l,
 :root[data-motion="reduce"] .wing-r,
 :root[data-motion="reduce"] .aura-glow { animation: none; }
+
+/* The 3D character (skin viewer): limbs swing on the compositor, Home adds a slow idle turn. */
+@keyframes skin-swing {
+  from { transform: rotateX(var(--amp)); }
+  to { transform: rotateX(calc(var(--amp) * -1)); }
+}
+.skin-swing { animation: skin-swing 1.96s ease-in-out infinite alternate; }
+@keyframes skin-sway {
+  from { transform: rotateY(-9deg); }
+  to { transform: rotateY(11deg); }
+}
+.skin-sway { animation: skin-sway 7s ease-in-out infinite alternate; }
+
+/* Home: the landscape settles in, then the hero's content rises into place. */
+@keyframes hero-settle {
+  from { transform: scale(1.045); }
+  to { transform: none; }
+}
+.hero-settle { animation: hero-settle 1.6s cubic-bezier(0.16, 0.8, 0.24, 1) both; transform-origin: 60% 30%; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.rise-in { animation: rise-in 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: var(--d, 0ms); }
+.hero-character { animation: rise-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 160ms both; }
+
+/* Looping animations stop outright with reduced motion (a near-zero duration would flicker). */
+:root[data-motion="reduce"] .skin-swing,
+:root[data-motion="reduce"] .skin-sway,
+:root[data-motion="reduce"] .skeleton,
+:root[data-motion="reduce"] .hero-settle,
+:root[data-motion="reduce"] .rise-in,
+:root[data-motion="reduce"] .hero-character { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .skin-swing,
+  .skin-sway,
+  .skeleton,
+  .hero-settle,
+  .rise-in,
+  .hero-character,
+  .wing-l,
+  .wing-r,
+  .aura-glow { animation: none !important; }
+}

@@ -178,6 +178,9 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
+          # One installer only (the per-user setup.exe). Updating with an .msi installed a second
+          # copy in Program Files while the shortcuts still opened the old one.
+          updaterJsonPreferNsis: true
 
       - name: Publish the release
         shell: bash

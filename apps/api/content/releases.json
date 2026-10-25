@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.31",
+    "date": "2026-10-25",
+    "notes": "Updates now replace the copy of MOTION you open (no more old version coming back after a restart). Your 3D character on Home, Play buttons on recent installations and smoother page entrances. Mods are no longer checked before launch: problems show in the game log instead of blocking you.\n\nMOTION Client 0.2.25: sharp HD text in every MOTION menu and the HUD, a title screen with your theme's landscape where your character walks in, and fuller wings that show their whole artwork."
+  },
+  {
     "version": "1.0.30",
     "date": "2026-10-25",
     "notes": "A cleaner launcher: new Minecraft-style backgrounds for every theme, simpler Home and menus, matching dropdowns, keyboard-friendly menus and dialogs, twice-as-fast startup and much smaller images. Your real Minecraft face in the launcher and in the MOTION menu.\n\nMOTION Client 0.2.24."

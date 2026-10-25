@@ -270,7 +270,7 @@ public final class Draw {
     }
 
     /** Minecraft's main render target (what the world and HUD are drawn into). */
-    static RenderTarget mainTarget() {
+    public static RenderTarget mainTarget() {
 //#if MC >= 26.2
         return Mc.get().gameRenderer.mainRenderTarget();
 //#else

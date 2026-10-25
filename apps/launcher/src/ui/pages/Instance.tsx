@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Instance } from "../../core/instances/model";
 import { LOADERS, type LoaderId } from "../../core/loaders/loaders";
-import type { CompatIssue } from "../../core/mods/compat";
 import { JVM_PRESETS, recommendMemory, splitArgs, validateJvmArgs } from "../../core/perf/memory";
 import { PRESETS } from "../../core/perf/presets";
 import { projectUrl } from "../../core/modrinth/api";
@@ -9,7 +8,6 @@ import { guessJavaMajor } from "../../core/mojang/version";
 import { app, errorMessage, navigate, P, path, reportError, toast } from "../../services/app";
 import {
   checkUpdates,
-  compatibility,
   contentDir,
   identifyContent,
   importFolder,
@@ -172,28 +170,6 @@ function ItemIcon({ item, size = 38, fallback }: { item: ContentItem; size?: num
   );
 }
 
-function IssueList({ issues }: { issues: CompatIssue[] }) {
-  const [open, setOpen] = useState(false);
-  const errors = issues.filter((i) => i.severity === "error");
-  const warnings = issues.filter((i) => i.severity === "warning");
-  if (errors.length + warnings.length === 0) return null;
-  const shown = open ? [...errors, ...warnings] : [...errors, ...warnings].slice(0, 3);
-  return (
-    <div className="mb-4 space-y-2">
-      {shown.map((i, n) => (
-        <Callout key={n} tone={i.severity === "error" ? "danger" : "warn"} title={i.message}>
-          {i.fix}
-          {i.files.length > 0 && <span className="block text-faint text-[12px] mt-1 truncate">{i.files.join(", ")}</span>}
-        </Callout>
-      ))}
-      {errors.length + warnings.length > 3 && (
-        <button type="button" className="text-[13px] text-accent font-semibold cursor-pointer" onClick={() => setOpen((o) => !o)}>
-          {open ? "Show fewer" : `Show all ${errors.length + warnings.length} issues`}
-        </button>
-      )}
-    </div>
-  );
-}
 
 const checkedThisSession = new Set<string>();
 
@@ -206,8 +182,6 @@ function ModsTab({ inst }: { inst: Instance }) {
   const [checking, setChecking] = useState(false);
   const [updatingAll, setUpdatingAll] = useState(false);
 
-  const issues = useMemo(() => (items ? compatibility(inst, items) : []), [items, inst]);
-  const issueFiles = useMemo(() => new Map(issues.flatMap((i) => i.files.map((f) => [f, i] as const))), [issues]);
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (items ?? []).filter((m) => !q || [m.meta?.name, m.modrinth?.title, m.fileName, m.meta?.id].some((x) => x?.toLowerCase().includes(q)));
@@ -344,7 +318,6 @@ function ModsTab({ inst }: { inst: Instance }) {
         </div>
       )}
 
-      <IssueList issues={issues} />
 
       {error && <Callout tone="danger">{error}</Callout>}
       {!items ? (
@@ -363,7 +336,6 @@ function ModsTab({ inst }: { inst: Instance }) {
         <Card className="divide-y divide-line overflow-hidden">
           {shown.map((m) => {
             const u = updateFor(m);
-            const issue = issueFiles.get(m.fileName);
             return (
               <div key={m.path} className={cx("flex items-center gap-3.5 px-4 py-3 hover:bg-panel-2 transition-colors", !m.enabled && "opacity-55")}>
                 <ItemIcon item={m} />
@@ -371,11 +343,6 @@ function ModsTab({ inst }: { inst: Instance }) {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold truncate">{m.meta?.name ?? m.modrinth?.title ?? m.baseName}</span>
                     {(m.meta?.version || m.modrinth?.versionNumber) && <span className="text-[13px] text-muted truncate">{m.modrinth?.versionNumber ?? m.meta?.version}</span>}
-                    {issue && (
-                      <span title={issue.message} className={issue.severity === "error" ? "text-danger" : "text-warn"}>
-                        <Icon.Alert size={14} />
-                      </span>
-                    )}
                   </div>
                   <div className="text-[12px] text-faint truncate">
                     {m.fileName} · {formatBytes(m.size)}

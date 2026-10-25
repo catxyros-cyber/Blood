@@ -1,0 +1,19 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "bloomclient:inter_medium.ttf",
+      "shift": [
+        0.0,
+        0.6
+      ],
+      "size": 9.0,
+      "oversample": 6.0,
+      "skip": ""
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:default"
+    }
+  ]
+}

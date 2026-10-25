@@ -47,7 +47,7 @@ public final class BloomToast implements Toast {
         Ui.panel(g, 0, 0, width(), height(), p.window() | 0xFF000000);
         Ui.panelBorder(g, 0, 0, width(), height(), Theme.alpha(Theme.accentArgb(), 0.5f));
         Ui.spriteTinted(g, "logo", 6, 6, 16, 16, 0xFFFFFFFF);
-        g.drawString(font, title, 28, 6, Theme.accentArgb(), false);
+        Ui.text(g, title, 28, 6, Theme.accentArgb());
         for (int i = 0; i < Math.min(4, lines.size()); i++) g.drawString(font, lines.get(i), 28, 17 + i * 10, p.textDim(), false);
     }
 }

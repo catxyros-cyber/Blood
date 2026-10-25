@@ -353,12 +353,12 @@ public class BloomMenuScreen extends Screen implements Host {
             search.render(g, mx, my, dt);
             Ui.spriteTinted(g, "logo", wx + 14, wy + 8, 22, 22, 0xFFFFFFFF);
             Ui.text(g, "MOTION", wx + 43, wy + 8, Theme.alpha(p.text(), t));
-            Ui.text(g, "CLIENT", wx + 43 + Ui.font().width("MOTION "), wy + 8, Theme.alpha(0xFFE6C35E, t));
+            Ui.text(g, "CLIENT", wx + 43 + Ui.width("MOTION "), wy + 8, Theme.alpha(0xFFE6C35E, t));
             // You: face and name, just left of the search box.
             String you = Ui.ellipsize(net.minecraft.client.Minecraft.getInstance().getUser().getName(), 90);
-            int youW = 16 + 6 + Ui.font().width(you);
+            int youW = 16 + 6 + Ui.width(you);
             int youX = search.x - 12 - youW;
-            boolean showYou = youX > wx + 44 + Ui.font().width("MOTION CLIENT") + 24;
+            boolean showYou = youX > wx + 44 + Ui.width("MOTION CLIENT") + 24;
             if (showYou) {
                 dev.bloom.client.game.PlayerFace.draw(g, youX, wy + 11, 16, Theme.alpha(0xFFFFFFFF, t));
                 Ui.text(g, you, youX + 22, wy + 15, Theme.alpha(p.text(), t));
@@ -400,7 +400,7 @@ public class BloomMenuScreen extends Screen implements Host {
             }
             Ui.text(g, title, contentX() + (visualsMenu ? 10 : 58), wy + 12, Theme.alpha(p.text(), t));
             int sw = Math.min(visualsMenu ? 110 : 180, ww - sidebar - 120);
-            if (visualsMenu) renderShaderStatus(g, contentX() + 16 + Ui.font().width(title), wy + 9, wx + ww - sw - 16, t);
+            if (visualsMenu) renderShaderStatus(g, contentX() + 16 + Ui.width(title), wy + 9, wx + ww - sw - 16, t);
             search.layout(wx + ww - sw - 10, wy + 7, sw);
             search.render(g, mx, my, dt);
             g.fill(contentX() + 6, wy + 30, wx + ww - 6, wy + 31, Theme.alpha(p.border(), 0.6f * t));
@@ -426,7 +426,7 @@ public class BloomMenuScreen extends Screen implements Host {
         String status = dev.bloom.client.render.PostEffects.status();
         boolean on = !"Off".equals(status);
         String text = Ui.ellipsize(on ? status : "Shaders off", maxX - x - 14);
-        int w = Ui.font().width(text) + 14;
+        int w = Ui.width(text) + 14;
         if (x + w > maxX || w < 30) return;
         Ui.pill(g, x, y, w, 13, Theme.alpha(on ? Theme.accentArgb() : p.surface(), (on ? 0.22f : 1f) * t));
         Ui.circle(g, x + 6, y + 6, 2, on ? Theme.accentArgb() : p.textFaint());
@@ -442,7 +442,7 @@ public class BloomMenuScreen extends Screen implements Host {
         if (!compact) {
             Ui.text(g, "MOTION", wx + 29, y + 4, Theme.alpha(p.text(), t));
             String sub = visualsMenu ? "Visuals" : "Client";
-            Ui.text(g, sub, wx + 29 + Ui.font().width("MOTION "), y + 4, Theme.alpha(Theme.accentArgb(), t));
+            Ui.text(g, sub, wx + 29 + Ui.width("MOTION "), y + 4, Theme.alpha(Theme.accentArgb(), t));
         }
         y += 26;
         int itemH = itemHeight();
@@ -519,7 +519,7 @@ public class BloomMenuScreen extends Screen implements Host {
         int w = 0;
         List<net.minecraft.util.FormattedCharSequence> wrapped = new ArrayList<>();
         for (String s : lines) wrapped.addAll(Ui.wrap(s, 200));
-        for (var l : wrapped) w = Math.max(w, Ui.font().width(l));
+        for (var l : wrapped) w = Math.max(w, Ui.width(l));
         int h = wrapped.size() * 10 + 6;
         int x = Math.min(width - w - 12, mx + 10), y = Math.min(height - h - 4, my + 12);
         g.nextStratum();
@@ -760,7 +760,7 @@ public class BloomMenuScreen extends Screen implements Host {
                     Theme.alpha(over ? 0xFFFFD878 : 0xFFE6C35E, 0.92f));
             Ui.icon(g, category.icon(), x + 7, y + 6, 13,
                     over ? 0xFFFFD878 : 0xFFE6C35E);
-            int countW = Ui.font().width(Integer.toString(settingCount)) + 10;
+            int countW = Ui.width(Integer.toString(settingCount)) + 10;
             Ui.pill(g, x + w - countW - 7, y + 7, countW, 13, Theme.alpha(p.surfaceActive(), 0.95f));
             Ui.text(g, Integer.toString(settingCount), x + w - countW - 2, y + 10, p.textDim());
             Ui.text(g, Ui.ellipsize(category.label(), Math.max(24, w - countW - 43)),
@@ -807,7 +807,7 @@ public class BloomMenuScreen extends Screen implements Host {
             if (over) Ui.smallPanel(g, x, y, w, h - 1, Theme.alpha(p.surfaceHover(), 0.88f));
 
             String value = setting.displayValue();
-            int valueW = Math.min(Math.max(28, Ui.font().width(value) + 12), Math.max(28, w / 2));
+            int valueW = Math.min(Math.max(28, Ui.width(value) + 12), Math.max(28, w / 2));
             int chipX = x + w - valueW - 2;
             String label = Ui.ellipsize(setting.label(), Math.max(18, chipX - x - 13));
             Ui.text(g, label, x + 8, y + 5,
