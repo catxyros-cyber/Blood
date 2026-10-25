@@ -436,17 +436,17 @@ public class HudEditorScreen extends Screen implements Host {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        return click(event.x(), event.y(), event.button());
+        return click(event.x(), event.y(), dev.bloom.client.Mc.button(event.button()));
     }
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        return release(event.x(), event.y(), event.button());
+        return release(event.x(), event.y(), dev.bloom.client.Mc.button(event.button()));
     }
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
-        return drag(event.x(), event.y(), event.button(), dx, dy);
+        return drag(event.x(), event.y(), dev.bloom.client.Mc.button(event.button()), dx, dy);
     }
 
     @Override

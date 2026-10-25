@@ -107,7 +107,7 @@ public class KeybindsPage extends GenericPage {
         public boolean mouseClicked(double mx, double my, int button) {
             if (listening) {
                 if (button >= 2) {
-                    apply(InputConstants.Type.MOUSE.getOrCreate(button));
+                    apply(InputConstants.Type.MOUSE.getOrCreate(dev.bloom.client.Mc.rawButton(button)));
                 } else {
                     listening = false;
                     screen.focus(null);

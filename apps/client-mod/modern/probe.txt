@@ -1,5 +1,0 @@
-# Porting aid (CI only): javap of these classes per target. Delete once every target runs.
-net.minecraft.client.multiplayer.MultiPlayerGameMode
-net.minecraft.client.renderer.FirstPersonHandsAndItemsRenderer
-net.minecraft.client.player.FirstPersonHandsAndItems
-net.minecraft.world.entity.LivingEntity$SwingState

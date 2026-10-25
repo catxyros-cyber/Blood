@@ -67,7 +67,7 @@ public class SmokeTest implements FabricClientGameTest {
             context.runOnClient(mc -> mc.options.cloudStatus().set(net.minecraft.client.CloudStatus.FANCY));
             world.getServer().runCommand("execute as @p at @p anchored eyes run summon minecraft:pig ^ ^-0.6 ^2 {NoAI:1b,NoGravity:1b}");
             context.waitTicks(20);
-            context.getInput().pressMouse(0);
+            context.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
             context.waitTicks(10);
             context.takeScreenshot("07_hit");
             context.getInput().holdKey(dev.bloom.client.BloomKeys.ZOOM);

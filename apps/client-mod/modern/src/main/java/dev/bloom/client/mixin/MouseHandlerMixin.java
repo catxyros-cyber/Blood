@@ -25,7 +25,7 @@ public abstract class MouseHandlerMixin {
     @Inject(method = "onButton", at = @At("HEAD"))
     private void bloom$countClick(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
         dev.bloom.client.Hooks.fired("mouseButton");
-        if (action == InputConstants.PRESS && Mc.screen() == null && BloomClient.ready()) BloomClient.get().onMouseClick(info.button());
+        if (action == InputConstants.PRESS && Mc.screen() == null && BloomClient.ready()) BloomClient.get().onMouseClick(dev.bloom.client.Mc.button(info.button()));
     }
 
     @Inject(method = "turnPlayer", at = @At("TAIL"))
