@@ -200,7 +200,7 @@ public class ProfilesPage extends GenericPage {
             int tx = x + 10;
             int titleMax = Math.max(40, w - buttonsWidth() - 100);
             Ui.text(g, Ui.ellipsize(profile.name(), titleMax), tx, y + 9, p.text());
-            int bx = tx + Math.min(Ui.font().width(profile.name()), titleMax) + 6;
+            int bx = tx + Math.min(Ui.width(profile.name()), titleMax) + 6;
             if (profile.builtIn()) bx += tag(g, bx, y + 8, profile.modified() ? "Built-in · edited" : "Built-in", p.textDim()) + 4;
             if (biomeActive) tag(g, bx, y + 8, "Active (biome)", Theme.accentArgb());
             Ui.textWrapped(g, profile.description().isEmpty() ? "Your own profile." : profile.description(), tx, y + 24, w - 20, p.textFaint(), 2);
@@ -209,7 +209,7 @@ public class ProfilesPage extends GenericPage {
         }
 
         private int tag(GuiGraphics g, int x, int y, String text, int col) {
-            int w = Ui.font().width(text) + 8;
+            int w = Ui.width(text) + 8;
             Ui.pill(g, x, y - 1, w, 11, Theme.alpha(col, 0.18f));
             Ui.text(g, text, x + 4, y + 1, col);
             return w;

@@ -23,10 +23,16 @@ public class SmokeTest implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext context) {
         log("start");
+        // A desktop-sized window (GUI scale 3), so screenshots show text and art as players see them.
+        context.getInput().resizeWindow(1600, 900);
         context.waitForScreen(MotionTitleScreen.class);
         context.waitTicks(60);
         context.takeScreenshot("01_title");
         log("title screen ok");
+        // Into the title screen's own menu (any click enters it).
+        context.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        context.waitTicks(60);
+        context.takeScreenshot("01b_title_menu");
 
         context.setScreen(() -> new BloomMenuScreen(null));
         context.waitTicks(30);

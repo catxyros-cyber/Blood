@@ -169,7 +169,7 @@ public class SkyboxPage extends GenericPage {
         public void render(GuiGraphics g, int mx, int my, float dt) {
             Theme.Palette p = Theme.palette();
             Ui.text(g, "Click a sky to use it for", x + 8, y + 7, p.textDim());
-            int sx = x + 14 + Ui.font().width("Click a sky to use it for");
+            int sx = x + 14 + Ui.width("Click a sky to use it for");
             seg(g, sx, "Day", !choosingNight, mx, my, p);
             seg(g, sx + 52, "Night", choosingNight, mx, my, p);
         }
@@ -182,7 +182,7 @@ public class SkyboxPage extends GenericPage {
 
         @Override
         public boolean mouseClicked(double mx, double my, int button) {
-            int sx = x + 14 + Ui.font().width("Click a sky to use it for");
+            int sx = x + 14 + Ui.width("Click a sky to use it for");
             if (Ui.inside(mx, my, sx, y + 2, 50, 16)) {
                 choosingNight = false;
                 Ui.click();
@@ -272,7 +272,7 @@ public class SkyboxPage extends GenericPage {
         }
 
         private static int badge(GuiGraphics g, int x, int y, String text) {
-            int w = Ui.font().width(text) + 6;
+            int w = Ui.width(text) + 6;
             Ui.smallPanel(g, x, y, w, 10, Theme.accentArgb());
             Ui.text(g, text, x + 3, y + 1, Theme.onAccent());
             return w;

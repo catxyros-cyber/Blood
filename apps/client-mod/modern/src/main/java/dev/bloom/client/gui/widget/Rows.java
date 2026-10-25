@@ -239,7 +239,7 @@ public final class Rows {
             int titleCol = active ? p.text() : p.textFaint();
             String title = setting.label();
             if (categoryTag != null) {
-                int tagW = Ui.font().width(categoryTag) + 8;
+                int tagW = Ui.width(categoryTag) + 8;
                 Ui.pill(g, x + 8, y + 5, tagW, 11, Theme.alpha(Theme.accentArgb(), 0.18f));
                 Ui.text(g, categoryTag, x + 12, y + 7, Theme.accentArgb());
                 Ui.text(g, Ui.ellipsize(title, tw - tagW - 4), x + 12 + tagW, y + 7, titleCol);
@@ -251,7 +251,7 @@ public final class Rows {
             Ui.textWrapped(g, sub, x + 8, y + 18, tw, warn ? p.warn() : p.textFaint(), 3);
             if (setting instanceof NumberSetting n) {
                 String v = n.displayValue();
-                Ui.text(g, v, control.x - 6 - Ui.font().width(v), control.y + 2, active ? p.textDim() : p.textFaint());
+                Ui.text(g, v, control.x - 6 - Ui.width(v), control.y + 2, active ? p.textDim() : p.textFaint());
             }
             control.render(g, mx, my, dt);
             if (!setting.isDefault()) {

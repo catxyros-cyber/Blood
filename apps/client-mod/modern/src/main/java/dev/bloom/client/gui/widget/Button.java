@@ -35,7 +35,7 @@ public class Button extends Element {
     }
 
     public int naturalWidth() {
-        int tw = label == null || label.isEmpty() ? 0 : Ui.font().width(label);
+        int tw = label == null || label.isEmpty() ? 0 : Ui.width(label);
         int iw = icon != null ? 12 : 0;
         return Math.max(20, tw + iw + (tw > 0 && iw > 0 ? 4 : 0) + 14);
     }
@@ -74,7 +74,7 @@ public class Button extends Element {
             fg = p.textFaint();
         }
         Ui.smallPanel(g, x, y, w, h, bg);
-        int tw = label == null || label.isEmpty() ? 0 : Ui.font().width(label);
+        int tw = label == null || label.isEmpty() ? 0 : Ui.width(label);
         int iw = icon != null ? 12 : 0;
         int total = tw + iw + (tw > 0 && iw > 0 ? 4 : 0);
         int cx = x + (w - total) / 2;

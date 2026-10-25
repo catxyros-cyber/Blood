@@ -236,7 +236,7 @@ public final class Controls {
 
         public static int widthFor(ChoiceSetting s) {
             int w = 0;
-            for (ChoiceSetting.Option o : s.options()) w += Ui.font().width(o.label()) + 12;
+            for (ChoiceSetting.Option o : s.options()) w += Ui.width(o.label()) + 12;
             return w + 4;
         }
 
@@ -252,10 +252,10 @@ public final class Controls {
             List<ChoiceSetting.Option> opts = setting.options();
             int cx = x + 2;
             int total = 0;
-            for (ChoiceSetting.Option o : opts) total += Ui.font().width(o.label()) + 12;
+            for (ChoiceSetting.Option o : opts) total += Ui.width(o.label()) + 12;
             float k = (w - 4) / (float) Math.max(1, total);
             for (ChoiceSetting.Option o : opts) {
-                int sw = Math.round((Ui.font().width(o.label()) + 12) * k);
+                int sw = Math.round((Ui.width(o.label()) + 12) * k);
                 boolean sel = setting.is(o.id());
                 boolean over = enabled && Ui.inside(mx, my, cx, y, sw, h);
                 if (sel) Ui.smallPanel(g, cx, y + 2, sw, h - 4, enabled ? Theme.accentArgb() : Theme.alpha(Theme.accentArgb(), 0.4f));
@@ -271,11 +271,11 @@ public final class Controls {
             if (!enabled || button != 0 || !isOver(mx, my)) return false;
             List<ChoiceSetting.Option> opts = setting.options();
             int total = 0;
-            for (ChoiceSetting.Option o : opts) total += Ui.font().width(o.label()) + 12;
+            for (ChoiceSetting.Option o : opts) total += Ui.width(o.label()) + 12;
             float k = (w - 4) / (float) Math.max(1, total);
             int cx = x + 2;
             for (ChoiceSetting.Option o : opts) {
-                int sw = Math.round((Ui.font().width(o.label()) + 12) * k);
+                int sw = Math.round((Ui.width(o.label()) + 12) * k);
                 if (mx >= cx && mx < cx + sw) {
                     setting.set(o.id());
                     Ui.click();
@@ -301,7 +301,7 @@ public final class Controls {
         public int preferredHeight(int width) {
             int cx = 0, rows = 1;
             for (var o : setting.options()) {
-                int cw = Ui.font().width(o.label()) + 14;
+                int cw = Ui.width(o.label()) + 14;
                 if (cx > 0 && cx + cw > width) {
                     rows++;
                     cx = 0;
@@ -318,7 +318,7 @@ public final class Controls {
             var opts = setting.options();
             for (int i = 0; i < opts.size(); i++) {
                 var o = opts.get(i);
-                int cw = Ui.font().width(o.label()) + 14;
+                int cw = Ui.width(o.label()) + 14;
                 if (cx > x && cx + cw > x + w) {
                     cx = x;
                     cy += 18;
@@ -340,7 +340,7 @@ public final class Controls {
             var opts = setting.options();
             for (int i = 0; i < opts.size(); i++) {
                 var o = opts.get(i);
-                int cw = Ui.font().width(o.label()) + 14;
+                int cw = Ui.width(o.label()) + 14;
                 if (cx > x && cx + cw > x + w) {
                     cx = x;
                     cy += 18;

@@ -82,11 +82,11 @@ public class TextField extends Element {
             if (value.isEmpty() && !focused) {
                 Ui.text(g, placeholder, tx, y + 5, p.textFaint());
             } else {
-                int cx = Ui.font().width(value.substring(0, cursor));
+                int cx = Ui.width(value.substring(0, cursor));
                 if (cx - scroll > avail - 2) scroll = cx - avail + 2;
                 if (cx - scroll < 0) scroll = cx;
                 if (allSelected && !value.isEmpty()) {
-                    g.fill(tx - scroll, y + 4, tx - scroll + Ui.font().width(value), y + 14, Theme.alpha(Theme.accentArgb(), 0.4f));
+                    g.fill(tx - scroll, y + 4, tx - scroll + Ui.width(value), y + 14, Theme.alpha(Theme.accentArgb(), 0.4f));
                 }
                 Ui.text(g, value, tx - scroll, y + 5, p.text());
                 if (focused && (System.currentTimeMillis() / 530) % 2 == 0) {
@@ -104,7 +104,7 @@ public class TextField extends Element {
         host.focus(this);
         int tx = x + (icon != null ? 19 : 5) - scroll;
         int rel = (int) mx - tx;
-        cursor = Ui.font().plainSubstrByWidth(value, Math.max(0, rel)).length();
+        cursor = Ui.substr(value, Math.max(0, rel)).length();
         allSelected = false;
         return true;
     }

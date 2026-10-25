@@ -406,12 +406,12 @@ public final class SkyBrowserPage implements Page {
             String name = e == null ? "Minecraft's sky" : e.name();
             Ui.text(g, Ui.ellipsize(name, w - 150), x + 2, y + ph + 5, p.text());
             String res = e == null ? "vanilla" : SkyboxCatalog.resolutionLabel(id);
-            Ui.text(g, res, x + w - Ui.font().width(res) - 2, y + ph + 5, p.textDim());
+            Ui.text(g, res, x + w - Ui.width(res) - 2, y + ph + 5, p.textDim());
             // compatibility with the current theme
             Themes.Info theme = Themes.get(BloomSettings.THEME.id());
             if (id.equals(theme.recommendedSky()) || SkyboxCatalog.NONE.equals(id) && "none".equals(theme.recommendedSky())) {
                 String badge = "Matches " + theme.name();
-                int bw = Ui.font().width(badge) + 8;
+                int bw = Ui.width(badge) + 8;
                 Ui.smallPanel(g, x + 4, y + 4, bw, 11, Theme.accentArgb());
                 Ui.text(g, badge, x + 8, y + 6, Theme.onAccent());
             }
@@ -485,7 +485,7 @@ public final class SkyBrowserPage implements Page {
             search.render(g, mx, my, dt);
             int cx = x;
             for (String[] f : FILTERS) {
-                int fw = Ui.font().width(f[1]) + 10;
+                int fw = Ui.width(f[1]) + 10;
                 boolean on = filter.equals(f[0]);
                 boolean over = Ui.inside(mx, my, cx, y + 21, fw, 14);
                 Ui.pill(g, cx, y + 21, fw, 14, on ? Theme.accentArgb() : over ? p.surfaceActive() : p.surface());
@@ -499,7 +499,7 @@ public final class SkyBrowserPage implements Page {
             if (search.mouseClicked(mx, my, button)) return true;
             int cx = x;
             for (String[] f : FILTERS) {
-                int fw = Ui.font().width(f[1]) + 10;
+                int fw = Ui.width(f[1]) + 10;
                 if (Ui.inside(mx, my, cx, y + 21, fw, 14)) {
                     filter = f[0];
                     Ui.click();
@@ -599,7 +599,7 @@ public final class SkyBrowserPage implements Page {
         }
 
         private static int badge(GuiGraphics g, int x, int y, String text) {
-            int w = Ui.font().width(text) + 6;
+            int w = Ui.width(text) + 6;
             Ui.smallPanel(g, x, y, w, 10, Theme.accentArgb());
             Ui.text(g, text, x + 3, y + 1, Theme.onAccent());
             return w;

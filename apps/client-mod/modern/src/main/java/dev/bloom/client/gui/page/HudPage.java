@@ -99,7 +99,7 @@ public class HudPage extends GenericPage {
         }
 
         private int ddX() {
-            return x + 8 + Ui.font().width("Active layout") + 10;
+            return x + 8 + Ui.width("Active layout") + 10;
         }
 
         @Override
@@ -151,7 +151,7 @@ public class HudPage extends GenericPage {
         private int chipsHeight(int width) {
             int cx = 0, rows = 1;
             for (HudWidgetType.Option o : state.type.options()) {
-                int cw = Ui.font().width(o.label()) + 14;
+                int cw = Ui.width(o.label()) + 14;
                 if (cx > 0 && cx + cw > width) {
                     rows++;
                     cx = 0;
@@ -181,7 +181,7 @@ public class HudPage extends GenericPage {
             if (!state.visible) return;
             int cx = x + 30, cy = y + 28;
             for (HudWidgetType.Option o : state.type.options()) {
-                int cw = Ui.font().width(o.label()) + 14;
+                int cw = Ui.width(o.label()) + 14;
                 if (cx > x + 30 && cx + cw > x + w - 14) {
                     cx = x + 30;
                     cy += 18;
@@ -217,7 +217,7 @@ public class HudPage extends GenericPage {
             if (state.visible) {
                 int cx = x + 30, cy = y + 28;
                 for (HudWidgetType.Option o : state.type.options()) {
-                    int cw = Ui.font().width(o.label()) + 14;
+                    int cw = Ui.width(o.label()) + 14;
                     if (cx > x + 30 && cx + cw > x + w - 14) {
                         cx = x + 30;
                         cy += 18;

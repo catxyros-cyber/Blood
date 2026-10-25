@@ -13,3 +13,9 @@
 *.pyd binary
 *.cfg text eol=lf
 *.jks binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.ogg binary

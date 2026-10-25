@@ -81,6 +81,8 @@ public final class BloomSettings {
             "full", ChoiceSetting.of("full", "Full", "reduced", "Reduced", "performance", "Performance"), "animation", "motion");
     public static final BoolSetting REDUCE_MOTION = bool("ui.reduceMotion", GENERAL, "Interface", "Reduce motion",
             "Turns off sliding and scaling animations in MOTION menus and the decorative petals in the menu background.", false, "accessibility", "animation");
+    public static final BoolSetting SMOOTH_TEXT = bool("ui.smoothText", GENERAL, "Interface", "Smooth text",
+            "Sharp, anti-aliased text in MOTION's menus and title screen at any GUI scale. Off uses Minecraft's pixel font.", true, "font", "hd", "text", "crisp");
     public static final NumberSetting MENU_DIM = num("ui.menuDim", GENERAL, "Interface", "Menu backdrop",
             "How much the game is dimmed behind the MOTION menu. The game keeps running behind it.", 0.45f, 0f, 0.9f, 0.05f, PERCENT, "", "background", "dim");
     public static final BoolSetting PAUSE_SINGLEPLAYER = bool("ui.pauseSingleplayer", GENERAL, "Interface", "Pause singleplayer",

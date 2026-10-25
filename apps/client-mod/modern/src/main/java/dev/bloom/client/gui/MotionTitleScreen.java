@@ -29,16 +29,9 @@ import java.util.function.Supplier;
 /** MOTION title screen: restrained entry splash followed by a custom main menu. */
 public final class MotionTitleScreen extends Screen {
     private static final long WALK_IN_MS = 1_500L;
-    private static final int BACKGROUND_WIDTH = 3840;
-    private static final int BACKGROUND_HEIGHT = 2160;
-    private static final Identifier BACKGROUND = Identifier.fromNamespaceAndPath(
-            "bloomclient", "textures/gui/motion_title_bg.png");
     private static final Identifier BRAND_MARK = Identifier.fromNamespaceAndPath(
             "bloomclient", "textures/gui/sprites/logo.png");
     private static final int BRAND_MARK_SIZE = 256;
-    private static final Identifier DOLLAR = Identifier.fromNamespaceAndPath(
-            "bloomclient", "textures/gui/sprites/dollar.png");
-    private static final int DOLLAR_SIZE = 64;
     private static final String[] MENU_ITEMS = {"Singleplayer", "Multiplayer", "Minecraft Settings", "MOTION Client", "Quit Game"};
 
     private boolean entered;
@@ -50,6 +43,9 @@ public final class MotionTitleScreen extends Screen {
     private Boolean avatarModelSlim;
     private Identifier avatarTexture;
     private boolean skinLookupStarted;
+    private final float[] hover = new float[MENU_ITEMS.length];
+    private long lastFrameNanos = System.nanoTime();
+    private float frameDt;
 
     public MotionTitleScreen() { super(Component.literal("MOTION Client")); }
 
@@ -67,6 +63,9 @@ public final class MotionTitleScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        long nanos = System.nanoTime();
+        frameDt = Math.min(0.1f, (nanos - lastFrameNanos) / 1_000_000_000f);
+        lastFrameNanos = nanos;
         long now = System.currentTimeMillis();
         float walkIn = entering ? Math.min(1f, (now - enterStartedAt) / (float) WALK_IN_MS) : 0f;
         if (entering && walkIn >= 1f) {
@@ -129,11 +128,19 @@ public final class MotionTitleScreen extends Screen {
             int alpha = Math.round(255 * easeOutCubic(rowReveal));
             int rowX = menuX - 10;
             int rowW = 192;
-            boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 3 && mouseY < rowY + 24;
-            if (hovered) {
-                g.fillGradient(rowX, rowY - 3, rowX + rowW, rowY + 24, (alpha / 5 << 24) | 0xDDE3DF, (alpha / 8 << 24) | 0x9CA59F);
+            boolean hovered = mouseX >= rowX && mouseX < rowX + rowW && mouseY >= rowY - 4 && mouseY < rowY + 22;
+            hover[i] = Anim.approach(hover[i], hovered ? 1f : 0f, 18f, frameDt);
+            float hv = hover[i];
+            // A quiet glass button; hover brightens it and draws the accent edge.
+            Ui.panel(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0x0E1311, Math.round(alpha * (0.55f + 0.2f * hv))));
+            if (hv > 0.01f) {
+                Ui.panel(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0xFFFFFF, Math.round(alpha * 0.10f * hv)));
+                Ui.panelBorder(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(Theme.accentArgb() & 0xFFFFFF, Math.round(alpha * 0.85f * hv)));
+            } else {
+                Ui.panelBorder(g, rowX, rowY - 4, rowW, 26, Theme.withAlpha(0xFFFFFF, Math.round(alpha * 0.08f)));
             }
-            int color = hovered ? 0xFFF9FAF9 : (alpha << 24) | (i == 0 ? 0xE4E8E5 : 0xC5CBC7);
+            int base = i == 0 ? 0xF2F4F3 : 0xD3D8D5;
+            int color = (alpha << 24) | Theme.lerp(base, 0xFFFFFF, hv) & 0xFFFFFF;
             centerText(g, MENU_ITEMS[i], menuX + 86, rowY + 4, color);
         }
 
@@ -145,25 +152,14 @@ public final class MotionTitleScreen extends Screen {
         drawUserAvatar(g, x, y, walkIn, stride, now);
     }
 
-    /** Full-resolution charcoal and satin-curtain artwork; small $ marks drift down over the curtain. */
+    /**
+     * The theme's landscape at the window's own resolution (see TitleArt), shaded on the left where
+     * the menu sits and towards the bottom, so text stays readable on every theme.
+     */
     private void drawMotionBackdrop(GuiGraphics g, long time) {
-        g.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND, 0, 0, 0f, 0f, width, height,
-                BACKGROUND_WIDTH, BACKGROUND_HEIGHT, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, 0xFFFFFFFF);
-        for (int i = 0; i < 9; i++) {
-            float phase = time * (0.00012f + (i % 3) * 0.000025f);
-            int x = Math.round(width * (0.77f + (i % 5) * 0.045f + (float) Math.sin(phase + i) * 0.012f));
-            int y = Math.floorMod(i * 97 + (int) (time * (0.012f + (i % 3) * 0.004f)), Math.max(1, height + 42)) - 21;
-            int size = 9 + (i * 5) % 9;
-            int alpha = i % 2 == 0 ? 0xB0 : 0x70;
-            int tint = i % 3 == 0 ? 0x9CFFC4 : 0xE4E9E6;
-            drawDollar(g, x, y, size, (alpha << 24) | tint, phase * 40f + i);
-        }
-    }
-
-    /** A small $ mark that slowly sways (drawn from the dollar sprite, tinted). */
-    private void drawDollar(GuiGraphics g, int cx, int cy, int size, int color, float sway) {
-        int s = Math.max(4, Math.round(size * (1f + 0.08f * (float) Math.sin(sway))));
-        g.blit(RenderPipelines.GUI_TEXTURED, DOLLAR, cx - s / 2, cy - s / 2, 0f, 0f, s, s, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, DOLLAR_SIZE, color);
+        if (!dev.bloom.client.game.TitleArt.draw(g, width, height)) g.fill(0, 0, width, height, 0xFF0B0F0D);
+        Ui.gradientBand(g, 0, 0, Math.round(width * 0.62f), height, 0xC8070908, 0x00070908, 40);
+        g.fillGradient(0, height * 2 / 3, width, height, 0x00000000, 0x8C000000);
     }
 
     private void drawBrandMark(GuiGraphics g, int cx, int cy, int size, int color) {
@@ -173,7 +169,7 @@ public final class MotionTitleScreen extends Screen {
     }
 
     private void centerText(GuiGraphics g, String text, int cx, int y, int color) {
-        g.drawString(font, text, cx - font.width(text) / 2, y, color, false);
+        Ui.textCentered(g, text, cx, y, color);
     }
 
     /** Fetch the skin for Minecraft's active account off-thread; the default skin is shown meanwhile. */
@@ -252,9 +248,9 @@ public final class MotionTitleScreen extends Screen {
 
         String name = minecraft.getUser().getName();
         int nameY = Math.max(12, y0 - 14);
-        int nameX = Math.round(centerX - font.width(name) / 2f);
-        g.drawString(font, name, nameX, nameY, 0xFFE8EAE9, false);
-        g.fill(nameX, nameY + 10, nameX + font.width(name), nameY + 11, 0xAAE8EAE9);
+        int nameX = Math.round(centerX - Ui.width(name) / 2f);
+        Ui.text(g, name, nameX, nameY, 0xFFE8EAE9);
+        g.fill(nameX, nameY + 10, nameX + Ui.width(name), nameY + 11, 0xAAE8EAE9);
     }
     private static float easeOutCubic(float value) {
         float inverse = 1f - value;

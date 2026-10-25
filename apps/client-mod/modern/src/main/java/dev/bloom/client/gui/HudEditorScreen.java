@@ -397,7 +397,7 @@ public class HudEditorScreen extends Screen implements Host {
 
     private void drawTip(GuiGraphics g, List<String> lines, int mx, int my) {
         int w = 0;
-        for (String s : lines) w = Math.max(w, Ui.font().width(s));
+        for (String s : lines) w = Math.max(w, Ui.width(s));
         int h = lines.size() * 10 + 6;
         int x = Math.min(width - w - 12, mx + 10), y = Math.min(height - h - 4, my + 12);
         g.nextStratum();
