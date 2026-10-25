@@ -167,16 +167,62 @@
 
   const CAPE_WIDTHS = [64, 128, 256, 512, 1024, 2048];
   const MAX_FRAMES = 64;
+  const CAPE_MAX_BYTES = 4 * 1024 * 1024 - 64 * 1024; // the server's 4 MB, with room for the request
 
   /**
    * Turns any image into a cape PNG. Animated GIF/WebP/APNG frames (decoded by the browser) become
    * a vertical strip, one frame under the other. Images in the cape layout but at an odd size are
    * scaled (pixel-sharp) to the nearest valid width.
    */
-  async function capeFromFile(file) {
+  const isVideo = (file) => /^video\//.test(file.type) || /\.(mp4|m4v|webm|mov)$/i.test(file.name || "");
+  /** Default speed for video capes: 12.5 frames a second, so 64 frames are about 5 seconds. */
+  const VIDEO_FRAME_MS = 80;
+
+  /**
+   * Frames from a video, decoded locally by the browser: up to MAX_FRAMES, `frameMs` apart,
+   * from `startS` on. Nothing is uploaded until the cape itself is published.
+   */
+  async function videoFrames(file, startS, frameMs) {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.muted = true;
+    v.playsInline = true;
+    v.preload = "auto";
+    try {
+      await new Promise((resolve, reject) => {
+        v.onloadeddata = resolve;
+        v.onerror = () => reject(new Error("This browser can't read that video. Use an MP4 (H.264) or WebM file, in Chrome or Edge."));
+        v.src = url;
+      });
+      const step = frameMs / 1000;
+      const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : MAX_FRAMES * step;
+      const start = Math.min(Math.max(0, startS || 0), Math.max(0, dur - step));
+      const n = Math.max(1, Math.min(MAX_FRAMES, Math.floor((dur - start) / step)));
+      const seek = (t) => new Promise((resolve) => {
+        v.onseeked = () => resolve();
+        v.currentTime = t;
+      });
+      const frames = [];
+      for (let i = 0; i < n; i++) {
+        await seek(Math.min(dur - 0.001, start + i * step));
+        frames.push(await createImageBitmap(v));
+      }
+      if (!frames.length || !frames[0].width) throw new Error("That video has no picture.");
+      return frames;
+    } finally {
+      v.removeAttribute("src");
+      v.load();
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function capeFromFile(file, opts = {}) {
     let frames = [];
     let frameMs = 100;
-    if (typeof ImageDecoder === "function" && /gif|webp|apng|png/.test(file.type)) {
+    if (isVideo(file)) {
+      frameMs = opts.frameMs >= 20 ? opts.frameMs : VIDEO_FRAME_MS;
+      frames = await videoFrames(file, opts.start, frameMs);
+    } else if (typeof ImageDecoder === "function" && /gif|webp|apng|png/.test(file.type)) {
       try {
         const dec = new ImageDecoder({ data: await file.arrayBuffer(), type: file.type });
         await dec.tracks.ready;
@@ -213,28 +259,42 @@
     }
     const n = frames.length > 1 ? frames.length : stripFrames;
     if (n > MAX_FRAMES) throw new Error(`An animated cape can have at most ${MAX_FRAMES} frames. This one has ${n}.`);
-    // Not a cape layout (2:1)? Treat it as artwork and wrap it onto an HD cape.
-    const artwork = Math.abs(fw / fh - 2) > 0.02;
-    const width = artwork ? artworkWidth(fw, fh, n) : CAPE_WIDTHS.find((w) => w >= Math.min(fw, 2048)) ?? 2048;
-    const height = width / 2;
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height * n;
-    const g = canvas.getContext("2d");
-    // Pixel art (64×32, or whole-number upscales of it) stays crisp; HD art is resampled smoothly.
-    const pixelArt = !artwork && (fw <= 64 || (width % fw === 0 && fw % 64 === 0));
-    g.imageSmoothingEnabled = !pixelArt;
-    g.imageSmoothingQuality = "high";
-    for (let i = 0; i < n; i++) {
-      const src = frames.length > 1 ? frames[i] : frames[0];
-      const sy = frames.length > 1 ? 0 : i * fh;
-      if (artwork) wrapArtwork(g, src, 0, sy, fw, fh, i * height, width);
-      else g.drawImage(src, 0, sy, fw, fh, 0, i * height, width, height);
+    // Not a cape layout (2:1)? Treat it as artwork and wrap it onto an HD cape. Videos always are.
+    const artwork = isVideo(file) || Math.abs(fw / fh - 2) > 0.02;
+    const pixelArt = !artwork && (fw <= 64 || ((CAPE_WIDTHS.find((w) => w >= Math.min(fw, 2048)) ?? 2048) % fw === 0 && fw % 64 === 0));
+    const draw = (width, count) => {
+      const height = width / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height * count;
+      const g = canvas.getContext("2d");
+      // Pixel art (64×32, or whole-number upscales of it) stays crisp; HD art is resampled smoothly.
+      g.imageSmoothingEnabled = !pixelArt;
+      g.imageSmoothingQuality = "high";
+      for (let i = 0; i < count; i++) {
+        // Fewer frames than the source: spread them evenly, keeping the loop's real duration.
+        const k = Math.floor((i * n) / count);
+        const src = frames.length > 1 ? frames[k] : frames[0];
+        const sy = frames.length > 1 ? 0 : k * fh;
+        if (artwork) wrapArtwork(g, src, 0, sy, fw, fh, i * height, width);
+        else g.drawImage(src, 0, sy, fw, fh, 0, i * height, width, height);
+      }
+      return canvas.toDataURL("image/png");
+    };
+    let width = artwork ? artworkWidth(fw, fh, n) : CAPE_WIDTHS.find((w) => w >= Math.min(fw, 2048)) ?? 2048;
+    let count = n;
+    let dataUrl = draw(width, count);
+    // Photos and video compress far worse than pixel art: step the size down until it fits the
+    // server's 4 MB (narrower first, then fewer frames).
+    while (artwork && dataUrl.length * 0.75 > CAPE_MAX_BYTES) {
+      if (width > 128) width /= 2;
+      else if (count > 8) count = Math.max(8, Math.floor(count * 0.75));
+      else break;
+      dataUrl = draw(width, count);
     }
-    const dataUrl = canvas.toDataURL("image/png");
-    return { dataUrl, frames: n, frameMs };
+    for (const f of frames) f.close?.();
+    return { dataUrl, frames: count, frameMs: count < n ? Math.round((frameMs * n) / count) : frameMs, width };
   }
-
 
   /** Largest cape width that keeps an artwork animation under the server's size limits. */
   function artworkWidth(fw, fh, n) {
@@ -277,17 +337,18 @@
     const f = new FormData(ev.target);
     const file = f.get("file");
     const capeMsg = $("[data-cape-msg]");
-    if (!file || !file.size) return msg(capeMsg, "Choose an image.", true);
-    if (file.size > 20 * 1024 * 1024) return msg(capeMsg, "The file is too big (max 20 MB before conversion).", true);
+    if (!file || !file.size) return msg(capeMsg, "Choose an image or a video.", true);
+    const video = isVideo(file);
+    if (file.size > (video ? 500 : 20) * 1024 * 1024) return msg(capeMsg, video ? "The video is too big (max 500 MB). Trim it first." : "The file is too big (max 20 MB before conversion).", true);
+    const typedMs = Number(f.get("frameMs"));
     let cape;
     try {
-      msg(capeMsg, "Preparing the image…");
-      cape = await capeFromFile(file);
+      msg(capeMsg, video ? "Reading frames from the video…" : "Preparing the image…");
+      cape = await capeFromFile(file, { frameMs: typedMs >= 20 ? Math.round(typedMs) : 0, start: Number(f.get("start")) || 0 });
     } catch (e) {
       return msg(capeMsg, e.message, true);
     }
-    const typedMs = Number(f.get("frameMs"));
-    const frameMs = typedMs >= 20 ? Math.round(typedMs) : cape.frameMs;
+    const frameMs = typedMs >= 20 && !video ? Math.round(typedMs) : cape.frameMs;
     const data = cape.dataUrl;
     if (data.length * 0.75 > 4 * 1024 * 1024) return msg(capeMsg, "That cape is over 4 MB after conversion. Use fewer frames or a smaller size.", true);
     const submit = ev.target.querySelector("button[type=submit]");
@@ -295,7 +356,7 @@
     msg(capeMsg, "Publishing…");
     try {
       await api("POST", "/v1/admin/capes", { name: String(f.get("name")).trim(), access: f.get("access"), png: data, ...(cape.frames > 1 ? { frameMs } : {}) });
-      msg(capeMsg, cape.frames > 1 ? `Published an animated cape (${cape.frames} frames). Players can pick it in the MOTION launcher.` : "Published. Players can pick it in the MOTION launcher.");
+      msg(capeMsg, cape.frames > 1 ? `Published an animated cape (${cape.frames} frames, ${cape.width}×${cape.width / 2}, ${((cape.frames * frameMs) / 1000).toFixed(1)} s loop). Players can pick it in the MOTION launcher.` : "Published. Players can pick it in the MOTION launcher.");
       ev.target.reset();
       await loadCapes();
     } catch (e) {

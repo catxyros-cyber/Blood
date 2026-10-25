@@ -24,6 +24,8 @@ export const WEBSITE_CSP = [
   "style-src 'self'",
   "img-src 'self' data: https://crafatar.com https://mc-heads.net",
   "connect-src 'self'",
+  // The admin page reads a chosen video file locally (a blob: URL) to turn it into a cape.
+  "media-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'none'",
   "form-action 'self'",
