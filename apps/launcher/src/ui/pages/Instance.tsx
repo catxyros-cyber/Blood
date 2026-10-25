@@ -97,17 +97,24 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
               .filter(Boolean)
               .join(" · ")}
             {inst.bloomClient?.enabled && (
-              <span className="inline-flex items-center gap-1 text-fg/80">
-                · <Icon.Motion size={12} className="text-accent" /> MOTION Client
-              </span>
+              <>
+                <span>·</span>
+                <span className="inline-flex items-center gap-1 text-fg/80">
+                  <Icon.Motion size={12} className="text-accent" /> MOTION Client
+                </span>
+              </>
             )}
           </div>
           <LiveStats instanceId={inst.id} />
         </div>
         <div className="flex items-center gap-2">
-          <Button size="lg" className="h-10" icon={<Icon.Hud size={16} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
-            MOTION Mods
-          </Button>
+          <button
+            type="button"
+            onClick={() => navigate({ page: "mods", instanceId: inst.id })}
+            className="h-10 px-4 rounded-lg inline-flex items-center gap-2 text-[13.5px] font-medium border border-line bg-raised hover:bg-line-strong transition-colors cursor-pointer"
+          >
+            <Icon.Hud size={16} className="text-muted" /> MOTION Mods
+          </button>
           <PlayButton inst={inst} size="md" />
           <Menu
             trigger={

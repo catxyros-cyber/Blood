@@ -195,7 +195,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             <div className="text-[13px] font-semibold">This installation</div>
             <span className={cx("text-[11px] font-semibold inline-flex items-center gap-1", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
               <span className={cx("h-1.5 w-1.5 rounded-full", summary?.filesReady ? "bg-accent" : "bg-faint")} />
-              {summary ? (summary.filesReady ? "Ready" : "Downloads on play") : "…"}
+              {summary ? (summary.filesReady ? "Ready" : "Not downloaded") : "…"}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-[13px]">
