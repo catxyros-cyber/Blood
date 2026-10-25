@@ -39,7 +39,6 @@ import {
   toggleValues,
   type ClientBackup,
 } from "../../services/bloodMods";
-import { compatibility } from "../../services/content";
 import { getInstance, selectedInstance } from "../../services/instances";
 import { useStore } from "../../services/store";
 import { Badge, Button, Callout, Card, confirm, cx, EmptyState, Menu, PageHeader, Select, Skeleton, Slider, TextInput, Toggle, timeAgo } from "../components";
@@ -137,7 +136,6 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 
   const clientReady = Boolean(client?.enabled);
   const layout = view ? activeLayout(view.hud) : null;
-  const problems = mods ? compatibility(inst, mods).filter((i) => i.severity === "error") : [];
   const perf = useMemo(() => (mods ? perfStates(mods, PERF_SLUGS) : []), [mods]);
 
   function isOn(m: ModuleInfo): boolean | null {
@@ -200,7 +198,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 
   return (
     <div className="space-y-6">
-      <ClientBanner inst={inst} client={client} running={running} problems={problems.length} onChanged={() => setTick((t) => t + 1)} />
+      <ClientBanner inst={inst} client={client} running={running} onChanged={() => setTick((t) => t + 1)} />
       {loadError && (
         <Callout tone="danger" title="MOTION Client's settings file can't be read">
           {loadError}
@@ -265,7 +263,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
 
 // ---------------------------------------------------------------- header banner
 
-function ClientBanner({ inst, client, running, problems, onChanged }: { inst: Instance; client: ClientStatus | null; running: boolean; problems: number; onChanged: () => void }) {
+function ClientBanner({ inst, client, running, onChanged }: { inst: Instance; client: ClientStatus | null; running: boolean; onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   if (!client) return <Skeleton className="h-[74px] rounded-xl" />;
   const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
@@ -280,13 +278,6 @@ function ClientBanner({ inst, client, running, problems, onChanged }: { inst: In
           {client.enabled ? <Badge tone="accent">v{client.installedVersion} installed</Badge> : <Badge>Not installed</Badge>}
           {client.updateAvailable && <Badge tone="info">Update {client.bundle?.version} on next launch</Badge>}
           {running && <Badge tone="warn">Game running · changes apply live</Badge>}
-          {problems > 0 && (
-            <button type="button" className="cursor-pointer" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })}>
-              <Badge tone="danger">
-                <Icon.Alert size={12} /> {problems} mod problem{problems === 1 ? "" : "s"}
-              </Badge>
-            </button>
-          )}
         </div>
         <div className="text-[13px] text-muted mt-0.5">
           {client.enabled

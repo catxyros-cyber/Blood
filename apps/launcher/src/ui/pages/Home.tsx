@@ -7,7 +7,7 @@ import { recommendMemory } from "../../core/perf/memory";
 import { PRESETS } from "../../core/perf/presets";
 import { activeAccount } from "../../services/accounts";
 import { app, errorMessage, navigate, updateSettings } from "../../services/app";
-import { compatibility, listContent } from "../../services/content";
+import { listContent } from "../../services/content";
 import { formatPlaytime, isRunning, play, stopGame } from "../../services/game";
 import { selectedInstance } from "../../services/instances";
 import { patchNoteBody, patchNotes, type PatchNote } from "../../services/news";
@@ -398,24 +398,15 @@ function Recommendations({ inst }: { inst: Instance }) {
   const system = useStore(app, (s) => s.system);
   const settings = useStore(app, (s) => s.settings);
   const [mods, setMods] = useState<string[] | null>(null);
-  const [problems, setProblems] = useState(0);
   useEffect(() => {
     if (inst.loader === "vanilla") return setMods([]);
     listContent(inst, "mods")
       .then((m) => {
         setMods(m.filter((x) => x.enabled).map((x) => x.meta?.id ?? ""));
-        setProblems(compatibility(inst, m).filter((i) => i.severity === "error").length);
       })
       .catch(() => setMods([]));
   }, [inst]);
   const tips: { title: string; body: string; action?: { label: string; run: () => void } }[] = [];
-  if (problems > 0) {
-    tips.push({
-      title: `${problems} mod problem${problems === 1 ? "" : "s"} found`,
-      body: "Missing dependencies, wrong loaders or conflicting mods can stop the game from starting.",
-      action: { label: "Review mods", run: () => navigate({ page: "instance", id: inst.id, tab: "content" }) },
-    });
-  }
   if (inst.loader === "vanilla") {
     tips.push({
       title: "Use Fabric for performance mods",
