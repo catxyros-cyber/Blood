@@ -9,6 +9,7 @@
  * as applied when Mojang answers with it as the active skin.
  */
 
+import { secureSkinUrl } from "../core/auth/microsoft";
 import { BloomError } from "../core/platform";
 import type { CommunitySkinInfo } from "@bloom/shared";
 import { guessModel, legacyMirrors, skinSizeProblem, type SkinModel } from "../core/skins/skin";
@@ -182,7 +183,7 @@ export function selectSkin(id: string) {
 
 /** Your account's current skin (from Mojang), as a URL the preview can show. */
 export function accountSkinUrl(): string | null {
-  return activeAccount()?.skinUrl ?? null;
+  return secureSkinUrl(activeAccount()?.skinUrl) ?? null;
 }
 
 interface MojangProfile {

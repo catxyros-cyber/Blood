@@ -29,6 +29,7 @@ import { Backdrop, useCustomBackground } from "./backdrop";
 import { DragOverlay, Sidebar, TitleBar, Toasts } from "./shell";
 import { bumpContent } from "./contentEvents";
 import { InstallPlanHost } from "./installFlow";
+import { CommandPalette } from "./commandPalette";
 
 let started = false;
 
@@ -234,6 +235,7 @@ export function App() {
       <DragOverlay />
       <PremiumWelcome />
       <InstallPlanHost />
+      {ready && <CommandPalette />}
     </div>
   );
 }

@@ -32,6 +32,16 @@ function AuraPreview({ a }: { a: AccessoryChoice }) {
   );
 }
 
+/** The 3D avatar as MOTION Client draws it (pre-rendered from the same model). */
+function AvatarPreview({ a }: { a: AccessoryChoice }) {
+  return (
+    <div className="relative h-[64px] w-[92px] grid place-items-center">
+      <div className="absolute inset-x-4 bottom-0 h-3 rounded-full blur-md opacity-60" style={{ background: a.color }} />
+      <img src={`/avatars/${a.style}.png`} alt="" className="relative h-[64px] w-auto object-contain" draggable={false} />
+    </div>
+  );
+}
+
 function Picker({ kind, title, items, current, busy, onPick }: {
   kind: AccessoryKind;
   title: string;
@@ -62,7 +72,7 @@ function Picker({ kind, title, items, current, busy, onPick }: {
             className={cx("w-[104px] h-[112px] rounded-xl border flex flex-col items-center justify-center gap-1 cursor-pointer disabled:cursor-default",
               current === a.id ? "border-accent bg-accent/10" : "border-line bg-panel-2 hover:border-white/20", !a.allowed && "opacity-50")}
           >
-            {busy === `${kind}:${a.id}` ? <Spinner size={14} /> : kind === "wings" ? <WingsPreview a={a} /> : <AuraPreview a={a} />}
+            {busy === `${kind}:${a.id}` ? <Spinner size={14} /> : kind === "wings" ? <WingsPreview a={a} /> : kind === "avatar" ? <AvatarPreview a={a} /> : <AuraPreview a={a} />}
             <span className="text-[11.5px] truncate max-w-[94px]">{a.name}</span>
             {!a.allowed && <span className="text-[10px] text-amber-200">Premium</span>}
           </button>
@@ -87,7 +97,7 @@ export function AccessoryCard() {
     try {
       await chooseAccessory(kind, id);
     } catch (e) {
-      reportError(`Couldn't change your ${kind === "wings" ? "wings" : "aura"}`, e);
+      reportError(`Couldn't change your ${kind}`, e);
     } finally {
       setBusy(null);
     }
@@ -95,18 +105,19 @@ export function AccessoryCard() {
 
   const wings = st.accessories.filter((a) => a.kind === "wings");
   const auras = st.accessories.filter((a) => a.kind === "aura");
+  const avatars = st.accessories.filter((a) => a.kind === "avatar");
   return (
     <Card className="p-5 mb-6">
       <div className="flex items-center gap-2">
         <Icon.Sparkle size={17} className="text-accent" />
-        <h3 className="font-semibold flex-1">Wings &amp; aura</h3>
+        <h3 className="font-semibold flex-1">Wings, aura &amp; 3D avatar</h3>
         {st.status === "loading" && <Spinner size={14} />}
       </div>
       <p className="text-[13px] text-muted mt-1">
-        Shown by MOTION Client: you and other MOTION players see them in game (Minecraft 1.21.11). Wings fold when you stand still and spread as you move.
+        Shown by MOTION Client: you and other MOTION players see them in game (Minecraft 1.21.11). Wings fold when you stand still and spread as you move. A 3D avatar replaces your player model, at normal player height.
       </p>
       {!account ? (
-        <p className="text-[13px] text-faint mt-3">Sign in with Microsoft to choose wings and an aura.</p>
+        <p className="text-[13px] text-faint mt-3">Sign in with Microsoft to choose wings, an aura and an avatar.</p>
       ) : st.status === "error" ? (
         <div className="mt-3 flex items-center gap-3">
           <span className="text-[13px] text-warn">{st.error}</span>
@@ -116,6 +127,7 @@ export function AccessoryCard() {
         <div className="space-y-5 mt-4">
           <Picker kind="wings" title="Wings" items={wings} current={st.wings} busy={busy} onPick={(k, id) => void pick(k, id)} />
           <Picker kind="aura" title="Aura" items={auras} current={st.aura} busy={busy} onPick={(k, id) => void pick(k, id)} />
+          <Picker kind="avatar" title="3D avatar" items={avatars} current={st.avatar} busy={busy} onPick={(k, id) => void pick(k, id)} />
         </div>
       )}
     </Card>

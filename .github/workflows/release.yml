@@ -34,30 +34,44 @@ jobs:
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
-  client-mod-12111:
-    name: MOTION Client mod (Fabric, MC 1.21.11)
+  mod-targets:
+    name: List MOTION Client build targets
     runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.t.outputs.list }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: t
+        run: echo "list=$(python3 -c 'import json; print(json.dumps([t["id"] for t in json.load(open("apps/client-mod/modern/versions.json"))["targets"]]))')" >> "$GITHUB_OUTPUT"
+
+  client-mod-modern:
+    name: MOTION Client mod (Fabric, MC ${{ matrix.target }})
+    needs: mod-targets
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: ${{ fromJSON(needs.mod-targets.outputs.list) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          # Loom 1.18 runs on Java 25; the mod itself is still compiled for Java 21.
+          # Loom runs on Java 25; 1.21.x jars are still compiled for Java 21.
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build the Minecraft 1.21.11 jar
-        working-directory: apps/client-mod/mc1.21.11
-        run: chmod +x gradlew && ./gradlew build --stacktrace
+      - name: Build the Minecraft ${{ matrix.target }} jar
+        working-directory: apps/client-mod/modern
+        run: chmod +x gradlew && ./gradlew build -Ptarget=${{ matrix.target }} --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: bloom-client-jars-12111
+          name: bloom-client-jars-modern-${{ matrix.target }}
           path: |
-            apps/client-mod/mc1.21.11/build/libs/bloomclient-fabric-1.21.11-*.jar
+            apps/client-mod/modern/build/libs/bloomclient-fabric-${{ matrix.target }}-*.jar
             !apps/client-mod/**/*-sources.jar
           if-no-files-found: error
 
   windows:
-    needs: [client-mod, client-mod-12111]
+    needs: [client-mod, client-mod-modern]
     runs-on: windows-latest
     env:
       # Job-level so step conditions can see whether signing is configured.
@@ -84,8 +98,9 @@ jobs:
           path: apps/client-mod
       - uses: actions/download-artifact@v4
         with:
-          name: bloom-client-jars-12111
-          path: apps/client-mod/mc1.21.11/build/libs
+          pattern: bloom-client-jars-modern-*
+          merge-multiple: true
+          path: apps/client-mod/modern/build/libs
       - name: Bundle MOTION Client into the installer
         run: node apps/client-mod/tools/bundle.mjs
 

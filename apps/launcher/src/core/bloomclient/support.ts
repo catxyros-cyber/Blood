@@ -9,6 +9,10 @@ export interface BundleFile {
   size: number;
   /** Minecraft version of this jar (older manifests: every file is for minecraft[0]). */
   minecraft?: string;
+  /** Versions it installs on: min inclusive, below exclusive (older manifests: exactly `minecraft`). */
+  supports?: { min: string; below: string };
+  /** How players see that range, e.g. "26.1–26.1.2". */
+  label?: string;
 }
 
 export interface Bundle {
@@ -33,9 +37,23 @@ export function fileMinecraft(bundle: Bundle, f: BundleFile): string {
   return f.minecraft ?? bundle.minecraft[0] ?? "";
 }
 
-/** The bundled jar for a loader and Minecraft version, if there is one. */
+/** Whether a bundled jar installs on this Minecraft version. */
+export function fileSupports(bundle: Bundle, f: BundleFile, gameVersion: string): boolean {
+  if (f.supports) return compareVersions(gameVersion, f.supports.min) >= 0 && compareVersions(gameVersion, f.supports.below) < 0;
+  return fileMinecraft(bundle, f) === gameVersion;
+}
+
+/** The bundled jar for a loader and Minecraft version, if there is one (an exact build wins over a range). */
 export function bundleFileFor(bundle: Bundle, loader: "fabric" | "neoforge", gameVersion: string): BundleFile | null {
-  return bundle.files.find((f) => f.loader === loader && fileMinecraft(bundle, f) === gameVersion) ?? null;
+  const mine = bundle.files.filter((f) => f.loader === loader);
+  return mine.find((f) => fileMinecraft(bundle, f) === gameVersion) ?? mine.find((f) => fileSupports(bundle, f, gameVersion)) ?? null;
+}
+
+/** Every Minecraft version (or range) a loader has a jar for, as players read them, oldest first. */
+export function supportedLabels(bundle: Bundle, loader?: "fabric" | "neoforge"): string[] {
+  const files = bundle.files.filter((f) => !loader || f.loader === loader);
+  const sorted = [...files].sort((a, b) => compareVersions(a.supports?.min ?? fileMinecraft(bundle, a), b.supports?.min ?? fileMinecraft(bundle, b)));
+  return [...new Set(sorted.map((f) => f.label ?? fileMinecraft(bundle, f)))];
 }
 
 /** Newest Minecraft version with a Fabric build (what "Create Fabric installation" uses). */
@@ -49,7 +67,7 @@ export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: 
   if (!bundle) {
     return { ok: false, reason: "not_bundled", message: "This build of the launcher doesn't include MOTION Client. Official MOTION releases do." };
   }
-  const versions = bundle.minecraft.join(", ");
+  const versions = supportedLabels(bundle).join(", ");
   if (inst.loader === "vanilla") {
     return {
       ok: false,
@@ -75,14 +93,14 @@ export function support(inst: Pick<Instance, "loader" | "gameVersion">, bundle: 
     return {
       ok: false,
       reason: "version",
-      message: `MOTION Client ${bundle.version} supports Minecraft ${versions}; this installation is ${inst.gameVersion}.`,
+      message: `MOTION Client ${bundle.version} supports Minecraft ${supportedLabels(bundle, lf).join(", ")} on ${lf === "fabric" ? "Fabric and Quilt" : "NeoForge"}; this installation is ${inst.gameVersion}.`,
       fix: "create_fabric_copy",
     };
   }
   return { ok: true, loaderFile: lf, file: file.file };
 }
 
-/** "bloomclient-fabric-1.21.1-0.1.0.jar" → "0.1.0" (null for other files). */
+/** "bloomclient-fabric-1.21.1-0.1.0.jar" → "0.1.0" (null for other files). Also "bloomclient-fabric-26.1-0.1.0.jar". */
 export function versionFromFileName(name: string): string | null {
   const m = /^bloomclient-(fabric|neoforge)-[0-9.]+-(.+?)\.jar(\.disabled)?$/i.exec(name);
   return m ? m[2]! : null;

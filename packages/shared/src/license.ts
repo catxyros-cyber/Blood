@@ -109,7 +109,7 @@ export interface CapeInfo {
 }
 
 /**
- * Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 1024×512 per frame.
+ * Cape PNGs: Minecraft's cape layout (64×32) or an HD multiple of it, up to 2048×1024 per frame.
  * Animated capes stack their frames vertically (64×32 frames → 64×(32·frames)), up to 64 frames.
  */
 export const CAPE_MAX_BYTES = 4 * 1024 * 1024;
@@ -123,11 +123,11 @@ export function capeFrames(w: number, h: number): number {
 }
 
 export function capeSizeProblem(w: number, h: number): string | null {
-  if (w < 64 || w > 1024 || w % 64 !== 0) return `A cape must be 64, 128, 256, 512 or 1024 pixels wide. This one is ${w}.`;
+  if (w < 64 || w > 2048 || w % 64 !== 0) return `A cape must be 64, 128, 256, 512, 1024 or 2048 pixels wide. This one is ${w}.`;
   const frames = capeFrames(w, h);
   if (frames < 1) return `A cape frame must be twice as wide as it is tall (64×32, 128×64, …). This image is ${w}×${h}.`;
   if (frames > CAPE_MAX_FRAMES) return `An animated cape can have at most ${CAPE_MAX_FRAMES} frames. This one has ${frames}.`;
-  if (w * h > 1024 * 512 * 16) return "That animation is too big. Use fewer frames or a smaller size.";
+  if (w * h > 2048 * 1024 * 4) return "That animation is too big. Use fewer frames or a smaller size.";
   return null;
 }
 
@@ -155,9 +155,12 @@ export type SetCapeRequest = Infer<typeof SetCapeRequest>;
 
 // --- accessories (wings & auras) ----------------------------------------------
 
-export type AccessoryKind = "wings" | "aura";
+export type AccessoryKind = "wings" | "aura" | "avatar";
 export const AURA_STYLES = ["glow", "embers", "sparkles", "orbit"] as const;
 export type AuraStyle = (typeof AURA_STYLES)[number];
+/** Built-in 3D avatar models in MOTION Client (core/avatar/AvatarModels.java). */
+export const AVATAR_MODELS = ["sahur", "tralalero", "bombardiro", "ballerina"] as const;
+export type AvatarModelId = (typeof AVATAR_MODELS)[number];
 export const ACCESSORY_MAX_BYTES = 4 * 1024 * 1024;
 
 /** An accessory the owner published. Wings have an image; auras have a colour and style. */
@@ -170,24 +173,24 @@ export interface AccessoryInfo {
   image?: string;
   /** Auras: particle colour (#rrggbb). Wings: an accent colour for previews. */
   color: string;
-  /** Auras only. */
-  style?: AuraStyle;
+  /** Auras: the particle style. Avatars: the 3D model id. */
+  style?: AuraStyle | AvatarModelId;
 }
 
 export const AdminCreateAccessory = v.object({
   name: v.string({ min: 1, max: 40, trim: true }),
-  kind: v.literal("wings", "aura"),
+  kind: v.literal("wings", "aura", "avatar"),
   access: v.literal("everyone", "premium"),
   /** Wings: base64 PNG of one wing (root on the left edge, tip on the right). */
   png: v.optional(v.string({ min: 16, max: 5_600_000 })),
   color: v.string({ min: 7, max: 7, pattern: /^#[0-9a-fA-F]{6}$/ }),
-  style: v.optional(v.literal("glow", "embers", "sparkles", "orbit")),
+  style: v.optional(v.literal("glow", "embers", "sparkles", "orbit", "sahur", "tralalero", "bombardiro", "ballerina")),
 });
 export type AdminCreateAccessory = Infer<typeof AdminCreateAccessory>;
 
 /** id "" removes the accessory of that kind. */
 export const SetAccessoryRequest = v.object({
-  kind: v.literal("wings", "aura"),
+  kind: v.literal("wings", "aura", "avatar"),
   id: v.string({ min: 0, max: 36, pattern: /^([0-9a-f-]{36})?$/ }),
 });
 export type SetAccessoryRequest = Infer<typeof SetAccessoryRequest>;

@@ -22,7 +22,7 @@ public final class CapeDirectory {
     /** After a failed request, wait this long before asking again (server down, offline). */
     public static final long RETRY_MS = 60_000;
 
-    private record Known(String capeId, Tag tag, String wingsId, Aura aura, long at) {
+    private record Known(String capeId, Tag tag, String wingsId, Aura aura, String avatar, long at) {
     }
 
     /** A MOTION aura: a colour and a particle style ("glow", "embers", "sparkles", "orbit"). */
@@ -63,6 +63,12 @@ public final class CapeDirectory {
     public synchronized Aura auraOf(String uuid) {
         Known k = known.get(normalize(uuid));
         return k == null ? null : k.aura();
+    }
+
+    /** The player's 3D avatar model id (see AvatarModels), or null. */
+    public synchronized String avatarOf(String uuid) {
+        Known k = known.get(normalize(uuid));
+        return k == null ? null : k.avatar();
     }
 
     /** Cape id for a player, or null (no cape, or not known yet). */
@@ -137,9 +143,19 @@ public final class CapeDirectory {
                 auras.put(u, new Aura(Integer.parseInt(c.substring(1), 16), st));
             }
         }
+        Map<String, String> avatars = new HashMap<>();
+        if (root.isJsonObject() && root.getAsJsonObject().get("avatars") instanceof JsonObject o) {
+            for (Map.Entry<String, JsonElement> e : o.entrySet()) {
+                String u = normalize(e.getKey());
+                if (u != null && e.getValue().isJsonPrimitive()) {
+                    String id = e.getValue().getAsString();
+                    if (dev.bloom.client.core.avatar.AvatarModels.get(id) != null) avatars.put(u, id);
+                }
+            }
+        }
         for (String u : asked) {
             pending.remove(u);
-            known.put(u, new Known(capes.get(u), tags.get(u), wings.get(u), auras.get(u), now));
+            known.put(u, new Known(capes.get(u), tags.get(u), wings.get(u), auras.get(u), avatars.get(u), now));
         }
     }
 

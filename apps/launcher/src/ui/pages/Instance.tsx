@@ -26,12 +26,16 @@ import {
   type WorldInfo,
 } from "../../services/content";
 import { isRunning, play } from "../../services/game";
+import { applyCrashFix, fixLabel } from "../../services/crashFix";
+import { listServers, worldDetails } from "../../services/worlds";
+import { quickPlaySupport, validServerAddress, type SavedServer } from "../../core/mojang/worlds";
 import { getInstance, instanceGameDir, updateInstance } from "../../services/instances";
 import { native, type JavaInfo } from "../../services/native";
 import { useStore } from "../../services/store";
 import {
   Badge,
   Button,
+  SectionTitle,
   Callout,
   Card,
   confirm,
@@ -121,7 +125,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
           { value: "content", label: "Mods" },
           { value: "resourcepacks", label: "Resource packs" },
           { value: "shaderpacks", label: "Shaders" },
-          { value: "worlds", label: "Worlds" },
+          { value: "worlds", label: "Worlds & servers" },
           { value: "logs", label: "Logs" },
           { value: "settings", label: "Settings" },
         ]}
@@ -499,51 +503,204 @@ function PacksTab({ inst, kind }: { inst: Instance; kind: "resourcepacks" | "sha
 
 function WorldsTab({ inst }: { inst: Instance }) {
   const [worlds, setWorlds] = useState<WorldInfo[] | null>(null);
+  const [servers, setServers] = useState<SavedServer[] | null>(null);
+  const [address, setAddress] = useState("");
+  const running = useStore(app, (s) => Boolean(s.running[inst.id]) || s.tasks.some((t) => t.id === `launch-${inst.id}`));
+  const support = quickPlaySupport(inst.gameVersion);
   useEffect(() => {
     listWorlds(inst).then(setWorlds).catch(() => setWorlds([]));
-  }, [inst.id]);
+    listServers(inst).then(setServers).catch(() => setServers([]));
+  }, [inst.id, running]);
+
+  const join = (target: string, name?: string) => {
+    if (!validServerAddress(target)) {
+      toast({ kind: "warning", title: "That isn't a server address", message: "Use host or host:port, like play.example.net or 203.0.113.5:25570." });
+      return;
+    }
+    void play(inst.id, { quickPlay: { kind: "server", address: target.trim() }, quickPlayName: name });
+  };
+
   return (
-    <div>
-      <div className="flex items-center mb-4">
-        <div className="text-muted text-[13px]">Worlds belong to this installation only. Back up a world by copying its folder.</div>
-        <div className="flex-1" />
-        <Button icon={<Icon.Folder size={16} />} onClick={() => void openContentFolder(inst, "saves")}>
-          Open saves folder
-        </Button>
-      </div>
-      {!worlds ? (
-        <Skeleton className="h-32 rounded-2xl" />
-      ) : worlds.length === 0 ? (
-        <Card>
-          <EmptyState icon={<Icon.Map size={24} />} title="No worlds yet">
-            Worlds you create in this installation appear here.
-          </EmptyState>
-        </Card>
+    <div className="space-y-7">
+      <section>
+        <SectionTitle
+          action={
+            <Button size="sm" icon={<Icon.Folder size={14} />} onClick={() => void openContentFolder(inst, "saves")}>
+              Open saves folder
+            </Button>
+          }
+        >
+          Worlds
+        </SectionTitle>
+        {!worlds ? (
+          <Skeleton className="h-32 rounded-2xl" />
+        ) : worlds.length === 0 ? (
+          <Card>
+            <EmptyState icon={<Icon.Map size={24} />} title="No worlds yet">
+              Worlds you create in this installation appear here, ready to open with one click.
+            </EmptyState>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {worlds.map((w) => (
+              <WorldCard key={w.path} inst={inst} world={w} canPlay={support.world} busy={running} />
+            ))}
+          </div>
+        )}
+        {worlds && worlds.length > 0 && !support.world && (
+          <p className="text-[12px] text-faint mt-2">Opening a world straight from MOTION needs Minecraft 1.20 or newer.</p>
+        )}
+      </section>
+
+      <section>
+        <SectionTitle>Servers</SectionTitle>
+        <div className="flex items-center gap-2 mb-3">
+          <TextInput value={address} onChange={setAddress} placeholder="Server address, e.g. play.example.net" icon={<Icon.Globe size={16} />} className="flex-1 max-w-md" mono onEnter={() => join(address)} />
+          <Button variant="primary" icon={<Icon.Play size={14} />} disabled={!address.trim() || running} onClick={() => join(address)}>
+            Join
+          </Button>
+        </div>
+        {!servers ? (
+          <Skeleton className="h-20 rounded-2xl" />
+        ) : servers.length === 0 ? (
+          <p className="text-[13px] text-muted">Servers you add in Minecraft's Multiplayer screen show up here, so you can join them straight from MOTION.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {servers.map((sv, i) => (
+              <Card key={`${sv.address}-${i}`} className="p-3.5 flex items-center gap-3">
+                {sv.icon ? (
+                  <img src={sv.icon} alt="" className="h-11 w-11 rounded-lg pixelated shrink-0" draggable={false} />
+                ) : (
+                  <div className="h-11 w-11 rounded-lg bg-raised border border-line grid place-items-center text-faint shrink-0">
+                    <Icon.Globe size={18} />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold truncate">{sv.name}</div>
+                  <div className="text-[12px] text-faint font-mono truncate selectable">{sv.address}</div>
+                </div>
+                <Button size="sm" variant="outline" icon={<Icon.Play size={13} />} disabled={running} onClick={() => join(sv.address, sv.name)}>
+                  Join
+                </Button>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+const MODE_LABEL: Record<string, string> = { survival: "Survival", creative: "Creative", adventure: "Adventure", spectator: "Spectator" };
+
+function WorldCard({ inst, world, canPlay, busy }: { inst: Instance; world: WorldInfo; canPlay: boolean; busy: boolean }) {
+  const [d, setD] = useState<Awaited<ReturnType<typeof worldDetails>> | null>(null);
+  useEffect(() => {
+    let live = true;
+    void worldDetails(world.path).then((x) => live && setD(x));
+    return () => {
+      live = false;
+    };
+  }, [world.path, world.modifiedMs]);
+  const name = d?.levelName ?? world.name;
+  const facts = [
+    d?.hardcore ? "Hardcore" : d?.gameMode ? MODE_LABEL[d.gameMode] : null,
+    d?.cheats ? "Cheats" : null,
+    d?.versionName,
+    `played ${timeAgo(d?.lastPlayed ?? world.modifiedMs)}`,
+  ].filter(Boolean);
+  return (
+    <Card className="p-3.5 flex items-center gap-3">
+      {d?.icon ? (
+        <img src={d.icon} alt="" className="h-11 w-11 rounded-lg shrink-0 object-cover" draggable={false} />
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {worlds.map((w) => (
-            <Card key={w.path} className="p-4 flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500/25 to-sky-500/10 grid place-items-center text-accent">
-                <Icon.Map size={20} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-semibold truncate">{w.name}</div>
-                <div className="text-[12px] text-faint">Last saved {timeAgo(w.modifiedMs)}</div>
-              </div>
-              <IconButton label="Open folder" onClick={() => void native.openPath(w.path)}>
-                <Icon.Folder size={16} />
-              </IconButton>
-            </Card>
-          ))}
+        <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500/25 to-sky-500/10 grid place-items-center text-accent shrink-0">
+          <Icon.Map size={20} />
         </div>
       )}
-    </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold truncate" title={name !== world.name ? `Folder: ${world.name}` : undefined}>
+          {name}
+        </div>
+        <div className={cx("text-[12px] truncate", d?.hardcore ? "text-danger" : "text-faint")}>{facts.join(" · ")}</div>
+      </div>
+      <IconButton label="Open folder" onClick={() => void native.openPath(world.path)}>
+        <Icon.Folder size={16} />
+      </IconButton>
+      {canPlay && (
+        <Button size="sm" variant="outline" icon={<Icon.Play size={13} />} disabled={busy} onClick={() => void play(inst.id, { quickPlay: { kind: "world", folder: world.name }, quickPlayName: name })}>
+          Play
+        </Button>
+      )}
+    </Card>
   );
 }
 
 // ---------------------------------------------------------------------------
 // Logs
 // ---------------------------------------------------------------------------
+
+/** "What went wrong": the Crash Doctor's findings for the last session, with one-click fixes. */
+function CrashDoctor({ inst }: { inst: Instance }) {
+  const session = useStore(app, (s) => s.sessions[inst.id]);
+  const running = useStore(app, (s) => Boolean(s.running[inst.id]));
+  const [busy, setBusy] = useState<number | null>(null);
+  const [hidden, setHidden] = useState<number | null>(null);
+  if (running || !session || session.exitCode === 0 || session.exitCode === null || !session.crash || hidden === session.endedAt) return null;
+  const found = session.crash;
+  return (
+    <div className="mb-3 rounded-2xl border border-danger/30 bg-danger/[0.06] p-4 animate-in">
+      <div className="flex items-start gap-3">
+        <span className="text-danger mt-0.5">
+          <Icon.Alert size={18} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold">
+            {found.length ? "What went wrong" : `The game crashed (exit code ${session.exitCode})`}
+            <span className="ml-2 text-[12px] font-normal text-faint">{new Date(session.endedAt).toLocaleTimeString()}</span>
+          </div>
+          {found.length === 0 && (
+            <p className="text-[13px] text-muted mt-1">MOTION didn't recognise the cause. The errors in red below usually name the mod involved; recently added or updated mods are the most common culprits.</p>
+          )}
+          <div className="mt-2 space-y-2.5">
+            {found.map((d, i) => (
+              <div key={d.id} className={cx("rounded-xl border border-line bg-panel/70 p-3", i > 0 && "opacity-90")}>
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[13.5px] font-semibold">{d.title}</div>
+                    <p className="text-[12.5px] text-muted mt-0.5 selectable">{d.detail}</p>
+                  </div>
+                  {d.fix && (
+                    <Button
+                      size="sm"
+                      variant={i === 0 ? "primary" : "secondary"}
+                      loading={busy === i}
+                      icon={<Icon.Wrench size={14} />}
+                      onClick={async () => {
+                        if (!d.fix) return;
+                        setBusy(i);
+                        try {
+                          await applyCrashFix(inst.id, d.fix);
+                        } finally {
+                          setBusy(null);
+                        }
+                      }}
+                    >
+                      {fixLabel(d.fix)}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <IconButton label="Dismiss" className="h-7 w-7 -mt-1 -mr-1" onClick={() => setHidden(session.endedAt)}>
+          <Icon.Close size={14} />
+        </IconButton>
+      </div>
+    </div>
+  );
+}
 
 const LEVEL_COLORS: Record<string, string> = { ERROR: "text-danger", FATAL: "text-danger", WARN: "text-warn", DEBUG: "text-faint", TRACE: "text-faint" };
 
@@ -606,6 +763,7 @@ function LogsTab({ inst }: { inst: Instance }) {
           <Icon.Folder size={16} />
         </IconButton>
       </div>
+      <CrashDoctor inst={inst} />
       <div ref={box} className="h-[460px] overflow-auto rounded-2xl border border-line bg-[#070908] p-4 font-mono text-[12px] leading-[1.6] selectable">
         {lines.length === 0 ? (
           <div className="text-faint">{running ? "Waiting for output…" : "No log yet. Press Play to start the game; its output appears here."}</div>

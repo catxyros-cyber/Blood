@@ -1,0 +1,81 @@
+# Plain renames between Minecraft / Fabric API versions, applied to the preprocessed Java sources.
+# Format: <condition> | <java regex> | <replacement>
+# The sources are written against 1.21.11 names; each rule turns them into another version's names.
+# Anything that is more than a rename belongs in an //#if block (or a compat class) instead.
+
+# ---------------------------------------------------------------- before 1.21.11
+# Identifier was ResourceLocation; ResourceKey#identifier() was location().
+MC < 1.21.11 | \bIdentifier\b | ResourceLocation
+MC < 1.21.11 | \.identifier\(\) | .location()
+MC < 1.21.11 | \bnet\.minecraft\.util\.Util\b | net.minecraft.Util
+MC < 1.21.11 | \bnet\.minecraft\.client\.model\.player\.PlayerModel\b | net.minecraft.client.model.PlayerModel
+# RenderTypes (the entity render type factories) lived on RenderType.
+MC < 1.21.11 | \bnet\.minecraft\.client\.renderer\.rendertype\.RenderTypes\b | net.minecraft.client.renderer.RenderType
+MC < 1.21.11 | \bRenderTypes\. | RenderType.
+# Camera getters.
+MC < 1.21.11 | \b(camera|camera\(\)|getMainCamera\(\))\.entity\(\) | $1.getEntity()
+MC < 1.21.11 | \b(camera|camera\(\)|getMainCamera\(\))\.position\(\) | $1.getPosition()
+MC < 1.21.11 | \b(camera|camera\(\)|getMainCamera\(\))\.blockPosition\(\) | $1.getBlockPosition()
+MC < 1.21.11 | \b(camera|camera\(\)|getMainCamera\(\))\.yRot\(\) | $1.getYRot()
+MC < 1.21.11 | \b(camera|camera\(\)|getMainCamera\(\))\.xRot\(\) | $1.getXRot()
+
+# ---------------------------------------------------------------- 26.1 and later
+# Fabric API took Mojang's names (docs.fabricmc.net/develop/porting/fabric-api).
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.keybinding\.v1\.KeyBindingHelper\b | net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper
+MC >= 26 | \bKeyBindingHelper\.registerKeyBinding\b | KeyMappingHelper.registerKeyMapping
+MC >= 26 | \bLivingEntityFeatureRendererRegistrationCallback\b | LivingEntityRenderLayerRegistrationCallback
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.rendering\.v1\.world\.WorldRenderEvents\b | net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents
+MC >= 26 | \bnet\.fabricmc\.fabric\.api\.client\.rendering\.v1\.world\.WorldRenderContext\b | net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext
+MC >= 26 | \bWorldRenderEvents\b | LevelRenderEvents
+MC >= 26 | \bWorldRenderContext\b | LevelRenderContext
+MC >= 26 | \bClientTickEvents\.(START|END)_WORLD_TICK\b | ClientTickEvents.$1_LEVEL_TICK
+# GuiGraphics became GuiGraphicsExtractor: draw*/render*/submit* prefixes dropped, *String* -> *Text*.
+MC >= 26 | \bGuiGraphics\b | GuiGraphicsExtractor
+MC >= 26 | \bg\.drawString\( | g.text(
+MC >= 26 | \bg\.drawCenteredString\( | g.centeredText(
+MC >= 26 | \bg\.renderItem\( | g.item(
+MC >= 26 | \bg\.renderOutline\( | g.outline(
+MC >= 26 | \bg\.hLine\( | g.horizontalLine(
+MC >= 26 | \bg\.vLine\( | g.verticalLine(
+# Screens and toasts: render* overrides became extract*.
+MC >= 26 | \bpublic void render\(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick\) | public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick)
+MC >= 26 | \bpublic void renderBackground\(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick\) | public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick)
+MC >= 26 | \bsuper\.render\(g, mouseX, mouseY, partialTick\) | super.extractRenderState(g, mouseX, mouseY, partialTick)
+MC >= 26 | \bpublic void render\(GuiGraphicsExtractor g, Font font, long fullyVisibleFor\) | public void extractRenderState(GuiGraphicsExtractor g, Font font, long fullyVisibleFor)
+MC >= 26 | \bg\.submitSkinRenderState\( | g.skin(
+# Mixin targets that were renamed the same way.
+MC >= 26 | method = "renderCrosshair" | method = "extractCrosshair"
+MC >= 26 | method = "renderBackground" | method = "extractBackground"
+MC >= 26 | method = "renderPanorama" | method = "extractPanorama"
+MC >= 26 | method = "renderBlurredBackground" | method = "extractBlurredBackground"
+MC >= 26 | method = "renderMenuBackground\( | method = "extractMenuBackground(
+# Entity render types: the no-cull cutout is now just "cutout".
+MC >= 26 | \bRenderTypes\.entityCutoutNoCull\( | RenderTypes.entityCutout(
+# Typed characters no longer carry modifier keys.
+MC >= 26 | typed\(\(char\) cp, event\.modifiers\(\)\) | typed((char) cp, 0)
+# The day time is now a world clock.
+MC >= 26 | \blevel\.getDayTime\(\) | level.getOverworldClockTime()
+# The options screen knew whether it was opened in a world in 26.1 and 26.2.
+MC >= 26 && MC < 26.3 | new OptionsScreen\(this, Minecraft\.getInstance\(\)\.options\) | new OptionsScreen(this, Minecraft.getInstance().options, false)
+
+# ---------------------------------------------------------------- 26.2 and later
+MC >= 26.2 | new Matrix4f\(RenderSystem\.getModelViewMatrix\(\)\) | RenderSystem.getModelViewMatrixCopy()
+
+# ---------------------------------------------------------------- 26.3 and later
+# Blaze3D's GPU API moved to Renderpearl (com.mojang.renderpearl.api.*).
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.buffers\. | com.mojang.renderpearl.api.buffers.
+MC >= 26.3 | com/mojang/blaze3d/buffers/ | com/mojang/renderpearl/api/buffers/
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.textures\. | com.mojang.renderpearl.api.textures.
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(CommandEncoder|RenderPass|RenderPassDescriptor|GpuQuery|GpuQueryPool)\b | com.mojang.renderpearl.api.commands.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.systems\.(GpuDevice|GpuBackend|DeviceInfo|GpuSurface)\b | com.mojang.renderpearl.api.device.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.pipeline\.(BlendEquation|BindGroupLayout|BlendFunction|ColorTargetState|CompiledRenderPipeline|DepthStencilState|RenderPipeline)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.platform\.(BlendFactor|BlendOp|CompareOp|PolygonMode)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.shaders\.(UniformType|ShaderType|ShaderSource)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.(PrimitiveTopology|IndexType)\b | com.mojang.renderpearl.api.pipeline.$1
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.GpuFormat\b | com.mojang.renderpearl.api.GpuFormat
+MC >= 26.3 | \bcom\.mojang\.blaze3d\.vertex\.(VertexFormat|VertexFormatElement)\b | com.mojang.renderpearl.api.vertex.$1
+# Key events: the second code is now SDL's keycode (GLFW's scancode).
+MC >= 26.3 | \bevent\.scancode\(\) | event.keycode()
+# PoseStack rotations by quaternion are rotate(...); the attack swing is swingAnimation.
+MC >= 26.3 | \.mulPose\(Axis\. | .rotate(Axis.
+MC >= 26.3 | \bstate\.attackTime\b | state.swingAnimation

@@ -1,0 +1,25 @@
+package dev.bloom.client.mixin;
+
+import dev.bloom.client.BloomClient;
+import dev.bloom.client.gui.MotionTitleScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+
+/** Replaces only Minecraft's entry title screen; every other screen remains vanilla. */
+//#if MC >= 26.2
+// 26.2 moved screen management from Minecraft into Gui.
+@Mixin(net.minecraft.client.gui.Gui.class)
+//#else
+@Mixin(Minecraft.class)
+//#endif
+public abstract class MinecraftTitleScreenMixin {
+    @ModifyVariable(method = "setScreen", at = @At("HEAD"), argsOnly = true)
+    private Screen motion$replaceTitleScreen(Screen next) {
+        dev.bloom.client.Hooks.fired("titleScreen");
+        return BloomClient.ready() && next instanceof TitleScreen ? new MotionTitleScreen() : next;
+    }
+}

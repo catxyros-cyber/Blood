@@ -93,7 +93,7 @@ export interface CommunitySkin {
 export interface Accessory {
   id: string;
   name: string;
-  kind: "wings" | "aura";
+  kind: "wings" | "aura" | "avatar";
   access: "everyone" | "premium";
   /** Wings image (PNG); null for auras. */
   png: Buffer | null;
@@ -109,6 +109,7 @@ export interface Accessory {
 export interface PlayerAccessories {
   wings: string | null;
   aura: string | null;
+  avatar: string | null;
 }
 
 export interface TaggedPlayer {
@@ -202,7 +203,7 @@ export interface Store {
   setPlayerAccessory(minecraftUuid: string, kind: Accessory["kind"], id: string | null, now: number): Promise<void>;
   getPlayerAccessories(minecraftUuid: string): Promise<PlayerAccessories>;
   /** Enabled accessories worn by these players. */
-  playerAccessories(minecraftUuids: string[]): Promise<{ wings: Record<string, string>; auras: Record<string, { color: string; style: string }> }>;
+  playerAccessories(minecraftUuids: string[]): Promise<{ wings: Record<string, string>; auras: Record<string, { color: string; style: string }>; avatars: Record<string, string> }>;
 
   /** Case-insensitive. */
   getUserByUsername(username: string): Promise<User | null>;

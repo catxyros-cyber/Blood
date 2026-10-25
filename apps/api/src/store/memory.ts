@@ -265,18 +265,25 @@ export class MemoryStore implements Store {
     else this.playerAccessoryMap.delete(k);
   }
   async getPlayerAccessories(minecraftUuid: string) {
-    return { wings: this.playerAccessoryMap.get(`${minecraftUuid}|wings`) ?? null, aura: this.playerAccessoryMap.get(`${minecraftUuid}|aura`) ?? null };
+    return {
+      wings: this.playerAccessoryMap.get(`${minecraftUuid}|wings`) ?? null,
+      aura: this.playerAccessoryMap.get(`${minecraftUuid}|aura`) ?? null,
+      avatar: this.playerAccessoryMap.get(`${minecraftUuid}|avatar`) ?? null,
+    };
   }
   async playerAccessories(uuids: string[]) {
     const wings: Record<string, string> = {};
     const auras: Record<string, { color: string; style: string }> = {};
+    const avatars: Record<string, string> = {};
     for (const u of uuids) {
       const w = this.accessories.get(this.playerAccessoryMap.get(`${u}|wings`) ?? "");
       if (w?.enabled) wings[u] = w.id;
       const a = this.accessories.get(this.playerAccessoryMap.get(`${u}|aura`) ?? "");
       if (a?.enabled) auras[u] = { color: a.color, style: a.style ?? "glow" };
+      const v = this.accessories.get(this.playerAccessoryMap.get(`${u}|avatar`) ?? "");
+      if (v?.enabled && v.style) avatars[u] = v.style;
     }
-    return { wings, auras };
+    return { wings, auras, avatars };
   }
 
 

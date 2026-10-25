@@ -9,6 +9,8 @@ public enum Category {
     PARTICLES("Particles", "particles"),
     VISUAL_EFFECTS("Visual Effects", "effects"),
     WORLD("World Appearance", "world"),
+    COMBAT("Combat", "combat"),
+    WAYPOINTS("Waypoints", "waypoints"),
     PERFORMANCE("Performance", "performance"),
     PROFILES("Profiles", "profiles"),
     KEYBINDS("Keybinds", "keybinds");

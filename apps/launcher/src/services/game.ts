@@ -3,10 +3,11 @@ import { API_URL } from "./premium";
 
 import { beforeLaunch as bloomClientBeforeLaunch } from "./bloomClient";
 import { prepareInstance } from "../core/install/installer";
-import { buildLaunchCommand } from "../core/mojang/args";
+import { buildLaunchCommand, type QuickPlay } from "../core/mojang/args";
 import { LogParser, detectMilestone } from "../core/mojang/logparse";
+import { diagnoseCrash, type CrashDiagnosis } from "../core/mojang/crash";
+import { JVM_PRESETS, recommendMemory } from "../core/perf/memory";
 import { javaComponentFor } from "../core/mojang/version";
-import { JVM_PRESETS } from "../core/perf/memory";
 import { gcLogArg, gcStats, type GcStats } from "../core/perf/gclog";
 import { BloomError } from "../core/platform";
 import type { Instance } from "../core/instances/model";
@@ -53,11 +54,29 @@ async function resolveJava(inst: Instance, required: number, managed?: { path: s
   return { path: custom, major: info.major };
 }
 
+/** Remember the server/world for "Jump back in" (most recent first, at most 6). */
+function rememberPlay(inst: Instance, opts: PlayOptions): Instance["recentPlays"] {
+  const qp = opts.quickPlay;
+  if (!qp) return inst.recentPlays;
+  const target = qp.kind === "server" ? qp.address : qp.folder;
+  const entry = { kind: qp.kind, target, name: opts.quickPlayName || target, at: Date.now() };
+  return [entry, ...(inst.recentPlays ?? []).filter((r) => !(r.kind === qp.kind && r.target === target))].slice(0, 6);
+}
+
 export function gcLogPath(instanceId: string): string {
   return path(L().logs, "gc", `${instanceId}.log`);
 }
 
-export async function play(instanceId: string, opts: { repair?: boolean; ignoreModProblems?: boolean } = {}) {
+export interface PlayOptions {
+  repair?: boolean;
+  ignoreModProblems?: boolean;
+  /** Join this server or open this world once the game has loaded. */
+  quickPlay?: QuickPlay;
+  /** Display name for the quick-play target (server or world name), remembered for "Jump back in". */
+  quickPlayName?: string;
+}
+
+export async function play(instanceId: string, opts: PlayOptions = {}) {
   const inst = getInstance(instanceId);
   if (!inst) return;
   if (isRunning(instanceId) || isPreparing(instanceId)) return;
@@ -149,6 +168,7 @@ export async function play(instanceId: string, opts: { repair?: boolean; ignoreM
       extraGameArgs: [...s.gameArgs, ...(inst.gameArgs ?? [])],
       resolution: inst.resolution ?? s.resolution ?? undefined,
       fullscreen: inst.fullscreen ?? s.fullscreen,
+      quickPlay: opts.quickPlay,
     });
 
     parsers.set(instanceId, new LogParser());
@@ -164,7 +184,7 @@ export async function play(instanceId: string, opts: { repair?: boolean; ignoreM
     app.set((st) => ({
       running: { ...st.running, [instanceId]: { instanceId, pid, startedAt: Date.now(), prepareMs, maxHeapMb: memory.maxMb, javaMajor: java.major } },
     }));
-    await saveInstance({ ...inst, lastPlayedAt: Date.now() });
+    await saveInstance({ ...(getInstance(instanceId) ?? inst), lastPlayedAt: Date.now(), recentPlays: rememberPlay(inst, opts) });
     endTask(taskId);
     if (s.onLaunch === "minimize") {
       const { getCurrentWindow } = await import("@tauri-apps/api/window");
@@ -211,6 +231,10 @@ export function initGameEvents() {
 
   void events.onGameExit(async (e) => {
     const run = app.get().running[e.instanceId];
+    // A half-read XML log event must not leak into the next launch's output.
+    parsers.delete(e.instanceId);
+    const crashed = !e.killed && e.code !== 0 && e.code !== null;
+    const crash = crashed ? diagnose(e.instanceId, e.code, run) : undefined;
     app.set((st) => {
       const running = { ...st.running };
       delete running[e.instanceId];
@@ -232,6 +256,7 @@ export function initGameEvents() {
         gc: gc ?? run.gc,
         maxHeapMb: run.maxHeapMb,
         exitCode: e.code,
+        crash,
       };
       app.set((st) => ({ sessions: { ...st.sessions, [e.instanceId]: summary } }));
     }
@@ -245,13 +270,21 @@ export function initGameEvents() {
       // Presets saved before options.txt existed can now be applied.
       await applyPendingPreset(inst).catch(() => undefined);
     }
-    if (!e.killed && e.code !== 0 && e.code !== null && inst) {
+    if (crashed && inst) {
+      if (!run) {
+        // Re-attached game (no session yet): keep the diagnosis for the Logs tab anyway.
+        app.set((st) => ({ sessions: { ...st.sessions, [e.instanceId]: { instanceId: e.instanceId, startedAt: Date.now(), endedAt: Date.now(), prepareMs: 0, exitCode: e.code, crash } } }));
+      }
+      const top = crash?.[0];
+      const viewLog = () => app.set({ route: { page: "instance", id: inst.id, tab: "logs" } });
       toast(
         {
           kind: "error",
-          title: `${inst.name} crashed (exit code ${e.code})`,
-          message: "Check the log for the cause. Recently added mods are the most common culprit.",
-          action: { label: "View log", run: () => app.set({ route: { page: "instance", id: inst.id, tab: "logs" } }) },
+          title: top ? `${inst.name} crashed: ${top.title}` : `${inst.name} crashed (exit code ${e.code})`,
+          message: top ? top.detail : "MOTION couldn't recognise the cause. Check the log; recently added mods are the most common culprit.",
+          action: top?.fix
+            ? { label: "Fix it", run: () => void import("./crashFix").then((m) => (top.fix ? m.applyCrashFix(inst.id, top.fix) : undefined)) }
+            : { label: "View log", run: viewLog },
         },
         0,
       );
@@ -282,6 +315,20 @@ export function initGameEvents() {
       }
     })
     .catch(() => undefined);
+}
+
+/** Crash Doctor: explain the crash from the end of the game's output. */
+function diagnose(instanceId: string, code: number | null, run: { maxHeapMb?: number; javaMajor?: number } | undefined): CrashDiagnosis[] {
+  try {
+    const lines = (app.get().logs[instanceId] ?? []).map((l) => l.text);
+    const system = app.get().system;
+    const inst = getInstance(instanceId);
+    const maxSafeMb = system ? recommendMemory(system.totalMemory / 1_048_576, { modded: inst?.loader !== "vanilla", modCount: 0 }).maxSafeMb : undefined;
+    return diagnoseCrash(lines, { exitCode: code, maxHeapMb: run?.maxHeapMb, maxSafeMb, javaMajor: run?.javaMajor });
+  } catch (err) {
+    console.warn("crash diagnosis failed", err);
+    return [];
+  }
 }
 
 async function readGc(instanceId: string): Promise<GcStats | undefined> {

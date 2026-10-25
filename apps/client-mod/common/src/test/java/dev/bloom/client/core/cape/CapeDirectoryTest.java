@@ -62,4 +62,13 @@ public class CapeDirectoryTest {
         assertEquals(new CapeDirectory.Aura(0x39FF88, "embers"), d.auraOf(A));
         assertNull("bad colours are ignored", d.auraOf(B));
     }
+
+    @Test
+    public void avatarsAreParsedAndUnknownModelsIgnored() {
+        CapeDirectory d = new CapeDirectory();
+        java.util.List<String> asked = d.due(java.util.List.of(A32, B), 0);
+        d.answer(asked, "{\"avatars\":{\"" + A32 + "\":\"sahur\",\"" + B + "\":\"godzilla\"}}", 0);
+        assertEquals("sahur", d.avatarOf(A32));
+        assertNull(d.avatarOf(B));
+    }
 }

@@ -1,6 +1,7 @@
 import type { OsName } from "../platform";
 import { rulesAllow, type RuleEnv } from "./rules";
 import type { ArgumentValue, VersionJson } from "./types";
+import { splitAddress } from "./worlds";
 
 export interface LaunchContext {
   env: RuleEnv;
@@ -30,7 +31,11 @@ export interface LaunchContext {
   extraGameArgs: string[];
   resolution?: { width: number; height: number };
   fullscreen?: boolean;
+  /** Join a server or open a world as soon as the game has loaded. */
+  quickPlay?: QuickPlay;
 }
+
+export type QuickPlay = { kind: "server"; address: string } | { kind: "world"; folder: string };
 
 export interface LaunchCommand {
   jvmArgs: string[];
@@ -65,10 +70,12 @@ export function buildLaunchCommand(version: VersionJson, ctx: LaunchContext): La
     is_demo_user: false,
     has_custom_resolution: Boolean(ctx.resolution),
     has_quick_plays_support: false,
-    is_quick_play_singleplayer: false,
-    is_quick_play_multiplayer: false,
+    is_quick_play_singleplayer: ctx.quickPlay?.kind === "world",
+    is_quick_play_multiplayer: ctx.quickPlay?.kind === "server",
     is_quick_play_realms: false,
   };
+  // Versions before 1.20 have no Quick Play arguments in their version JSON.
+  const hasQuickPlay = JSON.stringify(version.arguments?.game ?? []).includes("is_quick_play_");
   const env: RuleEnv = { ...ctx.env, features };
   const vars: Record<string, string> = {
     auth_player_name: ctx.username,
@@ -93,6 +100,11 @@ export function buildLaunchCommand(version: VersionJson, ctx: LaunchContext): La
     library_directory: ctx.librariesDir,
     resolution_width: String(ctx.resolution?.width ?? ""),
     resolution_height: String(ctx.resolution?.height ?? ""),
+    // Mojang's JSON has used both spellings.
+    quickPlayMultiplayer: ctx.quickPlay?.kind === "server" ? ctx.quickPlay.address : "",
+    quick_play_multiplayer: ctx.quickPlay?.kind === "server" ? ctx.quickPlay.address : "",
+    quickPlaySingleplayer: ctx.quickPlay?.kind === "world" ? ctx.quickPlay.folder : "",
+    quick_play_singleplayer: ctx.quickPlay?.kind === "world" ? ctx.quickPlay.folder : "",
   };
 
   let jvmTemplate: string[];
@@ -126,6 +138,17 @@ export function buildLaunchCommand(version: VersionJson, ctx: LaunchContext): La
   jvmArgs.push(...jvmTemplate.map((a) => substitute(a, vars)));
 
   const gameArgs = gameTemplate.map((a) => substitute(a, vars));
+  const qp = ctx.quickPlay;
+  if (qp?.kind === "server" && !gameArgs.includes("--quickPlayMultiplayer")) {
+    if (hasQuickPlay) gameArgs.push("--quickPlayMultiplayer", qp.address);
+    else {
+      // 1.19 and older: the classic --server/--port arguments.
+      const { host, port } = splitAddress(qp.address);
+      gameArgs.push("--server", host, "--port", String(port));
+    }
+  }
+  // Loader profiles sometimes replace Mojang's argument list; add it ourselves if it went missing.
+  if (qp?.kind === "world" && hasQuickPlay && !gameArgs.includes("--quickPlaySingleplayer")) gameArgs.push("--quickPlaySingleplayer", qp.folder);
   if (ctx.fullscreen) gameArgs.push("--fullscreen");
   gameArgs.push(...ctx.extraGameArgs);
 
