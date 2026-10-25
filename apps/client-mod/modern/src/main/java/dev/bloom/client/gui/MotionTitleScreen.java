@@ -154,7 +154,7 @@ public final class MotionTitleScreen extends Screen {
         float targetX = width * 0.79f;
         float x = targetX + (width + 60f - targetX) * (1f - travel);
         float turn = entering ? 1f - smoothstep(0.72f, 1f, walkIn) : 0f;
-        float walkSpeed = entering ? 0.9f * (1f - smoothstep(0.65f, 0.95f, walkIn)) : 0f;
+        float walkSpeed = entering ? 0.55f * (1f - smoothstep(0.65f, 0.95f, walkIn)) : 0f;
         float bob = walkSpeed * Math.abs((float) Math.sin(now * 0.018f * 0.6662f)) * 2.5f;
         float y = height * 0.30f - bob;
         drawUserAvatar(g, x, y, walkSpeed, -18f + turn * WALK_TURN, now);
