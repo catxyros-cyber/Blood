@@ -307,5 +307,6 @@ tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.Client
     // MOTION records which of its (optional, so silently skippable) hooks ran; the test lists the rest.
     jvmArgs.add('-Dmotion.smoke=true')
     jvmArgs.add('-Dmotion.smoke.avatar=sahur')
-    useXVFB = true
+    // CI provides a 24-bit display with GLX (26.3's SDL window needs one); otherwise Loom starts Xvfb.
+    useXVFB = System.getenv('DISPLAY') == null
 }

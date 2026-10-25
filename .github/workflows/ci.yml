@@ -120,7 +120,10 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri mesa-utils > /dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb libgl1-mesa-dri libglx-mesa0 mesa-utils > /dev/null
+          Xvfb :99 -screen 0 1920x1080x24 +extension GLX +render -nolisten tcp &
+          export DISPLAY=:99 SDL_VIDEO_DRIVER=x11
+          sleep 3; glxinfo -B | head -12 || true
           set -o pipefail
           ./gradlew runProductionClientGameTest -Ptarget=${{ matrix.target }} -Psmoke --stacktrace 2>&1 | tee "$RUNNER_TEMP/smoke.log"
       - name: Publish the build log to a ci-logs branch
