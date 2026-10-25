@@ -33,7 +33,7 @@ function list(path: string) {
   return [...names].map(([name, isDir]) => ({ name, path: prefix + name, isDir, size: 10, modifiedMs: now }));
 }
 
-const notFound = (path: string) => ({ kind: "not_found", message: `Not found: ${path}` });
+const notFound = (path: string) => ({ code: "not_found", message: `Not found: ${path}` });
 
 mockWindows("main");
 mockIPC((cmd, a: any) => {
@@ -86,7 +86,7 @@ mockIPC((cmd, a: any) => {
       return null;
     default:
       if (cmd.startsWith("plugin:")) return null;
-      throw { kind: "unsupported", message: `preview: ${cmd}` };
+      throw { code: "unsupported", message: `preview: ${cmd}` };
   }
 });
 

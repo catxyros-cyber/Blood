@@ -23,9 +23,7 @@ import { LicenseCard } from "../licenseCard";
 import { TeamCard } from "../teamCard";
 import { installSummary, type InstallSummary } from "../../services/dashboard";
 import { installUpdate, updateState } from "../../services/updater";
-import { perfStates } from "../../services/bloodMods";
 import { activeLayout, HUD_WIDGETS, widgetVisible } from "../../core/bloomclient/modules";
-import type { ContentItem } from "../../services/content";
 
 /** `quiet` renders a neutral button, for lists where many installations each have one. */
 export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instance; size?: "lg" | "md"; quiet?: boolean }) {
@@ -190,7 +188,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
           <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
         </div>
-        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[272px] shrink-0 hidden lg:block">
+        <div className="rounded-xl border border-line bg-panel/90 p-4 w-[272px] shrink-0 hidden min-[1200px]:block">
           <div className="flex items-center justify-between gap-3 mb-3.5 whitespace-nowrap">
             <div className="text-[13px] font-semibold">This installation</div>
             <span className={cx("text-[11px] font-semibold inline-flex items-center gap-1", summary?.filesReady ? "text-accent" : "text-faint")} title={summary?.filesReady ? "Game files are downloaded" : "Game files download on first launch"}>
@@ -351,70 +349,6 @@ function BloomClientCard({ inst }: { inst: Instance }) {
             </Button>
           </>
         )}
-      </div>
-    </Card>
-  );
-}
-
-const CORE_PERF = ["sodium", "lithium", "ferrite-core", "immediatelyfast", "entityculling"];
-
-/** Installed mods at a glance: counts, the core performance mods and problems. */
-function ModsOverview({ inst }: { inst: Instance }) {
-  const [mods, setMods] = useState<ContentItem[] | null>(null);
-  useEffect(() => {
-    setMods(null);
-    if (inst.loader === "vanilla") return setMods([]);
-    listContent(inst, "mods").then(setMods).catch(() => setMods([]));
-  }, [inst]);
-  if (inst.loader === "vanilla") {
-    return (
-      <Card className="p-4">
-        <div className="text-[13px] text-muted leading-relaxed">This is a vanilla installation, so it has no mods. Create a Fabric installation to use performance mods and MOTION Client.</div>
-        <Button size="sm" className="mt-3" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>
-          See options
-        </Button>
-      </Card>
-    );
-  }
-  if (!mods) return <Skeleton className="h-[150px] rounded-xl" />;
-  const enabled = mods.filter((m) => m.enabled).length;
-  const disabled = mods.length - enabled;
-  const problems = compatibility(inst, mods).filter((i) => i.severity === "error").length;
-  const perf = perfStates(mods, CORE_PERF);
-  return (
-    <Card className="p-4">
-      <div className="flex items-baseline gap-4">
-        <div>
-          <span className="font-display text-[24px] font-semibold tabular-nums">{enabled}</span>
-          <span className="text-[13px] text-muted ml-1.5">enabled</span>
-        </div>
-        <div className="text-[13px] text-faint">{disabled} disabled</div>
-        <span className="flex-1" />
-        {problems > 0 ? <Badge tone="danger">{problems} problem{problems === 1 ? "" : "s"}</Badge> : <Badge tone="accent">No conflicts</Badge>}
-      </div>
-      <div className="mt-3 space-y-1.5">
-        {perf.map((p) => {
-          const st = p.item ? (p.item.enabled ? "on" : "off") : "missing";
-          return (
-            <div key={p.info.slug} className="flex items-center gap-2 text-[13px]">
-              <span className={cx("h-4 w-4 rounded grid place-items-center shrink-0", st === "on" ? "bg-accent text-accent-ink" : st === "off" ? "bg-line-strong text-muted" : "border border-line-strong")}>
-                {st === "on" && <Icon.Check size={11} strokeWidth={3} />}
-                {st === "off" && <Icon.Minus size={11} strokeWidth={3} />}
-              </span>
-              <span className={st === "missing" ? "text-faint" : ""}>{p.info.title}</span>
-              <span className="flex-1" />
-              <span className="text-faint text-[12px]">{st === "on" ? "Active" : st === "off" ? "Disabled" : "Not installed"}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="grid grid-cols-2 gap-2 mt-3">
-        <Button size="sm" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })}>
-          Manage mods
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => navigate({ page: "mods", instanceId: inst.id, category: "performance" })}>
-          Performance mods
-        </Button>
       </div>
     </Card>
   );
@@ -631,12 +565,12 @@ export function HomePage() {
         </section>
       )}
 
-      <div className="px-10 pb-12 grid grid-cols-[1fr_320px] gap-8">
+      <div className="px-10 pb-12 grid grid-cols-[1fr_288px] min-[1200px]:grid-cols-[1fr_320px] gap-8">
         <div className="space-y-10 min-w-0">
           {recent.length > 0 && (
             <section>
               <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "library" })}>View all</Button>}>Recently played</SectionTitle>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 min-[1200px]:grid-cols-2 gap-3">
                 {recent.map((i) => (
                   <Card key={i.id} className={cx("p-3 flex items-center gap-3", i.id === inst?.id && "border-line-strong bg-raised/60")} onClick={() => updateSettings({ selectedInstanceId: i.id })}>
                     <InstanceIcon inst={i} size={40} />
@@ -666,12 +600,6 @@ export function HomePage() {
         <aside className="space-y-8">
           <LauncherStatus />
           {inst && <BloomClientCard inst={inst} />}
-          {inst && (
-            <section>
-              <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })}>Manage</Button>}>Installed mods</SectionTitle>
-              <ModsOverview inst={inst} />
-            </section>
-          )}
           {inst && (
             <section>
               <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>Open</Button>}>Performance tips</SectionTitle>

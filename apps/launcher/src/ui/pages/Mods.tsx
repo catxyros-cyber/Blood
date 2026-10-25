@@ -152,7 +152,8 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
   function blocked(m: ModuleInfo): string | null {
     if (m.kind === "hud" || m.kind === "setting") {
       if (!client) return "Checking MOTION Client…";
-      if (!client.enabled) return client.support.ok ? "Install MOTION Client for this installation first." : client.support.message;
+      // The MOTION Client card at the top explains why; each module only needs a short pointer.
+      if (!client.enabled) return client.support.ok ? "Install MOTION Client above to use this." : "Needs MOTION Client (see above).";
     }
     if (m.kind === "perf" && inst.loader === "vanilla") return "Needs a mod loader (Fabric, Quilt, Forge or NeoForge).";
     return null;
@@ -490,7 +491,7 @@ function ModuleCard({
       </div>
       <p className="text-[13px] text-muted mt-3 leading-relaxed">{description}</p>
       {m.note && <p className="text-[12px] text-faint mt-1.5 leading-relaxed">{m.note}</p>}
-      {blocked && <p className="text-[12px] text-warn mt-1.5">{blocked}</p>}
+      {blocked && <p className="text-[12px] text-faint mt-1.5">{blocked}</p>}
       {m.kind === "vanilla" && running && <p className="text-[12px] text-warn mt-1.5">Close Minecraft to change this here.</p>}
       {configurable && !blocked && view && (
         <>

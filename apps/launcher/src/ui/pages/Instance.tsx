@@ -83,31 +83,30 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
       <button type="button" className="flex items-center gap-1 text-muted hover:text-fg text-[13px] mb-5 cursor-pointer" onClick={() => navigate({ page: "library" })}>
         <Icon.ChevronLeft size={16} /> Library
       </button>
-      <div className="flex items-center gap-4 mb-7">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-4 mb-7">
         <InstanceIcon inst={inst} size={56} />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-[24px] font-semibold tracking-tight truncate">{inst.name}</h1>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[13px] text-muted">
+          <div className="flex flex-wrap items-center gap-y-1 mt-1 text-[13px] text-muted">
             {[
               `Minecraft ${inst.gameVersion}`,
               loaderLabel(inst),
               inst.modpack ? `${inst.modpack.name}${inst.modpack.version ? ` ${inst.modpack.version}` : ""}` : null,
               inst.performancePreset ? `${PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "Custom"} preset` : null,
+              inst.bloomClient?.enabled ? "MOTION Client" : null,
             ]
-              .filter(Boolean)
-              .join(" · ")}
-            {inst.bloomClient?.enabled && (
-              <>
-                <span>·</span>
-                <span className="inline-flex items-center gap-1 text-fg/80">
-                  <Icon.Motion size={12} className="text-accent" /> MOTION Client
+              .filter((x): x is string => Boolean(x))
+              .map((part, i) => (
+                // Each detail stays on one line; the row wraps between them.
+                <span key={part} className="whitespace-nowrap">
+                  {i > 0 && <span className="mx-1.5 text-faint">·</span>}
+                  {part === "MOTION Client" ? <span className="text-fg/80">{part}</span> : part}
                 </span>
-              </>
-            )}
+              ))}
           </div>
           <LiveStats instanceId={inst.id} />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => navigate({ page: "mods", instanceId: inst.id })}
@@ -302,7 +301,7 @@ function ModsTab({ inst }: { inst: Instance }) {
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <TextInput value={query} onChange={setQuery} placeholder="Search mods" icon={<Icon.Search size={16} />} className="w-64" />
         <div className="flex-1" />
-        <Button variant="primary" icon={<Icon.Compass size={16} />} onClick={() => navigate({ page: "browse", type: "mod", instanceId: inst.id })} disabled={inst.loader === "vanilla"}>
+        <Button icon={<Icon.Compass size={16} />} onClick={() => navigate({ page: "browse", type: "mod", instanceId: inst.id })} disabled={inst.loader === "vanilla"}>
           Browse mods
         </Button>
         <Button icon={<Icon.Plus size={16} />} onClick={() => void pickAndImport(inst, "mods").then(bumpContent).catch((e) => reportError("Import failed", e))}>
@@ -466,7 +465,7 @@ function PacksTab({ inst, kind }: { inst: Instance; kind: "resourcepacks" | "sha
       <div className="flex items-center gap-2 mb-4">
         <div className="text-muted text-[13px]">Select packs in Minecraft's {shader ? "Video Settings → Shader Packs" : "Options → Resource Packs"} screen.</div>
         <div className="flex-1" />
-        <Button variant="primary" icon={<Icon.Compass size={16} />} onClick={() => navigate({ page: "browse", type: shader ? "shader" : "resourcepack", instanceId: inst.id })}>
+        <Button icon={<Icon.Compass size={16} />} onClick={() => navigate({ page: "browse", type: shader ? "shader" : "resourcepack", instanceId: inst.id })}>
           Browse {shader ? "shaders" : "packs"}
         </Button>
         <Button icon={<Icon.Plus size={16} />} onClick={() => void pickAndImport(inst, kind).then(bumpContent).catch((e) => reportError("Import failed", e))}>

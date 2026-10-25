@@ -118,9 +118,10 @@ export function isBloomError(e: unknown): e is BloomError {
 /** Normalise anything thrown (including `{code, message}` objects from Rust) into a BloomError. */
 export function toBloomError(e: unknown): BloomError {
   if (e instanceof BloomError) return e;
-  if (typeof e === "object" && e !== null && "code" in e && "message" in e) {
-    const o = e as { code: unknown; message: unknown };
-    return new BloomError(String(o.code), String(o.message));
+  if (typeof e === "object" && e !== null && "message" in e) {
+    // Rust errors arrive as { code, message }; anything else with a message keeps its text.
+    const o = e as { code?: unknown; message: unknown };
+    return new BloomError(o.code === undefined ? "unknown" : String(o.code), String(o.message));
   }
   if (e instanceof Error) return new BloomError("unknown", e.message);
   return new BloomError("unknown", String(e));
