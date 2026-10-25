@@ -206,13 +206,13 @@ function HeroCharacter() {
   const model = useSkinModel(src, accountSkin ? (applied?.model ?? "classic") : (saved?.model ?? "classic"));
   if (!src) return null;
   return (
-    <div className="hero-character group relative w-[250px] shrink-0 self-end -mb-6 hidden min-[1120px]:block">
+    <div className="hero-character group relative w-[280px] shrink-0 self-end -mb-6 hidden min-[1120px]:block">
       {account && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 px-2 h-6 inline-flex items-center rounded bg-black/50 text-[13px] font-medium whitespace-nowrap pointer-events-none">
           {account.username}
         </div>
       )}
-      <SkinViewer src={src} model={model} height={340} fill={0.76} sway animate={!reduce} initial={{ x: -6, y: -26 }} />
+      <SkinViewer src={src} model={model} height={390} fill={0.82} sway animate={!reduce} initial={{ x: -6, y: -26 }} />
       <button
         type="button"
         onClick={() => navigate({ page: "skins" })}
