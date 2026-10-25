@@ -222,7 +222,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
             >
               {c.icon}
               {c.label}
-              <span className={cx("tabular-nums text-[11.5px]", category === c.value ? "opacity-80" : "text-faint")}>{counts[c.value]}</span>
+              <span className={cx("tabular-nums text-[12px]", category === c.value ? "opacity-80" : "text-faint")}>{counts[c.value]}</span>
             </button>
           ))}
         </div>
@@ -409,7 +409,7 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
               <span className="h-8 w-8 rounded-lg bg-accent/12 text-accent grid place-items-center">{icons[p.id]}</span>
               <span className="font-semibold">{p.name}</span>
             </div>
-            <p className="text-[12.5px] text-muted mt-2 leading-relaxed flex-1">{p.description}</p>
+            <p className="text-[13px] text-muted mt-2 leading-relaxed flex-1">{p.description}</p>
             <Button className="mt-3" size="sm" variant={p.id === "performance" ? "primary" : "outline"} disabled={disabled} loading={busy === p.id} onClick={() => void apply(p)}>
               Apply
             </Button>
@@ -494,7 +494,7 @@ function ModuleCard({
       {m.kind === "vanilla" && running && <p className="text-[12px] text-warn mt-1.5">Close Minecraft to change this here.</p>}
       {configurable && !blocked && view && (
         <>
-          <button type="button" onClick={() => setOpen((o) => !o)} className="mt-3 text-[12.5px] font-semibold text-accent hover:underline cursor-pointer inline-flex items-center gap-1">
+          <button type="button" onClick={() => setOpen((o) => !o)} className="mt-3 text-[13px] font-semibold text-accent hover:underline cursor-pointer inline-flex items-center gap-1">
             <Icon.Sliders size={13} /> {open ? "Hide options" : "Options"}
           </button>
           {open && (
@@ -516,7 +516,7 @@ function WidgetOptions({ inst, widget, view, onView }: { inst: Instance; widget:
   const save = (p: Promise<SettingsView>) => p.then(onView).catch((e) => reportError("Couldn't save", e));
   return (
     <div className="space-y-2.5">
-      <div className="text-[11.5px] text-faint">
+      <div className="text-[12px] text-faint">
         Layout: <span className="text-muted">{layout.name}</span> · move widgets with the in-game HUD editor (Right Shift → HUD Editor).
       </div>
       {info.options.map((opt) => (
@@ -541,7 +541,7 @@ function WidgetOptions({ inst, widget, view, onView }: { inst: Instance; widget:
                   type="button"
                   onClick={() => void save(setSettings(inst, { [POTION_HIDDEN_KEY]: isHidden ? hidden.filter((h) => h !== e.id) : [...hidden, e.id] }))}
                   className={cx(
-                    "h-6 px-2 rounded-md border text-[11.5px] cursor-pointer transition-colors",
+                    "h-6 px-2 rounded-md border text-[12px] cursor-pointer transition-colors",
                     isHidden ? "border-accent/40 bg-accent/12 text-fg line-through decoration-accent/70" : "border-line text-muted hover:text-fg",
                   )}
                 >

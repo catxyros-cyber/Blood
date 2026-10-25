@@ -50,7 +50,7 @@ export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instanc
         onClick={() => void stopGame(inst.id)}
         className={cx(
           "group rounded-[10px] border border-line-strong bg-panel font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer hover:border-danger/50 hover:text-danger",
-          big ? "h-12 w-44 text-[15px]" : "h-10 w-32 text-[14px]",
+          big ? "h-12 w-44 text-[16px]" : "h-10 w-32 text-[14px]",
         )}
       >
         <span className="inline-flex rounded-full h-2 w-2 bg-accent group-hover:bg-danger" />
@@ -66,7 +66,7 @@ export function PlayButton({ inst, size = "lg", quiet = false }: { inst: Instanc
       className={cx(
         "font-semibold flex items-center justify-center cursor-pointer",
         quiet ? "rounded-lg border border-line-strong bg-raised hover:bg-line-strong transition-colors" : "play-button transition-[filter]",
-        big ? "h-12 w-44 text-[16px] gap-2.5" : quiet ? "h-9 w-24 text-[13.5px] gap-1.5" : "h-10 w-32 text-[14px] gap-2",
+        big ? "h-12 w-44 text-[16px] gap-2.5" : quiet ? "h-9 w-24 text-[14px] gap-1.5" : "h-10 w-32 text-[14px] gap-2",
       )}
     >
       <Icon.Play size={big ? 18 : quiet ? 13 : 15} className={quiet ? "text-accent" : undefined} />
@@ -138,7 +138,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             <Menu
               align="left"
               trigger={
-                <button type="button" className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-white/25 transition-colors" title="Switch Minecraft version">
+                <button type="button" className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium cursor-pointer hover:border-white/25 transition-colors" title="Switch Minecraft version">
                   <Icon.Cube size={13} /> Minecraft {inst.gameVersion} <Icon.ChevronDown size={12} className="opacity-70" />
                 </button>
               }
@@ -154,10 +154,10 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
                 { label: "Play another version…", icon: <Icon.Plus size={15} />, onClick: onCreate },
               ]}
             />
-            <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[12.5px] font-medium">{loaderLabel(inst)}</span>
-            {inst.modpack && <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[12.5px] font-medium">{inst.modpack.name}</span>}
+            <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[13px] font-medium">{loaderLabel(inst)}</span>
+            {inst.modpack && <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[13px] font-medium">{inst.modpack.name}</span>}
             {client?.enabled && (
-              <span className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium">
+              <span className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium">
                 <Icon.Motion size={13} className="text-accent" /> MOTION Client {client.installedVersion}
               </span>
             )}
@@ -180,7 +180,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
               { label: "Manage installations", icon: <Icon.Library size={15} />, onClick: () => navigate({ page: "library" }) },
             ]}
           />
-          <div className="text-[13.5px] text-fg/70 mt-1.5">{played}</div>
+          <div className="text-[14px] text-fg/70 mt-1.5">{played}</div>
           <div className="flex flex-wrap items-center gap-2 mt-6">
             <PlayButton inst={inst} />
             <HeroAction icon={<Icon.Hud size={16} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} />
@@ -224,7 +224,7 @@ function JumpBackIn({ inst }: { inst: Instance }) {
   if (!recent.length) return null;
   return (
     <div className="flex flex-wrap items-center gap-2 mt-4">
-      <span className="text-[12.5px] text-fg/60 mr-1">Jump back in</span>
+      <span className="text-[13px] text-fg/60 mr-1">Jump back in</span>
       {recent.map((r) => (
         <button
           key={`${r.kind}:${r.target}`}
@@ -232,7 +232,7 @@ function JumpBackIn({ inst }: { inst: Instance }) {
           disabled={busy}
           title={r.kind === "server" ? `Join ${r.target}` : `Open the world ${r.name}`}
           onClick={() => void play(inst.id, { quickPlay: r.kind === "server" ? { kind: "server", address: r.target } : { kind: "world", folder: r.target }, quickPlayName: r.name })}
-          className="chip rounded-md h-7 pl-2 pr-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-medium cursor-pointer hover:border-white/25 transition-colors disabled:opacity-50 disabled:pointer-events-none max-w-[220px]"
+          className="chip rounded-md h-7 pl-2 pr-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium cursor-pointer hover:border-white/25 transition-colors disabled:opacity-50 disabled:pointer-events-none max-w-[220px]"
         >
           {r.kind === "server" ? <Icon.Globe size={14} /> : <Icon.Map size={14} />}
           <span className="truncate">{r.name}</span>
@@ -247,7 +247,7 @@ function HeroAction({ icon, label, onClick }: { icon: ReactNode; label: string; 
     <button
       type="button"
       onClick={onClick}
-      className="h-12 px-4 rounded-[10px] inline-flex items-center gap-2 text-[13.5px] font-medium transition-colors cursor-pointer border border-white/10 bg-black/35 hover:bg-black/50 hover:border-white/20"
+      className="h-12 px-4 rounded-[10px] inline-flex items-center gap-2 text-[14px] font-medium transition-colors cursor-pointer border border-white/10 bg-black/35 hover:bg-black/50 hover:border-white/20"
     >
       <span className="text-fg/70">{icon}</span>
       {label}
@@ -317,7 +317,7 @@ function BloomClientCard({ inst }: { inst: Instance }) {
                 <div className="flex flex-wrap gap-1">
                   {shown.length ? (
                     shown.map((w) => (
-                      <span key={w.id} className="h-6 px-2 rounded-md bg-raised border border-line text-[11.5px] text-muted inline-flex items-center">
+                      <span key={w.id} className="h-6 px-2 rounded-md bg-raised border border-line text-[12px] text-muted inline-flex items-center">
                         {w.name}
                       </span>
                     ))
@@ -385,10 +385,10 @@ function ModsOverview({ inst }: { inst: Instance }) {
     <Card className="p-4">
       <div className="flex items-baseline gap-4">
         <div>
-          <span className="font-display text-[22px] font-semibold tabular-nums">{enabled}</span>
-          <span className="text-[12.5px] text-muted ml-1.5">enabled</span>
+          <span className="font-display text-[24px] font-semibold tabular-nums">{enabled}</span>
+          <span className="text-[13px] text-muted ml-1.5">enabled</span>
         </div>
-        <div className="text-[12.5px] text-faint">{disabled} disabled</div>
+        <div className="text-[13px] text-faint">{disabled} disabled</div>
         <span className="flex-1" />
         {problems > 0 ? <Badge tone="danger">{problems} problem{problems === 1 ? "" : "s"}</Badge> : <Badge tone="accent">No conflicts</Badge>}
       </div>
@@ -396,14 +396,14 @@ function ModsOverview({ inst }: { inst: Instance }) {
         {perf.map((p) => {
           const st = p.item ? (p.item.enabled ? "on" : "off") : "missing";
           return (
-            <div key={p.info.slug} className="flex items-center gap-2 text-[12.5px]">
+            <div key={p.info.slug} className="flex items-center gap-2 text-[13px]">
               <span className={cx("h-4 w-4 rounded grid place-items-center shrink-0", st === "on" ? "bg-accent text-accent-ink" : st === "off" ? "bg-line-strong text-muted" : "border border-line-strong")}>
                 {st === "on" && <Icon.Check size={11} strokeWidth={3} />}
                 {st === "off" && <Icon.Minus size={11} strokeWidth={3} />}
               </span>
               <span className={st === "missing" ? "text-faint" : ""}>{p.info.title}</span>
               <span className="flex-1" />
-              <span className="text-faint text-[11.5px]">{st === "on" ? "Active" : st === "off" ? "Disabled" : "Not installed"}</span>
+              <span className="text-faint text-[12px]">{st === "on" ? "Active" : st === "off" ? "Disabled" : "Not installed"}</span>
             </div>
           );
         })}
@@ -454,7 +454,7 @@ function LauncherStatus() {
 }
 
 function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="inline-flex items-center h-5 px-1.5 rounded border border-line-strong bg-raised text-[11.5px] font-mono text-fg">{children}</kbd>;
+  return <kbd className="inline-flex items-center h-5 px-1.5 rounded border border-line-strong bg-raised text-[12px] font-mono text-fg">{children}</kbd>;
 }
 
 function Recommendations({ inst }: { inst: Instance }) {
@@ -513,7 +513,7 @@ function Recommendations({ inst }: { inst: Instance }) {
     <Card className="divide-y divide-line">
       {tips.slice(0, 2).map((t) => (
         <div key={t.title} className="p-4">
-          <div className="font-semibold text-[13.5px]">{t.title}</div>
+          <div className="font-semibold text-[14px]">{t.title}</div>
           <div className="text-[13px] text-muted mt-1 leading-relaxed">{t.body}</div>
           {t.action && (
             <button type="button" onClick={t.action.run} className="text-[13px] font-medium text-accent mt-2 hover:underline cursor-pointer">
@@ -641,8 +641,8 @@ export function HomePage() {
                   <Card key={i.id} className={cx("p-3 flex items-center gap-3", i.id === inst?.id && "border-line-strong bg-raised/60")} onClick={() => updateSettings({ selectedInstanceId: i.id })}>
                     <InstanceIcon inst={i} size={40} />
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-[13.5px] truncate">{i.name}</div>
-                      <div className="text-[12.5px] text-muted truncate">
+                      <div className="font-semibold text-[14px] truncate">{i.name}</div>
+                      <div className="text-[13px] text-muted truncate">
                         {i.gameVersion} · {loaderLabel(i)}
                       </div>
                       <div className="text-[12px] text-faint truncate">{isRunning(i.id) ? "Running now" : `Played ${timeAgo(i.lastPlayedAt)}`}</div>

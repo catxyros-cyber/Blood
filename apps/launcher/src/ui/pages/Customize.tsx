@@ -183,7 +183,7 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
                       active ? "border-accent/60 bg-accent/10" : "border-line bg-panel-2 hover:border-line-strong",
                     )}
                   >
-                    <div className="flex items-center gap-1.5 font-semibold text-[13.5px]">
+                    <div className="flex items-center gap-1.5 font-semibold text-[14px]">
                       {active && <Icon.Check size={14} className="text-accent" />}
                       {p.name}
                     </div>
@@ -210,8 +210,8 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
             </div>
             <div className="flex items-center justify-between mt-5 pt-4 border-t border-line">
               <div>
-                <div className="font-medium text-[13.5px]">Effect quality</div>
-                <div className="text-[12.5px] text-muted">Particle limits and effect distance. MOTION also lowers effects briefly if your FPS drops.</div>
+                <div className="font-medium text-[14px]">Effect quality</div>
+                <div className="text-[13px] text-muted">Particle limits and effect distance. MOTION also lowers effects briefly if your FPS drops.</div>
               </div>
               <Segmented
                 value={get<string>("perf.quality", "medium") as "low" | "medium" | "high"}
@@ -228,8 +228,8 @@ function CustomizeInstance({ inst }: { inst: Instance }) {
           <Section title="In-game menu" subtitle="The MOTION menu has every setting, the HUD editor and profile management.">
             <div className="flex items-center justify-between gap-6">
               <div>
-                <div className="font-medium text-[13.5px]">Menu theme</div>
-                <div className="text-[12.5px] text-muted">Colours of the MOTION menu and HUD accents.</div>
+                <div className="font-medium text-[14px]">Menu theme</div>
+                <div className="text-[13px] text-muted">Colours of the MOTION menu and HUD accents.</div>
               </div>
               <div className="flex items-center gap-2">
                 {MENU_THEMES.map((t) => {
@@ -262,7 +262,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
   return (
     <Card className="p-5">
       <div className="mb-4">
-        <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+        <h2 className="font-display text-[16px] font-semibold">{title}</h2>
         {subtitle && <p className="text-[13px] text-muted mt-0.5">{subtitle}</p>}
       </div>
       {children}
@@ -288,7 +288,7 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="font-display text-[18px] font-semibold">MOTION Client</div>
+            <div className="font-display text-[16px] font-semibold">MOTION Client</div>
             {st.enabled ? <Badge tone="accent">Installed {st.installedVersion}</Badge> : sup.ok ? <Badge>Not installed</Badge> : <Badge tone="warn">Not available here</Badge>}
             {st.bundle && <Badge>Bundled {st.bundle.version}</Badge>}
           </div>
@@ -303,7 +303,7 @@ function StatusCard({ inst, st, busy, running, onEnable, onDisable, onCreateCopy
           {st.notes.length > 0 && (
             <ul className="mt-3 space-y-1.5">
               {st.notes.map((n) => (
-                <li key={n.title} className="flex items-start gap-2 text-[12.5px]">
+                <li key={n.title} className="flex items-start gap-2 text-[13px]">
                   <span className={cx("mt-0.5", n.level === "ok" ? "text-accent" : n.level === "info" ? "text-info" : n.level === "warning" ? "text-warn" : "text-danger")}>
                     {n.level === "ok" ? <Icon.Check size={14} /> : n.level === "info" ? <Icon.Info size={14} /> : <Icon.Alert size={14} />}
                   </span>
@@ -406,8 +406,8 @@ function SkyboxSection({ inst, view, custom, onPick, onImported }: {
                   </div>
                 )}
                 <div className="absolute left-1.5 top-1.5 flex gap-1">
-                  {day === s.id && <span className="px-1.5 rounded bg-black/55 text-[10px] font-bold tracking-wide text-white">DAY</span>}
-                  {night === s.id && <span className="px-1.5 rounded bg-black/55 text-[10px] font-bold tracking-wide text-white">NIGHT</span>}
+                  {day === s.id && <span className="px-1.5 rounded bg-black/55 text-[11px] font-bold tracking-wide text-white">DAY</span>}
+                  {night === s.id && <span className="px-1.5 rounded bg-black/55 text-[11px] font-bold tracking-wide text-white">NIGHT</span>}
                 </div>
               </div>
               <div className={cx("px-2 py-1.5 text-[12px] font-medium truncate", selected ? "text-accent" : "text-fg")}>{s.name}</div>
@@ -438,8 +438,8 @@ function MenuKeyRow({ inst, running }: { inst: Instance; running: boolean }) {
   return (
     <div className="flex items-center justify-between gap-6 mt-5 pt-4 border-t border-line">
       <div>
-        <div className="font-medium text-[13.5px]">Menu key</div>
-        <div className="text-[12.5px] text-muted">
+        <div className="font-medium text-[14px]">Menu key</div>
+        <div className="text-[13px] text-muted">
           {running ? "Close the game to change it here, or change it in game under Keybinds." : "Stored in Minecraft's options.txt; also changeable in game."}
           {conflicts.length > 0 && <span className="text-warn"> Also used by: {conflicts.join(", ")}.</span>}
         </div>
@@ -504,14 +504,14 @@ function Preview({ view, custom, installed }: { view: SettingsView | null; custo
             MOTION menu · {MENU_THEMES.find((t) => t.id === theme)?.name ?? "Crimson"}
           </div>
         </div>
-        <div className="p-3.5 text-[12.5px] text-muted leading-relaxed">
+        <div className="p-3.5 text-[13px] text-muted leading-relaxed">
           <span className="text-fg font-medium">{sky?.name ?? customSky?.name ?? (id === "none" ? "Vanilla sky" : "Custom sky")}</span>
           {" — "}
           {sky?.description ?? (customSky ? "Your imported skybox." : "Minecraft's own sky.")}
           <div className="text-faint mt-1.5">A preview: in game the look also depends on your world, time of day, weather and shaders.</div>
         </div>
       </Card>
-      {!installed && <div className="text-[12.5px] text-faint px-1">Add MOTION Client to this installation to change these settings.</div>}
+      {!installed && <div className="text-[13px] text-faint px-1">Add MOTION Client to this installation to change these settings.</div>}
     </div>
   );
 }

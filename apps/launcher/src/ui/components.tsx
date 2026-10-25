@@ -28,7 +28,7 @@ export function Button({
   children,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: "sm" | "md" | "lg"; icon?: ReactNode; loading?: boolean }) {
-  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-[13.5px] gap-2 rounded-lg", lg: "h-11 px-5 text-[14.5px] gap-2 rounded-[10px]" };
+  const sizes = { sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg", md: "h-9 px-3.5 text-[13px] gap-2 rounded-lg", lg: "h-11 px-5 text-[14px] gap-2 rounded-lg" };
   return (
     <button
       type="button"
@@ -81,7 +81,7 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
     <div className="flex items-end justify-between gap-6 mb-7">
       <div className="min-w-0">
         <h1 className="font-display text-[24px] font-semibold tracking-tight leading-tight truncate">{title}</h1>
-        {subtitle && <p className="text-muted text-[13.5px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
+        {subtitle && <p className="text-muted text-[14px] mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
@@ -105,7 +105,7 @@ export function Badge({ tone = "neutral", children, className }: { tone?: "neutr
     danger: "bg-danger/10 text-danger border-danger/25",
     info: "bg-info/10 text-info border-info/25",
   };
-  return <span className={cx("inline-flex items-center gap-1 h-[22px] px-2 rounded-md border text-[11.5px] font-medium", tones[tone], className)}>{children}</span>;
+  return <span className={cx("inline-flex items-center gap-1 h-[22px] px-2 rounded-md border text-[12px] font-medium", tones[tone], className)}>{children}</span>;
 }
 
 export function Spinner({ size = 16 }: { size?: number }) {
@@ -135,7 +135,7 @@ export function EmptyState({ icon, title, children, action }: { icon?: ReactNode
     <div className="flex flex-col items-center text-center py-16 px-6 animate-in">
       <div className="h-12 w-12 rounded-xl bg-raised border border-line grid place-items-center text-muted mb-4">{icon ?? <Icon.Sparkle size={22} />}</div>
       <h3 className="font-display text-[16px] font-semibold">{title}</h3>
-      {children && <p className="text-muted text-[13.5px] mt-1.5 max-w-md leading-relaxed">{children}</p>}
+      {children && <p className="text-muted text-[14px] mt-1.5 max-w-md leading-relaxed">{children}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );
@@ -158,7 +158,7 @@ export function Callout({ tone = "info", title, children, action }: { tone?: "in
       <div className="mt-0.5 shrink-0">{icon}</div>
       <div className="flex-1 min-w-0 text-fg">
         {title && <div className="font-semibold mb-0.5 break-words">{title}</div>}
-        <div className="text-muted text-[13.5px] leading-relaxed break-words">{children}</div>
+        <div className="text-muted text-[14px] leading-relaxed break-words">{children}</div>
       </div>
       {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
@@ -174,7 +174,7 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
     <label className="block">
       <div className="text-[13px] font-medium mb-1.5">{label}</div>
       {children}
-      {hint && <div className="text-[12.5px] text-faint mt-1.5 leading-relaxed">{hint}</div>}
+      {hint && <div className="text-[13px] text-faint mt-1.5 leading-relaxed">{hint}</div>}
     </label>
   );
 }
@@ -298,7 +298,7 @@ export function Tabs<T extends string>({ value, onChange, tabs }: { value: T; on
           type="button"
           onClick={() => onChange(t.value)}
           className={cx(
-            "relative h-10 px-3.5 text-[13.5px] font-medium transition-colors cursor-pointer",
+            "relative h-10 px-3.5 text-[14px] font-medium transition-colors cursor-pointer",
             value === t.value ? "text-fg" : "text-muted hover:text-fg",
           )}
         >

@@ -120,7 +120,7 @@ export function InstallPlanHost() {
       }
     >
       <div className="space-y-4">
-        <div className="text-muted text-[13.5px]">
+        <div className="text-muted text-[14px]">
           Into <span className="text-fg font-medium">{inst.name}</span> (Minecraft {inst.gameVersion}).
         </div>
         {plan.warnings.map((w) => (
@@ -139,10 +139,10 @@ export function InstallPlanHost() {
           </Callout>
         ))}
         <div>
-          <div className="text-[12.5px] text-muted font-medium mb-2">Will be installed</div>
+          <div className="text-[13px] text-muted font-medium mb-2">Will be installed</div>
           <div className="space-y-1.5">
             {plan.installs.map((i) => (
-              <div key={i.projectId} className="flex items-center gap-2.5 text-[13.5px] rounded-lg bg-panel-2 border border-line px-3 py-2">
+              <div key={i.projectId} className="flex items-center gap-2.5 text-[14px] rounded-lg bg-panel-2 border border-line px-3 py-2">
                 <Icon.Download size={15} className="text-accent shrink-0" />
                 <span className="font-medium truncate">{i.title}</span>
                 <span className="text-faint truncate">{i.version.version_number}</span>
@@ -151,10 +151,10 @@ export function InstallPlanHost() {
               </div>
             ))}
           </div>
-          {deps.length > 0 && <p className="text-[12.5px] text-faint mt-2">Required libraries are installed automatically from Modrinth. Files already in the folder are kept.</p>}
+          {deps.length > 0 && <p className="text-[13px] text-faint mt-2">Required libraries are installed automatically from Modrinth. Files already in the folder are kept.</p>}
         </div>
         {plan.optional.length > 0 && (
-          <div className="text-[12.5px] text-muted">
+          <div className="text-[13px] text-muted">
             Optional extras you can add later: {plan.optional.map((o) => o.title).join(", ")}.
           </div>
         )}

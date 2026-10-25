@@ -28,7 +28,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
   return (
     <Card className="p-5">
       <div className="mb-4">
-        <h2 className="font-display text-[17px] font-semibold">{title}</h2>
+        <h2 className="font-display text-[16px] font-semibold">{title}</h2>
         {subtitle && <p className="text-[13px] text-muted mt-0.5">{subtitle}</p>}
       </div>
       {children}
@@ -107,8 +107,8 @@ export function MenuBackgroundSection({ inst, get, write }: { inst: Instance; ge
       </div>
       <div className="grid grid-cols-2 gap-x-8 gap-y-4 mt-5 pt-4 border-t border-line">
         <div>
-          <div className="font-medium text-[13.5px]">Over the world</div>
-          <div className="text-[12.5px] text-muted mb-2">How much the background covers the world behind pause and option menus while you play.</div>
+          <div className="font-medium text-[14px]">Over the world</div>
+          <div className="text-[13px] text-muted mb-2">How much the background covers the world behind pause and option menus while you play.</div>
           <Slider value={inWorld} min={0} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => void write({ "ui.menuBackgroundInWorld": v })} />
         </div>
         <Toggle
@@ -133,8 +133,8 @@ export function CapeMotionSection({ get, write }: { get: Get; write: Write }) {
           description="Capes hang still while you stand and drift back gently as you move, instead of snapping."
         />
         <div>
-          <div className="font-medium text-[13.5px]">Cape sway</div>
-          <div className="text-[12.5px] text-muted mb-2">How far capes swing back while moving.</div>
+          <div className="font-medium text-[14px]">Cape sway</div>
+          <div className="text-[13px] text-muted mb-2">How far capes swing back while moving.</div>
           <Slider value={get<number>("capes.sway", 0.55)} min={0.1} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => void write({ "capes.sway": v })} />
         </div>
         <Toggle checked={get<boolean>("accessories.wings", true) === true} onChange={(v) => void write({ "accessories.wings": v })} label="Show wings" description="Wings MOTION players picked, yours too in third person." />

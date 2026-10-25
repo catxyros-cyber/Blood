@@ -42,7 +42,7 @@ export function TitleBar() {
           >
             <Icon.Search size={13} />
             <span className="flex-1 text-left truncate">Search</span>
-            <kbd className="font-mono text-[10.5px] opacity-70">Ctrl K</kbd>
+            <kbd className="font-mono text-[11px] opacity-70">Ctrl K</kbd>
           </button>
         )}
       </div>
@@ -89,7 +89,7 @@ function NavItem({ icon, label, active, onClick, badge }: { icon: ReactNode; lab
       type="button"
       onClick={onClick}
       className={cx(
-        "group relative flex items-center gap-3 h-9 w-full px-3 rounded-lg text-[13.5px] font-medium transition-colors cursor-pointer",
+        "group relative flex items-center gap-3 h-9 w-full px-3 rounded-lg text-[14px] font-medium transition-colors cursor-pointer",
         active ? "bg-white/[0.07] text-fg" : "text-muted hover:text-fg hover:bg-white/[0.04]",
       )}
     >
@@ -173,7 +173,7 @@ export function Sidebar() {
                 </span>
               )}
             </div>
-            <div className="text-[11.5px] text-faint truncate">{account ? (premium ? "Premium" : "Microsoft account") : "Add an account to play"}</div>
+            <div className="text-[12px] text-faint truncate">{account ? (premium ? "Premium" : "Microsoft account") : "Add an account to play"}</div>
           </div>
         </button>
         <IconButton
@@ -197,8 +197,8 @@ function TaskTray() {
         <div key={t.id} className="rounded-lg border border-line bg-panel-2 p-3 animate-in">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] font-semibold truncate">{t.title}</div>
-              <div className="text-[11.5px] text-muted truncate">{t.stage}</div>
+              <div className="text-[13px] font-semibold truncate">{t.title}</div>
+              <div className="text-[12px] text-muted truncate">{t.stage}</div>
             </div>
             {t.cancellable && (
               <IconButton
@@ -235,7 +235,7 @@ export function Toasts() {
         <div key={t.id} className="flex gap-3 rounded-xl border border-line-strong bg-raised p-3.5 shadow-xl shadow-black/40 animate-in">
           <div className={cx("mt-0.5", tone[t.kind].c)}>{tone[t.kind].icon}</div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-[13.5px]">{t.title}</div>
+            <div className="font-semibold text-[14px]">{t.title}</div>
             {t.message && <div className="text-[13px] text-muted mt-0.5 leading-relaxed selectable">{t.message}</div>}
             {t.action && (
               <button

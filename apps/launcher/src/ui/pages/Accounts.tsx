@@ -64,13 +64,13 @@ function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) 
             <div className="flex items-center justify-center gap-2 text-[14px]">
               <Spinner size={15} /> Finish signing in in the Microsoft window…
             </div>
-            <div className="mt-4 rounded-xl border border-line bg-panel-2 p-3 text-left text-[12.5px] text-muted leading-relaxed">
+            <div className="mt-4 rounded-xl border border-line bg-panel-2 p-3 text-left text-[13px] text-muted leading-relaxed">
               <div className="font-semibold text-fg mb-1">No passkey?</div>
               Microsoft accounts are passwordless by default, so Microsoft may offer a passkey or an emailed code first. Either works here. To use a password
               instead, choose <span className="text-fg">Other ways to sign in</span> → <span className="text-fg">Use your password</span> on Microsoft's page
               (only if your account has one). If Microsoft emails you a code, type it into that same window.
             </div>
-            <p className="text-[12.5px] text-faint mt-3 leading-relaxed">
+            <p className="text-[13px] text-faint mt-3 leading-relaxed">
               The page is Microsoft's own, so MOTION never sees your password. It only receives a sign-in token, stored in the Windows Credential Manager.
             </p>
             <button type="button" className="mt-5 text-[13px] text-accent hover:underline cursor-pointer" onClick={() => setMode("code")}>
@@ -142,7 +142,7 @@ function CodeSignInModal({ open, onClose }: { open: boolean; onClose: () => void
           </div>
         ) : (
           <div className="text-center">
-            <p className="text-muted text-[13.5px]">Your browser opened Microsoft's sign-in page. Enter this code there:</p>
+            <p className="text-muted text-[14px]">Your browser opened Microsoft's sign-in page. Enter this code there:</p>
             <button
               type="button"
               className="mt-4 mx-auto flex items-center gap-3 font-mono text-[30px] font-bold tracking-[0.18em] px-6 py-3 rounded-xl bg-panel-2 border border-line-strong hover:border-accent/50 cursor-pointer selectable"
@@ -244,7 +244,7 @@ export function AccountsPage() {
                       {isActive && <Badge tone="accent">Active</Badge>}
                       {isPremium && <PremiumBadge />}
                     </div>
-                    <div className="text-[12.5px] text-faint mt-0.5">
+                    <div className="text-[13px] text-faint mt-0.5">
                       Verified {timeAgo(a.lastVerifiedAt)} · <span className="font-mono">{a.id.slice(0, 8)}…</span>
                     </div>
                   </div>

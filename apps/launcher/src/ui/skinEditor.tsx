@@ -232,7 +232,7 @@ export function SkinEditor({ png, model, onChange, onSave, onImport }: {
       type="button"
       title={label}
       onClick={() => setTool(t)}
-      className={cx("h-9 px-3 rounded-lg border flex items-center gap-1.5 text-[12.5px] cursor-pointer", tool === t ? "border-accent bg-accent/15 text-fg" : "border-line bg-panel-2 text-muted hover:text-fg")}
+      className={cx("h-9 px-3 rounded-lg border flex items-center gap-1.5 text-[13px] cursor-pointer", tool === t ? "border-accent bg-accent/15 text-fg" : "border-line bg-panel-2 text-muted hover:text-fg")}
     >
       {icon}
       {label}

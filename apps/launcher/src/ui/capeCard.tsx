@@ -136,9 +136,9 @@ export function CapeCard() {
                 st.capeId === c.id ? "border-accent bg-accent/10" : "border-line bg-panel-2 hover:border-white/20", !c.allowed && "opacity-50")}
             >
               {busy === c.id ? <Spinner size={14} /> : <CapeFront cape={c} />}
-              <span className="text-[11.5px] truncate max-w-[94px]">{c.name}</span>
-              {(c.width ?? 64) > 64 && c.allowed && <span className="text-[9.5px] font-semibold tracking-wider text-accent">HD</span>}
-              {!c.allowed && <span className="text-[10px] text-amber-200">Premium</span>}
+              <span className="text-[12px] truncate max-w-[94px]">{c.name}</span>
+              {(c.width ?? 64) > 64 && c.allowed && <span className="text-[11px] font-semibold tracking-wider text-accent">HD</span>}
+              {!c.allowed && <span className="text-[11px] text-amber-200">Premium</span>}
             </button>
           ))}
         </div>

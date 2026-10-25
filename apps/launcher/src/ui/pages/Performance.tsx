@@ -120,7 +120,7 @@ function Presets({ inst }: { inst: Instance }) {
                 {active && <Badge tone="accent">Applied</Badge>}
               </div>
               <p className="text-[13px] text-muted mt-1 leading-relaxed flex-1">{p.tagline}</p>
-              <div className="text-[11.5px] text-faint mt-2">{summary(p.video)}</div>
+              <div className="text-[12px] text-faint mt-2">{summary(p.video)}</div>
               <div className="mt-3">
                 {locked ? (
                   <Button size="sm" variant="outline" icon={<Icon.Lock size={14} />} onClick={() => navigate({ page: "premium" })}>
@@ -162,9 +162,9 @@ function Presets({ inst }: { inst: Instance }) {
           <p className="text-muted">Your settings already matched this preset — nothing changed.</p>
         ) : (
           <div className="space-y-1.5">
-            <p className="text-muted text-[13.5px] mb-3">A backup was saved first. Changes take effect next time you play:</p>
+            <p className="text-muted text-[14px] mb-3">A backup was saved first. Changes take effect next time you play:</p>
             {result?.changes.map((c) => (
-              <div key={c.key} className="flex items-center gap-2 text-[13.5px] bg-panel-2 border border-line rounded-lg px-3 py-2">
+              <div key={c.key} className="flex items-center gap-2 text-[14px] bg-panel-2 border border-line rounded-lg px-3 py-2">
                 <Icon.Check size={15} className="text-accent" />
                 <span className="font-medium">{c.label}</span>
                 <span className="flex-1" />
@@ -329,9 +329,9 @@ function PerfModRow({ s, inst }: { s: PerfModStatus; inst: Instance }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="font-semibold">{s.mod.title}</span>
-          <span className="text-[11.5px] text-faint capitalize">{s.mod.category}</span>
+          <span className="text-[12px] text-faint capitalize">{s.mod.category}</span>
         </div>
-        <div className="text-[12.5px] text-muted leading-snug">{s.mod.what}</div>
+        <div className="text-[13px] text-muted leading-snug">{s.mod.what}</div>
       </div>
       {s.installed ? (
         <Badge tone="accent">Installed</Badge>
@@ -444,7 +444,7 @@ function MemoryJava({ inst }: { inst: Instance }) {
     <Card className="p-5 space-y-4">
       <h3 className="font-semibold">Memory and Java</h3>
       {system ? (
-        <div className="grid grid-cols-2 gap-3 text-[12.5px]">
+        <div className="grid grid-cols-2 gap-3 text-[13px]">
           <div>
             <div className="text-faint">RAM</div>
             <div>{gb(Math.round(system.totalMemory / 1_048_576))} total</div>
@@ -501,7 +501,7 @@ function Monitor({ inst }: { inst: Instance }) {
       <SectionTitle action={run ? <span className="text-[12px] text-accent">● Live</span> : last ? <span className="text-[12px] text-faint">Last session {new Date(last.endedAt).toLocaleTimeString()}</span> : undefined}>Monitor</SectionTitle>
       {!run && !last ? (
         <Card className="p-5">
-          <div className="text-muted text-[13.5px]">Start the game to see live statistics: process memory, CPU, launch time and — measured from the JVM's own log — heap usage and garbage-collection pauses.</div>
+          <div className="text-muted text-[14px]">Start the game to see live statistics: process memory, CPU, launch time and — measured from the JVM's own log — heap usage and garbage-collection pauses.</div>
         </Card>
       ) : (
         <div className="space-y-3">
@@ -707,7 +707,7 @@ function Backups({ inst }: { inst: Instance }) {
               <Icon.Clock size={14} className="text-faint shrink-0" />
               <div className="min-w-0 flex-1">
                 <div className="truncate">{b.reason}</div>
-                <div className="text-[11.5px] text-faint">{new Date(b.at).toLocaleString()}</div>
+                <div className="text-[12px] text-faint">{new Date(b.at).toLocaleString()}</div>
               </div>
               <Button size="sm" variant="ghost" icon={<Icon.Undo size={14} />} onClick={() => void restore(b)}>
                 Restore

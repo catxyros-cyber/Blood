@@ -101,7 +101,7 @@ export function PremiumPage() {
                 return (
                   <Card key={id} className={cx("p-5 flex flex-col", featured && "border-accent/40")}>
                     <div className="flex items-center gap-2">
-                      <div className="font-display font-semibold text-[17px]">{PLAN_COPY[id].title}</div>
+                      <div className="font-display font-semibold text-[16px]">{PLAN_COPY[id].title}</div>
                       {featured && saving > 0 && <Badge tone="accent">Save {saving}%</Badge>}
                     </div>
                     <div className="mt-3 flex items-baseline gap-1.5">
@@ -127,7 +127,7 @@ export function PremiumPage() {
 
           {/* Features */}
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-[1fr_90px_90px] px-5 py-3 text-[12.5px] text-muted font-medium bg-panel-2 border-b border-line">
+            <div className="grid grid-cols-[1fr_90px_90px] px-5 py-3 text-[13px] text-muted font-medium bg-panel-2 border-b border-line">
               <span>Feature</span>
               <span className="text-center">Free</span>
               <span className="text-center">Premium</span>
@@ -136,7 +136,7 @@ export function PremiumPage() {
               <div key={f.key} className="grid grid-cols-[1fr_90px_90px] px-5 py-3 border-b border-line last:border-b-0 items-center">
                 <div>
                   <div className="font-medium text-[14px]">{f.title}</div>
-                  <div className="text-[12.5px] text-muted">{f.description}</div>
+                  <div className="text-[13px] text-muted">{f.description}</div>
                 </div>
                 <div className="text-center">{f.free ? <Icon.Check size={17} className="inline text-accent" /> : <span className="text-faint">—</span>}</div>
                 <div className="text-center">
@@ -158,7 +158,7 @@ export function PremiumPage() {
               <BloodMark size={36} />
               <div className="min-w-0 flex-1">
                 <div className="font-semibold">{premium.user ? premium.user.username : account ? account.username : "Not signed in"}</div>
-                <div className="text-[12.5px] text-muted">
+                <div className="text-[13px] text-muted">
                   {premium.status === "connecting" ? "Connecting…" : premium.status === "error" ? "Couldn't reach MOTION's server" : premium.user ? "MOTION account" : account ? "Not connected yet" : "Sign in with Microsoft first"}
                 </div>
               </div>
@@ -249,12 +249,12 @@ export function PremiumPage() {
                 {premium.sync.state === "error" && <div className="text-[12px] text-danger">{premium.sync.error}</div>}
               </div>
             ) : (
-              <div className="text-[12.5px] text-faint mt-3">{hasPremium && !account ? "Sign in with Microsoft to use cloud sync." : "Available with Premium."}</div>
+              <div className="text-[13px] text-faint mt-3">{hasPremium && !account ? "Sign in with Microsoft to use cloud sync." : "Available with Premium."}</div>
             )}
           </Card>
 
           {premium.user && (
-            <button type="button" className="text-[12.5px] text-faint hover:text-muted cursor-pointer" onClick={() => run("signout", signOutBloom)}>
+            <button type="button" className="text-[13px] text-faint hover:text-muted cursor-pointer" onClick={() => run("signout", signOutBloom)}>
               Disconnect MOTION account on this PC
             </button>
           )}

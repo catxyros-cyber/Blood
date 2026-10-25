@@ -111,7 +111,7 @@ export function InstancePage({ id, tab = "content" }: { id: string; tab?: Tab })
           <button
             type="button"
             onClick={() => navigate({ page: "mods", instanceId: inst.id })}
-            className="h-10 px-4 rounded-lg inline-flex items-center gap-2 text-[13.5px] font-medium border border-line bg-raised hover:bg-line-strong transition-colors cursor-pointer"
+            className="h-10 px-4 rounded-lg inline-flex items-center gap-2 text-[14px] font-medium border border-line bg-raised hover:bg-line-strong transition-colors cursor-pointer"
           >
             <Icon.Hud size={16} className="text-muted" /> MOTION Mods
           </button>
@@ -335,7 +335,7 @@ function ModsTab({ inst }: { inst: Instance }) {
                   Update all
                 </Button>
               ) : (
-                <span className="flex items-center gap-2 text-[12.5px] text-muted">
+                <span className="flex items-center gap-2 text-[13px] text-muted">
                   Update all <PremiumBadge />
                 </span>
               )
@@ -372,7 +372,7 @@ function ModsTab({ inst }: { inst: Instance }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold truncate">{m.meta?.name ?? m.modrinth?.title ?? m.baseName}</span>
-                    {(m.meta?.version || m.modrinth?.versionNumber) && <span className="text-[12.5px] text-muted truncate">{m.modrinth?.versionNumber ?? m.meta?.version}</span>}
+                    {(m.meta?.version || m.modrinth?.versionNumber) && <span className="text-[13px] text-muted truncate">{m.modrinth?.versionNumber ?? m.meta?.version}</span>}
                     {issue && (
                       <span title={issue.message} className={issue.severity === "error" ? "text-danger" : "text-warn"}>
                         <Icon.Alert size={14} />
@@ -678,8 +678,8 @@ function CrashDoctor({ inst }: { inst: Instance }) {
               <div key={d.id} className={cx("rounded-xl border border-line bg-panel/70 p-3", i > 0 && "opacity-90")}>
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-[13.5px] font-semibold">{d.title}</div>
-                    <p className="text-[12.5px] text-muted mt-0.5 selectable">{d.detail}</p>
+                    <div className="text-[14px] font-semibold">{d.title}</div>
+                    <p className="text-[13px] text-muted mt-0.5 selectable">{d.detail}</p>
                   </div>
                   {d.fix && (
                     <Button
@@ -758,11 +758,11 @@ function LogsTab({ inst }: { inst: Instance }) {
           className="w-52"
         />
         <div className="flex-1" />
-        <span className="text-[12.5px] text-muted flex items-center gap-2">
+        <span className="text-[13px] text-muted flex items-center gap-2">
           {running ? <span className="text-accent">● Live</span> : live?.length ? "Last session" : saved ? "Last session (from disk)" : ""}
         </span>
         <Toggle checked={follow} onChange={setFollow} />
-        <span className="text-[12.5px] text-muted">Follow</span>
+        <span className="text-[13px] text-muted">Follow</span>
         <IconButton
           label="Copy log"
           className="h-9 w-9 border border-line"
@@ -834,14 +834,14 @@ function JavaPicker({ value, onChange, required }: { value?: string; onChange: (
           Browse…
         </Button>
       </div>
-      {found && found.length === 0 && <div className="text-[12.5px] text-muted">No other Java installations were found.</div>}
+      {found && found.length === 0 && <div className="text-[13px] text-muted">No other Java installations were found.</div>}
       {info && (
-        <div className={cx("text-[12.5px]", required && info.major < required ? "text-danger" : "text-muted")}>
+        <div className={cx("text-[13px]", required && info.major < required ? "text-danger" : "text-muted")}>
           Java {info.version} ({info.is64bit ? "64-bit" : "32-bit"})
           {required && info.major < required ? ` — this Minecraft version needs Java ${required}.` : ""}
         </div>
       )}
-      {probeError && <div className="text-[12.5px] text-danger">{probeError}</div>}
+      {probeError && <div className="text-[13px] text-danger">{probeError}</div>}
     </div>
   );
 }
@@ -863,7 +863,7 @@ export function MemoryControl({ value, onChange, modded, modCount }: { value: { 
       {value && (
         <>
           <Slider value={current} min={1024} max={max} step={512} onChange={(v) => onChange({ minMb: Math.min(value.minMb, v), maxMb: v })} format={gb} />
-          <div className={cx("text-[12.5px]", current > advice.maxSafeMb ? "text-warn" : "text-muted")}>
+          <div className={cx("text-[13px]", current > advice.maxSafeMb ? "text-warn" : "text-muted")}>
             {current > advice.maxSafeMb
               ? `More than ${gb(advice.maxSafeMb)} may leave too little memory for Windows on this PC (${gb(totalMb)} total).`
               : `${advice.reason} This PC has ${gb(totalMb)}.`}
@@ -966,7 +966,7 @@ function SettingsTab({ inst }: { inst: Instance }) {
             </Button>
             {draft.gameDir && <Button variant="ghost" onClick={() => set({ gameDir: undefined })}>Use default</Button>}
           </div>
-          <p className="text-[12.5px] text-faint">Mods, packs, worlds and options live here. Changing it doesn't move existing files.</p>
+          <p className="text-[13px] text-faint">Mods, packs, worlds and options live here. Changing it doesn't move existing files.</p>
         </Card>
 
         <Card className="p-5 space-y-4">
@@ -986,7 +986,7 @@ function SettingsTab({ inst }: { inst: Instance }) {
             <TextInput value={jvmText} onChange={setJvmText} placeholder="-XX:+AlwaysPreTouch" mono />
           </Field>
           {jvmIssues.map((i) => (
-            <div key={i.arg + i.message} className={cx("text-[12.5px]", i.severity === "error" ? "text-danger" : "text-warn")}>
+            <div key={i.arg + i.message} className={cx("text-[13px]", i.severity === "error" ? "text-danger" : "text-warn")}>
               {i.arg}: {i.message}
             </div>
           ))}

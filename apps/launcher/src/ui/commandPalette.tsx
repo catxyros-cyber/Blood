@@ -148,7 +148,7 @@ export function CommandPalette() {
         aria-modal="true"
         aria-label="Command palette"
       >
-        <div className="flex items-center gap-3 px-4 h-14 border-b border-line">
+        <div className="flex items-center gap-3 px-4 h-12 border-b border-line">
           <span className="text-faint">
             <Icon.Search size={18} />
           </span>
@@ -157,7 +157,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Play, join, or jump to…"
-            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-faint"
+            className="flex-1 bg-transparent outline-none text-[14px] placeholder:text-faint"
             spellCheck={false}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
@@ -179,20 +179,20 @@ export function CommandPalette() {
         </div>
         <div ref={listRef} className="overflow-y-auto py-2">
           {results.length === 0 ? (
-            <div className="px-4 py-8 text-center text-muted text-[13.5px]">Nothing matches “{query}”.</div>
+            <div className="px-4 py-8 text-center text-muted text-[14px]">Nothing matches “{query}”.</div>
           ) : (
             results.map((c, i) => {
               const header = !query.trim() && c.group !== lastGroup ? c.group : null;
               lastGroup = c.group;
               return (
                 <div key={c.id}>
-                  {header && <div className="px-4 pt-2.5 pb-1 text-[12.5px] text-faint font-medium">{header}</div>}
+                  {header && <div className="px-4 pt-3 pb-1 text-[12px] text-faint font-medium">{header}</div>}
                   <button
                     type="button"
                     data-i={i}
                     onMouseMove={() => setIndex(i)}
                     onClick={() => runAt(i)}
-                    className={cx("w-full flex items-center gap-3 px-4 h-10 text-left cursor-pointer", i === index ? "bg-accent/12 text-fg" : "text-fg/85")}
+                    className={cx("w-full flex items-center gap-3 px-4 h-10 text-left cursor-pointer", i === index ? "bg-white/[0.06] text-fg" : "text-fg/85")}
                   >
                     <span className={i === index ? "text-accent" : "text-faint"}>{c.icon}</span>
                     <span className="truncate text-[14px]">{c.title}</span>
@@ -203,7 +203,7 @@ export function CommandPalette() {
             })
           )}
         </div>
-        <div className="flex items-center gap-4 px-4 h-9 border-t border-line text-[11.5px] text-faint">
+        <div className="flex items-center gap-4 px-4 h-9 border-t border-line text-[12px] text-faint">
           <span>↑↓ to move</span>
           <span>Enter to run</span>
           <span className="ml-auto">Ctrl K anywhere</span>

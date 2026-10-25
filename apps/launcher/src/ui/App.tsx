@@ -174,7 +174,7 @@ function Splash({ error, onRetry }: { error?: string | null; onRetry?: () => voi
               <div className="mt-7 h-[2px] w-48 rounded-full bg-white/10 overflow-hidden">
                 <div className="h-full w-2/5 rounded-full bg-accent" style={{ animation: "bloom-indeterminate 1.1s ease-in-out infinite" }} />
               </div>
-              <div className="text-muted mt-3 text-[12.5px]">Starting MOTION…</div>
+              <div className="text-muted mt-3 text-[13px]">Starting MOTION…</div>
             </>
           )}
         </div>

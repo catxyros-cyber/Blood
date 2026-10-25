@@ -143,7 +143,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
                   {noCompat ? "No compatible version" : "Install"}
                 </Button>
               )}
-              {noCompat && <div className="text-[12.5px] text-warn mt-2">No version for Minecraft {target!.gameVersion}{isMod ? ` with ${loaderLabel(target!)}` : ""}.</div>}
+              {noCompat && <div className="text-[13px] text-warn mt-2">No version for Minecraft {target!.gameVersion}{isMod ? ` with ${loaderLabel(target!)}` : ""}.</div>}
               {compatible[0] && !installed && <div className="text-[12px] text-faint mt-2 truncate">Latest compatible: {compatible[0].version_number}</div>}
             </>
           )}
@@ -194,7 +194,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
         </div>
         <aside className="space-y-4">
           <Card className="p-4 text-[13px] space-y-2">
-            <div className="text-[12.5px] text-muted font-medium">Compatibility</div>
+            <div className="text-[13px] text-muted font-medium">Compatibility</div>
             <div className="flex justify-between">
               <span className="text-muted">Client</span>
               <span>{SIDE[project.client_side]}</span>
@@ -221,7 +221,7 @@ export function ProjectPage({ id, instanceId }: { id: string; instanceId?: strin
             </div>
           </Card>
           <Card className="p-4 text-[13px] space-y-2">
-            <div className="text-[12.5px] text-muted font-medium">Links</div>
+            <div className="text-[13px] text-muted font-medium">Links</div>
             {[
               ["Source code", project.source_url],
               ["Issues", project.issues_url],

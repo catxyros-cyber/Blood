@@ -60,7 +60,7 @@ export function UpgradeCard() {
           <Icon.Crown size={15} /> MOTION Premium
         </div>
         <div className="text-[14px] font-medium mt-2 leading-snug">Advanced presets, measured GC analytics, any accent colour and cloud sync.</div>
-        <div className="text-[12.5px] text-muted mt-1.5">Launching and mod management stay free.</div>
+        <div className="text-[13px] text-muted mt-1.5">Launching and mod management stay free.</div>
         <Button size="sm" variant="primary" className="mt-4" onClick={() => navigate({ page: "premium" })}>
           Explore Premium
         </Button>

@@ -67,8 +67,8 @@ function InstanceCard({ inst, selected }: { inst: Instance; selected: boolean })
       <div className="flex items-start gap-3.5">
         <InstanceIcon inst={inst} size={48} />
         <div className="min-w-0 flex-1">
-          <div className="font-semibold truncate text-[14.5px]">{inst.name}</div>
-          <div className="text-[12.5px] text-muted truncate mt-0.5">
+          <div className="font-semibold truncate text-[14px]">{inst.name}</div>
+          <div className="text-[13px] text-muted truncate mt-0.5">
             {inst.gameVersion} · {loaderLabel(inst)}
           </div>
           <div className="text-[12px] text-faint mt-1">{running ? <span className="text-accent">Running</span> : inst.lastPlayedAt ? `Played ${timeAgo(inst.lastPlayedAt)}` : "Not played yet"}</div>
@@ -86,7 +86,7 @@ function InstanceCard({ inst, selected }: { inst: Instance; selected: boolean })
         <div className="flex gap-1.5 flex-wrap">
           {inst.modpack && <Badge tone="info">{inst.modpack.name}</Badge>}
           {selected && <Badge>Selected</Badge>}
-          {inst.totalPlayMs ? <span className="text-[11.5px] text-faint self-center">{formatPlaytime(inst.totalPlayMs)}</span> : null}
+          {inst.totalPlayMs ? <span className="text-[12px] text-faint self-center">{formatPlaytime(inst.totalPlayMs)}</span> : null}
         </div>
         <div onClick={(e) => e.stopPropagation()}>
           <PlayButton inst={inst} size="md" quiet />

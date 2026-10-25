@@ -121,7 +121,7 @@ export function VersionLoaderPicker({
         </Field>
       </div>
       <Toggle checked={snapshots} onChange={setSnapshots} label="Show snapshots and old versions" />
-      {(loader === "forge" || loader === "neoforge") && <p className="text-[12.5px] text-faint -mt-1">{LOADERS.find((l) => l.id === loader)?.note}</p>}
+      {(loader === "forge" || loader === "neoforge") && <p className="text-[13px] text-faint -mt-1">{LOADERS.find((l) => l.id === loader)?.note}</p>}
       {loader !== "vanilla" && (
         <Field label={`${LOADERS.find((l) => l.id === loader)?.name} version`}>
           {loaderError ? (
@@ -181,7 +181,7 @@ export function RenameModal({ inst, open, onClose }: { inst: Instance; open: boo
         <Field label="Name">
           <TextInput value={name} onChange={setName} autoFocus onEnter={() => void save()} />
         </Field>
-        <p className="text-[12.5px] text-faint mt-2">The folder on disk keeps its name, so mods and worlds aren't moved.</p>
+        <p className="text-[13px] text-faint mt-2">The folder on disk keeps its name, so mods and worlds aren't moved.</p>
       </div>
     </Modal>
   );
@@ -229,7 +229,7 @@ export function NewInstanceModal({ open, onClose }: { open: boolean; onClose: ()
           <TextInput value={name} onChange={setName} placeholder={autoName || "My installation"} autoFocus />
         </Field>
         <VersionLoaderPicker gameVersion={sel.gameVersion} loader={sel.loader} loaderVersion={sel.loaderVersion} onChange={setSel} />
-        <p className="text-[12.5px] text-faint leading-relaxed">
+        <p className="text-[13px] text-faint leading-relaxed">
           Each installation has its own mods, resource packs, shaders, worlds and settings. Game files are downloaded from Mojang when you first press Play.
         </p>
       </div>
