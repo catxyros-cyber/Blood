@@ -43,7 +43,7 @@ public final class Ui {
     private static int guiScale = 2;
 
     public static Style style() {
-        boolean smooth = dev.bloom.client.core.settings.BloomSettings.SMOOTH_TEXT.get();
+        boolean smooth = dev.bloom.client.core.settings.BloomSettings.SMOOTH_TEXT.on();
         // GUI scale = framebuffer pixels per GUI unit, read off the open screen (the same on every
         // Minecraft version); toasts drawn with no screen open keep the last value.
         var screen = dev.bloom.client.Mc.screen();
