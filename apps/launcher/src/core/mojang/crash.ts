@@ -28,7 +28,8 @@ export interface CrashDiagnosis {
     | "graphics-driver"
     | "shader-pack"
     | "suspected-mod"
-    | "native-crash";
+    | "native-crash"
+    | "mod-exit";
   title: string;
   detail: string;
   /** Mod ids named in the log, when there are any. */
@@ -223,7 +224,10 @@ export function diagnoseCrash(lines: readonly string[], ctx: CrashContext): Cras
   const gpu =
     /GLFW error 6554[23]|WGL: The driver does not appear to support OpenGL|Pixel format not accelerated|OpenGL [\d.]+ (?:is not supported|or higher is required)|Failed to create (?:the )?(?:OpenGL )?(?:context|window)|No OpenGL context|couldn't set pixel format/i.test(
       text,
-    ) || /(?:atio6axx|nvoglv64|ig\d+icd64|igxelpicd64|amdxx64)\.dll/i.test(text);
+    ) ||
+    // Only a driver DLL in a native crash's stack counts: Sodium and others name the driver file
+    // in a normal startup line ("Found graphics adapter ... nvoglv64.dll").
+    /(?:^|\n)\s*(?:C\s+\[|#\s+C\s+\[)(?:atio6axx|nvoglv64|ig\d+icd64|igxelpicd64|amdxx64)\.dll/i.test(text);
   if (gpu) {
     add({
       id: "graphics-driver",
@@ -267,6 +271,17 @@ export function diagnoseCrash(lines: readonly string[], ctx: CrashContext): Cras
       id: "native-crash",
       title: "Java crashed outside the game",
       detail: "The Java runtime itself crashed (an access violation). This is usually the graphics driver, an overlay (Discord, MSI Afterburner, RivaTuner) or antivirus. Update your GPU driver and turn off overlays, then try again.",
+    });
+  }
+
+  // ------------------------------------------------------------------ a mod quit the game
+  // Java's own crashes exit with 1 or a Windows status code; small custom codes (such as 401 from
+  // a mod whose licence server turned it away) mean a mod closed the game on purpose.
+  if (!out.length && ctx.exitCode !== null && ctx.exitCode > 1 && ctx.exitCode < 1000 && ctx.exitCode !== 130 && ctx.exitCode !== 143) {
+    add({
+      id: "mod-exit",
+      title: `A mod closed the game (exit code ${ctx.exitCode})`,
+      detail: "Minecraft didn't crash: one of your mods shut it down on purpose, without an error in the log. Mods with their own sign-in or licence check do this when their server refuses them. Turn off the most recently added mod that needs a key or account, then play again.",
     });
   }
 

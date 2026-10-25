@@ -83,6 +83,13 @@ test("crash: corrupt jar → repair", () => {
 test("crash: graphics driver", () => {
   assert.deepEqual(ids("[Render thread/ERROR]: GLFW error 65542: WGL: The driver does not appear to support OpenGL"), ["graphics-driver"]);
   assert.deepEqual(ids("# Problematic frame:\n# C  [atio6axx.dll+0x1a2b3c]"), ["graphics-driver"]);
+  // Sodium names the driver on every normal start; that alone isn't a driver crash.
+  assert.deepEqual(ids("[main/INFO]: Found graphics adapter: AdapterInfo{vendor=NVIDIA, openglIcdFilePath='C:\\WINDOWS\\System32\\nvoglv64.dll'}"), []);
+});
+
+test("crash: a mod closing the game with its own exit code", () => {
+  assert.deepEqual(ids("[Render thread/INFO]: Authenticating to Mojang as Steve", { exitCode: 401 }), ["mod-exit"]);
+  assert.deepEqual(ids("[Render thread/INFO]: Stopping!", { exitCode: 1 }), []);
 });
 
 test("crash: suspected mods from the crash report, without repeating known culprits", () => {
