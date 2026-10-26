@@ -59,7 +59,6 @@ export function LicenseCard({ compact = false }: { compact?: boolean }) {
   return (
     <Card className={cx("p-5", status === "active" && "border-amber-300/25")}>
       <div className="flex items-center gap-2">
-        <Icon.Key size={17} className={status === "active" ? "text-amber-200" : "text-accent"} />
         <h3 className="font-semibold text-[14px] flex-1">Premium key</h3>
         {status === "checking" && <Spinner size={14} />}
         {status === "active" && (

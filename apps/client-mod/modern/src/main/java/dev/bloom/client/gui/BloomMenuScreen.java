@@ -2,7 +2,6 @@ package dev.bloom.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.bloom.client.Mc;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.CharacterEvent;
@@ -29,12 +28,10 @@ import dev.bloom.client.gui.widget.TextField;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -51,7 +48,6 @@ import java.util.function.Function;
  * </ul>
  */
 public class BloomMenuScreen extends Screen implements Host {
-    private static final Identifier ATLAS = Identifier.fromNamespaceAndPath(BloomClient.MOD_ID, "textures/effects/atlas.png");
     private static Category lastCategory = Category.GENERAL;
     private static int lastVisualsIndex;
 
@@ -75,7 +71,6 @@ public class BloomMenuScreen extends Screen implements Host {
     private long lastFrame = System.nanoTime();
     private boolean needsRebuild;
     private int wx, wy, ww, wh, sidebar;
-    private final float[][] petals = new float[26][6];
     private boolean closing;
     private long closeStart;
     private final float[] navHover;
@@ -110,15 +105,6 @@ public class BloomMenuScreen extends Screen implements Host {
         this.nav = nav;
         this.navIndex = Math.max(0, Math.min(start, nav.size() - 1));
         this.navHover = new float[nav.size()];
-        Random r = new Random();
-        for (float[] p : petals) {
-            p[0] = r.nextFloat();
-            p[1] = r.nextFloat();
-            p[2] = 0.3f + r.nextFloat() * 0.7f; // speed
-            p[3] = r.nextFloat() * 6.28f; // phase
-            p[4] = 5 + r.nextFloat() * 6; // size
-            p[5] = r.nextInt(4); // shape
-        }
     }
 
     // ------------------------------------------------------------------ layout
@@ -328,9 +314,8 @@ public class BloomMenuScreen extends Screen implements Host {
         // Backdrop
         float dim = visualsMenu ? BloomSettings.VISUALS_DIM.value() : BloomSettings.MENU_DIM.value();
         if (minecraft != null && minecraft.level == null) dim = 1f;
-        g.fillGradient(0, 0, width, height, Theme.alpha(0xFF0C080B, dim * t), Theme.alpha(0xFF1A0E15, dim * t));
+        g.fillGradient(0, 0, width, height, Theme.alpha(0xFF0A0B0C, dim * t), Theme.alpha(0xFF101213, dim * t));
         if (ThemeDecor.active()) ThemeDecor.render(g, 0, 0, width, height, dt, visualsMenu ? t * 0.6f : t);
-        else if (Anim.decorations() && !visualsMenu) drawPetals(g, dt, t);
 
         boolean blockedByModal = !popups.isEmpty() && popups.get(popups.size() - 1).modal();
         boolean overPopup = false;
@@ -352,20 +337,16 @@ public class BloomMenuScreen extends Screen implements Host {
             search.layout(wx + ww - searchW - 12, wy + 8, searchW);
             search.render(g, mx, my, dt);
             Ui.spriteTinted(g, "logo", wx + 14, wy + 8, 22, 22, 0xFFFFFFFF);
-            Ui.text(g, "MOTION", wx + 43, wy + 8, Theme.alpha(p.text(), t));
-            Ui.text(g, "CLIENT", wx + 43 + Ui.width("MOTION "), wy + 8, Theme.alpha(0xFFE6C35E, t));
+            Ui.text(g, "MOTION", wx + 43, wy + 15, Theme.alpha(p.text(), t));
             // You: face and name, just left of the search box.
             String you = Ui.ellipsize(net.minecraft.client.Minecraft.getInstance().getUser().getName(), 90);
             int youW = 16 + 6 + Ui.width(you);
             int youX = search.x - 12 - youW;
-            boolean showYou = youX > wx + 44 + Ui.width("MOTION CLIENT") + 24;
+            boolean showYou = youX > wx + 44 + Ui.width("MOTION") + 24;
             if (showYou) {
                 dev.bloom.client.game.PlayerFace.draw(g, youX, wy + 11, 16, Theme.alpha(0xFFFFFFFF, t));
                 Ui.text(g, you, youX + 22, wy + 15, Theme.alpha(p.text(), t));
             }
-            int subtitleX = wx + 44;
-            int subtitleW = Math.max(32, (showYou ? youX : search.x) - subtitleX - 12);
-            Ui.text(g, Ui.ellipsize("CLICK GUI  ·  Click a switch to toggle, a section to open details", subtitleW), subtitleX, wy + 21, Theme.alpha(p.textFaint(), t));
             g.fill(wx + 8, wy + 38, wx + ww - 8, wy + 39, Theme.alpha(p.border(), 0.8f * t));
             if (search.value().isBlank()) {
                 for (int i = 0; i < overviewColumns.size(); i++) {
@@ -373,21 +354,22 @@ public class BloomMenuScreen extends Screen implements Host {
                     Ui.shadow(g, b[0], b[1], b[2], b[3], t * 0.8f);
                     Ui.panel(g, b[0], b[1], b[2], b[3], Theme.alpha(p.window(), t));
                     Ui.panelBorder(g, b[0], b[1], b[2], b[3], Theme.alpha(p.border(), t));
-                    g.fill(b[0] + 7, b[1], b[0] + b[2] - 7, b[1] + 2, Theme.alpha(0xFFE6C35E, t));
                     overviewColumns.get(i).render(g, mx, my, dt);
+                }
+                // Rows scrolled past a column's edge fade out instead of being cut through their text.
+                g.nextStratum();
+                for (int[] b : overviewBounds) {
+                    g.fillGradient(b[0] + 1, b[1] + b[3] - 18, b[0] + b[2] - 1, b[1] + b[3] - 1,
+                            Theme.alpha(p.window() & 0xFFFFFF, 0f), Theme.alpha(p.window(), t));
                 }
             } else {
                 Ui.shadow(g, wx + 12, wy + 46, ww - 24, wh - 68, t * 0.8f);
                 Ui.panel(g, wx + 12, wy + 46, ww - 24, wh - 68, Theme.alpha(p.window(), t));
                 list.render(g, mx, my, dt);
             }
-            Ui.text(g, "Right Shift / ESC  ·  Scroll each column  ·  Click section headings for full controls", wx + 14, wy + wh - 14, Theme.alpha(p.textFaint(), t));
         } else {
             Ui.shadow(g, wx, wy, ww, wh, t);
             Ui.panel(g, wx, wy, ww, wh, Theme.alpha(p.window(), t));
-            int accentEnd = Theme.lerp(p.accent(), 0xFF8AF7FF, 0.32f);
-            Ui.gradientBand(g, wx + 1, wy + 1, ww - 2, 2,
-                    Theme.alpha(p.accent(), 0.96f * t), Theme.alpha(accentEnd, 0.96f * t), 36);
             // Sidebar
             Ui.panel(g, wx, wy, sidebar, wh, Theme.alpha(p.sidebar(), t));
             g.fill(wx + sidebar - 1, wy + 6, wx + sidebar, wy + wh - 6, Theme.alpha(p.border(), t));
@@ -395,8 +377,8 @@ public class BloomMenuScreen extends Screen implements Host {
             // Header
             String title = search.value().isBlank() ? nav.get(navIndex).label() : "Search";
             if (!visualsMenu) {
-                Ui.pill(g, contentX() + 7, wy + 8, 43, 15, Theme.alpha(p.surfaceActive(), t));
-                Ui.text(g, "‹ ALL", contentX() + 12, wy + 11, Theme.alpha(0xFFE6C35E, t));
+                boolean backOver = Ui.inside(mx, my, contentX() + 7, wy + 8, 43, 15);
+                Ui.text(g, "‹ All", contentX() + 12, wy + 12, Theme.alpha(backOver ? p.text() : p.textDim(), t));
             }
             Ui.text(g, title, contentX() + (visualsMenu ? 10 : 58), wy + 12, Theme.alpha(p.text(), t));
             int sw = Math.min(visualsMenu ? 110 : 180, ww - sidebar - 120);
@@ -435,14 +417,11 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private void renderSidebar(GuiGraphics g, int mx, int my, float dt, float t) {
         Theme.Palette p = Theme.palette();
-        int accentEnd = Theme.lerp(p.accent(), 0xFF8AF7FF, 0.32f);
         boolean compact = sidebar < 60;
         int y = wy + 8;
         Ui.spriteTinted(g, "logo", wx + (compact ? 7 : 9), y, 16, 16, 0xFFFFFFFF);
         if (!compact) {
-            Ui.text(g, "MOTION", wx + 29, y + 4, Theme.alpha(p.text(), t));
-            String sub = visualsMenu ? "Visuals" : "Client";
-            Ui.text(g, sub, wx + 29 + Ui.width("MOTION "), y + 4, Theme.alpha(Theme.accentArgb(), t));
+            Ui.text(g, visualsMenu ? "Visuals" : "MOTION", wx + 29, y + 4, Theme.alpha(p.text(), t));
         }
         y += 26;
         int itemH = itemHeight();
@@ -452,15 +431,9 @@ public class BloomMenuScreen extends Screen implements Host {
             boolean sel = i == navIndex && search.value().isBlank();
             boolean over = Ui.inside(mx, my, ix, y, iw, itemH);
             navHover[i] = Anim.approach(navHover[i], sel ? 1f : over ? 0.5f : 0f, 16f, dt);
-            if (navHover[i] > 0.01f) {
-                Ui.smallPanel(g, ix, y, iw, itemH, Theme.alpha(sel ? p.surfaceActive() : p.surfaceHover(), navHover[i] * t));
-                Ui.gradientBand(g, ix + 1, y + 1, iw - 2, itemH - 2,
-                        Theme.alpha(p.surfaceActive(), navHover[i] * t),
-                        Theme.alpha(p.accent(), navHover[i] * 0.18f * t), 12);
-            }
-            if (sel) g.fillGradient(ix, y + 3, ix + 2, y + itemH - 3,
-                    Theme.alpha(p.accent(), t), Theme.alpha(accentEnd, t));
-            int col = sel ? Theme.accentArgb() : over ? p.text() : p.textDim();
+            if (navHover[i] > 0.01f) Ui.smallPanel(g, ix, y, iw, itemH, Theme.alpha(sel ? p.surfaceActive() : p.surfaceHover(), navHover[i] * t));
+            if (sel) g.fill(ix, y + 4, ix + 2, y + itemH - 4, Theme.alpha(Theme.accentArgb(), t));
+            int col = sel || over ? p.text() : p.textDim();
             Ui.icon(g, c.icon(), ix + (compact ? 3 : 6), y + (itemH - 14) / 2, 14, Theme.alpha(col, t));
             if (!compact) Ui.text(g, Ui.ellipsize(c.label(), iw - 30), ix + 25, y + (itemH - 8) / 2, Theme.alpha(col, t));
             y += itemH + 1;
@@ -484,26 +457,6 @@ public class BloomMenuScreen extends Screen implements Host {
 
     private int itemHeight() {
         return Math.min(visualsMenu ? 22 : 20, (wh - 92) / nav.size());
-    }
-
-    private void drawPetals(GuiGraphics g, float dt, float t) {
-        int pink = Theme.accentArgb();
-        for (float[] p : petals) {
-            p[1] += dt * 0.035f * p[2];
-            p[0] += dt * 0.012f * (float) Math.sin(p[3] + p[1] * 6);
-            if (p[1] > 1.05f) {
-                p[1] = -0.05f;
-                p[0] = (float) Math.random();
-            }
-            float px = p[0] * width, py = p[1] * height;
-            int s = Math.round(p[4]);
-            g.pose().pushMatrix();
-            g.pose().translate(px, py);
-            g.pose().rotate(p[3] + p[1] * 9f);
-            int col = Theme.alpha(0xFF000000 | (pink & 0xFFFFFF), 0.35f * t);
-            g.blit(RenderPipelines.GUI_TEXTURED, ATLAS, -s / 2, -s / 2, (int) p[5] * 32f, 0f, s, s, 32, 32, 128, 128, col);
-            g.pose().popMatrix();
-        }
     }
 
     private void renderTooltip(GuiGraphics g, int mx, int my) {
@@ -754,17 +707,11 @@ public class BloomMenuScreen extends Screen implements Host {
         public void render(GuiGraphics g, int mx, int my, float dt) {
             Theme.Palette p = Theme.palette();
             boolean over = isOver(mx, my);
-            Ui.smallPanel(g, x, y + 2, w, h - 3,
-                    over ? Theme.alpha(p.surfaceHover(), 0.95f) : Theme.alpha(p.surface(), 0.78f));
-            g.fill(x + 1, y + 6, x + 2, y + h - 5,
-                    Theme.alpha(over ? 0xFFFFD878 : 0xFFE6C35E, 0.92f));
-            Ui.icon(g, category.icon(), x + 7, y + 6, 13,
-                    over ? 0xFFFFD878 : 0xFFE6C35E);
-            int countW = Ui.width(Integer.toString(settingCount)) + 10;
-            Ui.pill(g, x + w - countW - 7, y + 7, countW, 13, Theme.alpha(p.surfaceActive(), 0.95f));
-            Ui.text(g, Integer.toString(settingCount), x + w - countW - 2, y + 10, p.textDim());
-            Ui.text(g, Ui.ellipsize(category.label(), Math.max(24, w - countW - 43)),
-                    x + 25, y + 9, over ? p.text() : Theme.alpha(p.text(), 0.94f));
+            if (over) Ui.smallPanel(g, x, y + 2, w, h - 3, Theme.alpha(p.surfaceHover(), 0.95f));
+            Ui.icon(g, category.icon(), x + 7, y + 6, 13, over ? Theme.accentArgb() : p.textDim());
+            Ui.text(g, Ui.ellipsize(category.label(), Math.max(24, w - 40)), x + 25, y + 9, p.text());
+            Ui.text(g, "›", x + w - 12, y + 9, over ? p.text() : p.textFaint());
+            g.fill(x + 6, y + h - 1, x + w - 6, y + h, Theme.alpha(p.border(), 0.7f));
         }
 
         @Override
@@ -787,6 +734,7 @@ public class BloomMenuScreen extends Screen implements Host {
         private final BloomMenuScreen screen;
         private final Category category;
         private final Setting setting;
+        private float knob = -1;
 
         private OverviewSetting(BloomMenuScreen screen, Category category, Setting setting) {
             this.screen = screen;
@@ -806,28 +754,23 @@ public class BloomMenuScreen extends Screen implements Host {
             boolean active = setting.isActive();
             if (over) Ui.smallPanel(g, x, y, w, h - 1, Theme.alpha(p.surfaceHover(), 0.88f));
 
-            String value = setting.displayValue();
-            int valueW = Math.min(Math.max(28, Ui.width(value) + 12), Math.max(28, w / 2));
-            int chipX = x + w - valueW - 2;
-            String label = Ui.ellipsize(setting.label(), Math.max(18, chipX - x - 13));
-            Ui.text(g, label, x + 8, y + 5,
-                    active ? (over ? p.text() : p.textDim()) : p.textFaint());
-
+            int labelColor = active ? (over ? p.text() : p.textDim()) : p.textFaint();
             if (setting instanceof BoolSetting toggle) {
-                int chipColor = toggle.on() && active
-                        ? Theme.alpha(0xFFE6C35E, 0.26f)
-                        : Theme.alpha(p.surfaceActive(), 0.9f);
-                Ui.pill(g, chipX, y + 3, valueW, 13, chipColor);
-                if (toggle.on() && active) {
-                    Ui.circle(g, chipX + 6, y + 9, 2, 0xFFFFD878);
-                    Ui.text(g, "ON", chipX + 12, y + 6, p.text());
-                } else {
-                    Ui.text(g, active ? "OFF" : "—", chipX + 5, y + 6, p.textFaint());
-                }
+                // The same switch as the full settings pages, eased between states.
+                float target = toggle.on() ? 1f : 0f;
+                knob = knob < 0 ? target : Anim.approach(knob, target, 16f, dt);
+                int sw = 18, sh = 10, sx = x + w - sw - 6, sy = y + (h - sh) / 2;
+                int track = Theme.lerp(p.surfaceActive(), Theme.accentArgb(), knob);
+                Ui.pill(g, sx, sy, sw, sh, active ? track : Theme.alpha(track, 0.4f));
+                int r = sh / 2 - 2;
+                Ui.circle(g, sx + 2 + r + Math.round((sw - 4 - 2 * r) * knob), sy + sh / 2, r, active ? 0xFFFFFFFF : 0xFF8A8A8A);
+                Ui.text(g, Ui.ellipsize(setting.label(), Math.max(18, sx - x - 14)), x + 8, y + 5, labelColor);
             } else {
-                Ui.pill(g, chipX, y + 3, valueW, 13, Theme.alpha(p.surfaceActive(), 0.88f));
-                Ui.text(g, Ui.ellipsize(value, valueW - 8), chipX + 4, y + 6,
-                        active ? p.textDim() : p.textFaint());
+                String value = setting.displayValue();
+                int valueW = Math.min(Ui.width(value), Math.max(24, w / 2 - 8));
+                int vx = x + w - valueW - 7;
+                Ui.text(g, Ui.ellipsize(setting.label(), Math.max(18, vx - x - 16)), x + 8, y + 5, labelColor);
+                Ui.text(g, Ui.ellipsize(value, valueW + 1), vx, y + 5, active ? p.textDim() : p.textFaint());
             }
         }
 

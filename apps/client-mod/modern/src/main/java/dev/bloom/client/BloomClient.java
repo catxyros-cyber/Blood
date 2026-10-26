@@ -61,6 +61,8 @@ public final class BloomClient {
     private final ParticleSystem particles = new ParticleSystem();
     private final GameEnv env = new GameEnv();
     private final FrameStats frames = new FrameStats();
+    private final dev.bloom.client.core.perf.FpsRecorder fpsRecorder = new dev.bloom.client.core.perf.FpsRecorder();
+    private java.util.List<String> modList;
     private final CpsCounter cps = new CpsCounter();
     private final LowFpsAdvisor advisor = new LowFpsAdvisor();
     private final AdaptiveBudget budget = new AdaptiveBudget();
@@ -147,6 +149,11 @@ public final class BloomClient {
         });
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveNow, "MOTION settings save"));
         Log.info("MOTION Client " + platform.modVersion() + " ready on " + platform.loaderName());
+        // Quitting from inside a world: keep that session's FPS too.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            com.google.gson.JsonObject done = fpsRecorder.finish(System.currentTimeMillis());
+            if (done != null) saveFpsSession(done, true);
+        }, "MOTION FPS log"));
     }
 
     public static void init(Platform platform) {
@@ -257,7 +264,47 @@ public final class BloomClient {
 
     /** Every rendered frame (from the GameRenderer mixin). */
     public void onFrame() {
-        frames.frame(System.nanoTime());
+        long now = System.nanoTime();
+        frames.frame(now);
+        Minecraft mc = Minecraft.getInstance();
+        fpsRecorder.frame(now, mc.level != null && Mc.screen() == null && !mc.isPaused() && mc.isWindowActive());
+    }
+
+    /** What an FPS session runs under: a change splits the session, so numbers stay comparable. */
+    private java.util.Map<String, Object> fpsContext(Minecraft mc) {
+        if (mc.level == null) return null;
+        if (modList == null) modList = platform.mods();
+        java.util.Map<String, Object> c = new java.util.LinkedHashMap<>();
+        c.put("motion", platform.modVersion());
+        try {
+            c.put("renderDistance", mc.options.renderDistance().get());
+            c.put("simulationDistance", mc.options.simulationDistance().get());
+            c.put("fpsLimit", mc.options.framerateLimit().get());
+            c.put("vsync", mc.options.enableVsync().get());
+        } catch (RuntimeException | LinkageError e) {
+            // Options this version doesn't have are simply left out.
+        }
+        c.put("shaders", shaderActive);
+        var target = dev.bloom.client.render.Draw.mainTarget();
+        c.put("resolution", target.width + "x" + target.height);
+        c.put("multiplayer", mc.getCurrentServer() != null);
+        c.put("modCount", modList.size());
+        c.put("mods", modList);
+        return c;
+    }
+
+    private void saveFpsSession(com.google.gson.JsonObject session, boolean now) {
+        Path file = platform.configDir().getParent().resolve(".bloom").resolve("fps-sessions.json");
+        Runnable write = () -> {
+            try {
+                dev.bloom.client.core.perf.FpsRecorder.append(file, session);
+                Log.info("MOTION FPS: saved a session (" + session.get("avgFps") + " FPS average, 1% low " + session.get("low1Fps") + ")");
+            } catch (Exception e) {
+                Log.warn("MOTION FPS: couldn't save the session (" + e + ")");
+            }
+        };
+        if (now) write.run();
+        else java.util.concurrent.CompletableFuture.runAsync(write);
     }
 
     public void onMouseClick(int button) {
@@ -307,6 +354,8 @@ public final class BloomClient {
 
     private void everySecond(Minecraft mc, long now) {
         shaderActive = ShaderCompat.shaderPackInUse();
+        com.google.gson.JsonObject fpsDone = fpsRecorder.update(fpsContext(mc), now);
+        if (fpsDone != null) saveFpsSession(fpsDone, false);
         int fps = frames.fps(System.nanoTime());
         budget.update(BloomSettings.ADAPTIVE.on(), fps, BloomSettings.ADAPTIVE_TARGET.intValue());
         if (mc.level != null) {

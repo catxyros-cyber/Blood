@@ -13,4 +13,9 @@ public interface Platform {
     Path configDir();
 
     String modVersion();
+
+    /** Loaded mods as "id version", for the FPS log (empty where the loader can't tell). */
+    default java.util.List<String> mods() {
+        return java.util.List.of();
+    }
 }

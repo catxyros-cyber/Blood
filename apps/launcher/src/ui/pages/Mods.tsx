@@ -4,7 +4,7 @@
  * the real place that controls it (see core/bloomclient/modules.ts).
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   activeLayout,
   CROSSHAIR,
@@ -46,36 +46,16 @@ import { bumpContent, useContent } from "../contentEvents";
 import { Icon } from "../icons";
 import { loaderLabel } from "../instanceParts";
 
-const CATEGORIES: { value: ModCategory; label: string; icon: ReactNode }[] = [
-  { value: "all", label: "All", icon: <Icon.Layers size={15} /> },
-  { value: "hud", label: "HUD", icon: <Icon.Hud size={15} /> },
-  { value: "performance", label: "Performance", icon: <Icon.Zap size={15} /> },
-  { value: "visuals", label: "Visuals", icon: <Icon.Paint size={15} /> },
-  { value: "utility", label: "Utility", icon: <Icon.Wrench size={15} /> },
+const CATEGORIES: { value: ModCategory; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "hud", label: "HUD" },
+  { value: "performance", label: "Performance" },
+  { value: "visuals", label: "Visuals" },
+  { value: "utility", label: "Utility" },
 ];
 
 const VANILLA_OPTIONS = ["toggleSprint", "toggleCrouch"];
 const PERF_SLUGS = MODULES.filter((m) => m.kind === "perf").map((m) => m.perfSlug!);
-
-function moduleIcon(m: ModuleInfo, size = 18): ReactNode {
-  if (m.id === "crosshair") return <Icon.Crosshair size={size} />;
-  if (m.kind === "perf") return <Icon.Zap size={size} />;
-  if (m.kind === "vanilla") return <Icon.Keyboard size={size} />;
-  if (m.widget === "keystrokes") return <Icon.Keyboard size={size} />;
-  if (m.widget === "clock") return <Icon.Clock size={size} />;
-  if (m.widget === "held") return <Icon.Package size={size} />;
-  if (m.widget === "status") return <Icon.Zap size={size} />;
-  if (m.widget === "info") return <Icon.Info size={size} />;
-  if (m.widget === "cps") return <Icon.Cpu size={size} />;
-  if (m.widget === "memory") return <Icon.Memory size={size} />;
-  if (m.widget === "armor") return <Icon.Shield size={size} />;
-  if (m.widget === "potions") return <Icon.Drop size={size} />;
-  if (m.widget === "coords" || m.widget === "direction") return <Icon.Map size={size} />;
-  if (m.widget === "fps" || m.widget === "frametime") return <Icon.Gauge size={size} />;
-  if (m.category === "visuals") return <Icon.Paint size={size} />;
-  if (m.category === "utility") return <Icon.Wrench size={size} />;
-  return <Icon.Hud size={size} />;
-}
 
 export function ModsPage({ instanceId, category = "all" }: { instanceId?: string; category?: ModCategory }) {
   const instances = useStore(app, (s) => s.instances);
@@ -194,7 +174,6 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
     const text = [m.name, m.description, m.note, ...(m.keywords ?? []), info?.what, info?.title, m.category].join(" ").toLowerCase();
     return q.split(/\s+/).every((w) => text.includes(w));
   });
-  const counts = Object.fromEntries(CATEGORIES.map((c) => [c.value, MODULES.filter((m) => c.value === "all" || m.category === c.value).length]));
 
   return (
     <div className="space-y-6">
@@ -215,13 +194,11 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
               type="button"
               onClick={() => navigate({ page: "mods", instanceId: inst.id, category: c.value })}
               className={cx(
-                "h-8 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5",
+                "h-8 px-3 rounded-md text-[13px] font-medium transition-colors cursor-pointer",
                 category === c.value ? "bg-raised text-fg" : "text-muted hover:text-fg",
               )}
             >
-              {c.icon}
               {c.label}
-              <span className={cx("tabular-nums text-[12px]", category === c.value ? "opacity-80" : "text-faint")}>{counts[c.value]}</span>
             </button>
           ))}
         </div>
@@ -234,7 +211,7 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
           Try another word, or switch to All.
         </EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-3 items-start">
+        <div className="rounded-xl border border-line divide-y divide-line">
           {list.map((m) => (
             <ModuleCard
               key={m.id}
@@ -244,7 +221,6 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
               blocked={blocked(m)}
               busy={busy === m.id}
               view={view}
-              client={client}
               perfItem={perf.find((p) => p.info.slug === m.perfSlug)}
               onToggle={(v) => void toggle(m, v)}
               onView={setView}
@@ -253,10 +229,6 @@ function ModsBody({ inst, category, query, setQuery }: { inst: Instance; categor
           ))}
         </div>
       )}
-      <p className="text-[12px] text-faint leading-relaxed">
-        HUD modules and visual settings are part of MOTION Client and only show legitimate game information. Performance mods come from Modrinth and are checked for your
-        Minecraft version and loader before installing. Performance gains vary with hardware, settings and worlds.
-      </p>
     </div>
   );
 }
@@ -269,9 +241,6 @@ function ClientBanner({ inst, client, running, onChanged }: { inst: Instance; cl
   const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
-      <div className={cx("h-11 w-11 rounded-xl grid place-items-center shrink-0", client.enabled ? "bg-accent/15 text-accent glow-accent" : "bg-raised text-muted")}>
-        <Icon.Motion size={22} />
-      </div>
       <div className="min-w-0 flex-1">
         <div className="font-semibold flex items-center gap-2 flex-wrap">
           MOTION Client
@@ -362,7 +331,6 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
     }
   }
 
-  const icons: Record<ModPreset["id"], ReactNode> = { performance: <Icon.Zap size={18} />, minimal: <Icon.Minus size={18} />, full: <Icon.Hud size={18} /> };
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -396,16 +364,15 @@ function Presets({ inst, disabled, onApplied }: { inst: Instance; disabled: bool
       </div>
       <div className="grid grid-cols-3 gap-3">
         {MOD_PRESETS.map((p) => (
-          <Card key={p.id} className="p-4 flex flex-col">
-            <div className="flex items-center gap-2.5">
-              <span className="h-8 w-8 rounded-lg bg-accent/12 text-accent grid place-items-center">{icons[p.id]}</span>
-              <span className="font-semibold">{p.name}</span>
+          <div key={p.id} className="rounded-xl border border-line p-4 flex flex-col">
+            <span className="font-semibold">{p.name}</span>
+            <p className="text-[13px] text-muted mt-1 leading-relaxed flex-1">{p.description}</p>
+            <div className="mt-3">
+              <Button size="sm" variant={p.id === "performance" ? "primary" : "secondary"} disabled={disabled} loading={busy === p.id} onClick={() => void apply(p)}>
+                Apply
+              </Button>
             </div>
-            <p className="text-[13px] text-muted mt-2 leading-relaxed flex-1">{p.description}</p>
-            <Button className="mt-3" size="sm" variant={p.id === "performance" ? "primary" : "outline"} disabled={disabled} loading={busy === p.id} onClick={() => void apply(p)}>
-              Apply
-            </Button>
-          </Card>
+          </div>
         ))}
       </div>
     </section>
@@ -421,7 +388,6 @@ function ModuleCard({
   blocked,
   busy,
   view,
-  client,
   perfItem,
   onToggle,
   onView,
@@ -433,7 +399,6 @@ function ModuleCard({
   blocked: string | null;
   busy: boolean;
   view: SettingsView | null;
-  client: ClientStatus | null;
   perfItem?: ReturnType<typeof perfStates>[number];
   onToggle: (on: boolean) => void;
   onView: (v: SettingsView) => void;
@@ -443,60 +408,39 @@ function ModuleCard({
   const perf = perfItem?.info;
   const description = m.kind === "perf" ? (perf?.what ?? "") : m.description;
   const configurable = m.kind === "hud" || m.id === "crosshair";
-  const labels: string[] = [];
-  if (m.kind === "hud" || m.kind === "setting") {
-    labels.push("MOTION Client");
-    if (client?.bundle) labels.push(`MC ${supportedLabels(client.bundle).join(", ")}`);
-    labels.push("Fabric · Quilt · NeoForge");
-  } else if (m.kind === "perf") {
-    labels.push("Modrinth");
-    if (perf) labels.push(perf.category);
-    if (perfItem?.item) labels.push(perfItem.item.enabled ? "Installed" : "Disabled file");
-  } else {
-    labels.push("Minecraft option");
-    labels.push("All versions");
-  }
+  const source = m.kind === "perf" ? `From Modrinth${perfItem?.item && !perfItem.item.enabled ? " · file disabled" : ""}` : m.kind === "vanilla" ? "Minecraft setting" : null;
   return (
-    <Card className={cx("p-4 transition-colors", on && !blocked && "border-line-strong")}>
-      <div className="flex items-start gap-3">
-        <div className={cx("h-10 w-10 rounded-xl grid place-items-center shrink-0 transition-colors", on && !blocked ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>{moduleIcon(m)}</div>
+    <div className="px-4 py-3">
+      <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold truncate">{m.name}</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-[14px] font-medium">{m.name}</span>
+            {source && <span className="text-[12px] text-faint">{source}</span>}
           </div>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {labels.map((l) => (
-              <span key={l} className="text-[11px] text-faint border border-line rounded px-1.5 h-[18px] inline-flex items-center">
-                {l}
-              </span>
-            ))}
-          </div>
+          <p className="text-[13px] text-muted leading-snug mt-0.5">{description}</p>
+          {m.note && <p className="text-[12px] text-faint mt-1 leading-snug">{m.note}</p>}
+          {blocked && <p className="text-[12px] text-faint mt-1">{blocked}</p>}
+          {m.kind === "vanilla" && running && <p className="text-[12px] text-warn mt-1">Close Minecraft to change this here.</p>}
+          {configurable && !blocked && view && (
+            <button type="button" onClick={() => setOpen((o) => !o)} className="mt-1.5 text-[13px] font-medium text-accent hover:underline cursor-pointer">
+              {open ? "Hide options" : "Options"}
+            </button>
+          )}
         </div>
         {on === null && !blocked ? (
-          <Skeleton className="h-[22px] w-[38px] rounded-full" />
+          <Skeleton className="h-[22px] w-[38px] rounded-full mt-0.5" />
         ) : (
-          <div className={cx(busy && "opacity-50 pointer-events-none")} title={blocked ?? undefined}>
+          <div className={cx("mt-0.5", busy && "opacity-50 pointer-events-none")} title={blocked ?? undefined}>
             <Toggle checked={Boolean(on) && !blocked} disabled={Boolean(blocked) || busy || (m.kind === "vanilla" && running)} onChange={onToggle} />
           </div>
         )}
       </div>
-      <p className="text-[13px] text-muted mt-3 leading-relaxed">{description}</p>
-      {m.note && <p className="text-[12px] text-faint mt-1.5 leading-relaxed">{m.note}</p>}
-      {blocked && <p className="text-[12px] text-faint mt-1.5">{blocked}</p>}
-      {m.kind === "vanilla" && running && <p className="text-[12px] text-warn mt-1.5">Close Minecraft to change this here.</p>}
-      {configurable && !blocked && view && (
-        <>
-          <button type="button" onClick={() => setOpen((o) => !o)} className="mt-3 text-[13px] font-semibold text-accent hover:underline cursor-pointer inline-flex items-center gap-1">
-            <Icon.Sliders size={13} /> {open ? "Hide options" : "Options"}
-          </button>
-          {open && (
-            <div className="mt-3 pt-3 border-t border-line animate-in">
-              {m.kind === "hud" ? <WidgetOptions inst={inst} widget={m.widget!} view={view} onView={onView} /> : <CrosshairOptions inst={inst} view={view} onView={onView} />}
-            </div>
-          )}
-        </>
+      {open && configurable && view && (
+        <div className="mt-3 pt-3 border-t border-line animate-in">
+          {m.kind === "hud" ? <WidgetOptions inst={inst} widget={m.widget!} view={view} onView={onView} /> : <CrosshairOptions inst={inst} view={view} onView={onView} />}
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 

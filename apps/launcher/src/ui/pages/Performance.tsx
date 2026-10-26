@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Instance } from "../../core/instances/model";
 import { pickLoaderVersion } from "../../core/loaders/loaders";
-import { HEAVY_MODS } from "../../core/perf/knownMods";
-import { JVM_PRESETS, recommendMemory } from "../../core/perf/memory";
+import { beforeAfter, capped, settingsPatch, type Finding, type FpsSession, type Impact } from "../../core/perf/doctor";
+import { JVM_PRESETS } from "../../core/perf/memory";
 import { PRESETS, readVideoSettings, type AppliedChange, type PresetId, type VideoSettings } from "../../core/perf/presets";
 import { app, navigate, P, path, reportError, toast, updateSettings, type OverlayCorner } from "../../services/app";
-import { compatibility } from "../../services/content";
 import { createInstance, instanceGameDir, updateInstance } from "../../services/instances";
+import { applyFinding, runDoctor, type DoctorReport } from "../../services/doctor";
 import { applyPreset, backupSettings, listBackups, perfModStatus, restoreBackup, type BackupInfo, type PerfModStatus } from "../../services/performance";
 import { useStore } from "../../services/store";
 import { availableLoaderVersions } from "../../services/versions";
-import { Badge, Button, Callout, Card, confirm, cx, EmptyState, formatBytes, gb, Modal, PageHeader, SectionTitle, Segmented, Select, Skeleton, Slider, Spinner, Toggle } from "../components";
+import { Badge, Button, Callout, Card, confirm, cx, EmptyState, formatBytes, gb, Modal, PageHeader, SectionTitle, Segmented, Select, Skeleton, Slider, Spinner, timeAgo, Toggle } from "../components";
 import { Metric, Sparkline } from "../charts";
 import { useContent } from "../contentEvents";
 import { Icon } from "../icons";
@@ -40,8 +40,8 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
   return (
     <div className="animate-in">
       <PageHeader
-        title="MOTION Performance"
-        subtitle="Reversible optimizations and measured statistics — no guesses."
+        title="Performance"
+        subtitle="What's costing frame rate in this installation, and your measured FPS."
         actions={
           <Select
             value={inst.id}
@@ -51,20 +51,16 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
           />
         }
       />
-      <div className="mb-6">
-        <Callout tone="info">
-          Real-world FPS depends on your hardware, game settings, the world you're in and the mods you install. MOTION never claims an FPS gain it hasn't measured, and every change it makes can be undone.
-        </Callout>
-      </div>
-      <div className="grid grid-cols-[1fr_340px] gap-6 items-start">
-        <div className="space-y-8 min-w-0">
+      <div className="grid grid-cols-[1fr_340px] gap-8 items-start">
+        <div className="space-y-10 min-w-0">
+          <Doctor inst={inst} />
           <Presets inst={inst} />
-          <Monitor inst={inst} />
           <ModRecommendations inst={inst} />
+          <Monitor inst={inst} />
           <Overlay inst={inst} />
         </div>
         <div className="space-y-6">
-          <Checklist inst={inst} />
+          <MeasuredFps inst={inst} />
           <MemoryJava inst={inst} />
           <Backups inst={inst} />
         </div>
@@ -72,6 +68,157 @@ export function PerformancePage({ instanceId }: { instanceId?: string }) {
     </div>
   );
 }
+
+
+// ---------------------------------------------------------------------------
+// Doctor: what costs frame rate here, each with one fix
+// ---------------------------------------------------------------------------
+
+const IMPACT_LABEL: Record<Impact, string> = { high: "High", medium: "Medium", low: "Low" };
+const IMPACT_TONE: Record<Impact, string> = { high: "bg-danger", medium: "bg-warn", low: "bg-faint" };
+
+function useDoctor(inst: Instance) {
+  const { items } = useContent(inst, "mods");
+  const [report, setReport] = useState<DoctorReport | null>(null);
+  const [tick, setTick] = useState(0);
+  const running = useStore(app, (s) => Boolean(s.running[inst.id]));
+  useEffect(() => {
+    let live = true;
+    runDoctor(inst)
+      .then((r) => live && setReport(r))
+      .catch(() => live && setReport({ findings: [], sessions: [], video: null, mods: [] }));
+    return () => {
+      live = false;
+    };
+  }, [inst.id, inst.memory?.maxMb, inst.performancePreset, items?.length, items?.filter((m) => m.enabled).length, tick, running]);
+  return { report, refresh: () => setTick((t) => t + 1) };
+}
+
+function Doctor({ inst }: { inst: Instance }) {
+  const { report, refresh } = useDoctor(inst);
+  const running = useStore(app, (s) => Boolean(s.running[inst.id]));
+  const [busy, setBusy] = useState<string | null>(null);
+  const findings = report?.findings ?? [];
+  const patch = settingsPatch(findings);
+  const settingsCount = findings.filter((f) => f.action?.kind === "settings").length;
+
+  async function fix(f: Finding | null, all?: boolean) {
+    if (!report) return;
+    setBusy(all ? "all" : f!.id);
+    try {
+      await applyFinding(inst, report, f ?? findings[0]!, all ? patch : undefined);
+      toast({ kind: "success", title: all ? "Settings changed" : f!.actionLabel ?? "Done", message: all || f?.action?.kind === "settings" ? "A backup of your old settings was saved (Backups, on this page)." : undefined });
+      refresh();
+    } catch (e) {
+      reportError("Couldn't apply that", e);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <section>
+      <SectionTitle
+        action={
+          settingsCount > 1 ? (
+            <Button size="sm" variant="primary" loading={busy === "all"} disabled={running || busy !== null} onClick={() => void fix(null, true)}>
+              Apply all {settingsCount} settings
+            </Button>
+          ) : undefined
+        }
+      >
+        Fixes
+      </SectionTitle>
+      {running && <p className="text-[13px] text-warn mb-3">Close Minecraft to apply fixes. It rewrites its settings and keeps mod files open while it runs.</p>}
+      {!report ? (
+        <Skeleton className="h-40 rounded-xl" />
+      ) : findings.length === 0 ? (
+        <div className="rounded-xl border border-line px-4 py-5 text-[14px]">
+          Nothing to fix. This installation already runs with fast settings and no heavy mods.
+        </div>
+      ) : (
+        <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
+          {findings.map((f) => (
+            <div key={f.id} className="grid grid-cols-[76px_1fr_auto] items-start gap-4 px-4 py-3.5">
+              <div className="flex items-center gap-2 pt-0.5 text-[12px] text-muted">
+                <span className={cx("h-1.5 w-1.5 rounded-full", IMPACT_TONE[f.impact])} />
+                {IMPACT_LABEL[f.impact]}
+              </div>
+              <div className="min-w-0">
+                <div className="text-[14px] font-medium">{f.title}</div>
+                <div className="text-[13px] text-muted leading-snug mt-0.5">{f.detail}</div>
+              </div>
+              {f.action && f.action.kind !== "install" && (
+                <Button size="sm" loading={busy === f.id} disabled={running || busy !== null} onClick={() => void fix(f)}>
+                  {f.actionLabel ?? "Fix"}
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[12px] text-faint mt-2.5">
+        Impact is how much these usually cost, not a promise. Your real numbers are under Measured FPS.
+      </p>
+    </section>
+  );
+}
+
+function fps(n: number): string {
+  return n >= 100 ? String(Math.round(n)) : n.toFixed(1).replace(/\.0$/, "");
+}
+
+function MeasuredFps({ inst }: { inst: Instance }) {
+  const { report } = useDoctor(inst);
+  const ba = report ? beforeAfter(report.sessions) : null;
+  const row = (label: string, s: FpsSession) => (
+    <div className="grid grid-cols-[64px_1fr_1fr] items-baseline gap-2">
+      <span className="text-[12px] text-faint">{label}</span>
+      <span>
+        <span className="text-[20px] font-semibold tabular-nums">{fps(s.avgFps)}</span>
+        <span className="text-[12px] text-muted ml-1">avg</span>
+      </span>
+      <span>
+        <span className="text-[16px] font-medium tabular-nums">{fps(s.low1Fps)}</span>
+        <span className="text-[12px] text-muted ml-1">1% low</span>
+      </span>
+    </div>
+  );
+  const detail = (s: FpsSession) =>
+    [`${Math.round(s.seconds / 60) || "<1"} min`, s.resolution, s.multiplayer ? "server" : "singleplayer", s.renderDistance !== undefined ? `${s.renderDistance} chunks` : null, s.shaders ? "shaders" : null].filter(Boolean).join(" · ");
+  const change = ba?.before ? (ba.latest.avgFps - ba.before.avgFps) / ba.before.avgFps : null;
+  return (
+    <Card className="p-5">
+      <h3 className="font-semibold mb-3">Measured FPS</h3>
+      {!report ? (
+        <Skeleton className="h-20" />
+      ) : !ba ? (
+        <p className="text-[13px] text-muted leading-relaxed">
+          Play for a few minutes with MOTION Client on and your real frame rate shows up here, so you can see what each fix did. Only gameplay counts: not menus, pauses or loading.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {row("Latest", ba.latest)}
+          <div className="text-[12px] text-faint -mt-1.5 pl-[72px]">{detail(ba.latest)} · {timeAgo(ba.latest.endedAt)}</div>
+          {ba.before && (
+            <>
+              {row("Before", ba.before)}
+              <div className="pl-[72px] text-[13px]">
+                <span className={cx("font-semibold tabular-nums", change! >= 0 ? "text-accent" : "text-danger")}>
+                  {change! >= 0 ? "+" : ""}
+                  {Math.round(change! * 100)}%
+                </span>
+                <span className="text-muted"> after: {ba.changes.join(", ")}</span>
+              </div>
+            </>
+          )}
+          {capped(ba.latest) && <p className="text-[12px] text-warn leading-snug">VSync or an FPS limit was on, so this is that limit, not what your PC can reach.</p>}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 
 // ---------------------------------------------------------------------------
 // Presets
@@ -264,80 +411,25 @@ function CustomEditor({ inst, open, onClose, onApply }: { inst: Instance; open: 
 }
 
 // ---------------------------------------------------------------------------
-// Checklist
-// ---------------------------------------------------------------------------
-
-function Checklist({ inst }: { inst: Instance }) {
-  const { items } = useContent(inst, "mods");
-  const system = useStore(app, (s) => s.system);
-  const settings = useStore(app, (s) => s.settings);
-  const ids = new Set((items ?? []).filter((m) => m.enabled).flatMap((m) => (m.meta ? [m.meta.id, ...m.meta.provides] : [])));
-  const issues = items ? compatibility(inst, items) : [];
-  const advice = system ? recommendMemory(system.totalMemory / 1_048_576, { modded: inst.loader !== "vanilla", modCount: items?.length ?? 0 }) : null;
-  const mem = inst.memory ?? settings.memory;
-  const renderer = ids.has("sodium") || ids.has("embeddium") || ids.has("rubidium");
-  const checks: { label: string; ok: boolean | null; hint?: string }[] = [
-    { label: "Performance preset applied", ok: Boolean(inst.performancePreset), hint: inst.performancePreset ? PRESETS.find((p) => p.id === inst.performancePreset)?.name ?? "Custom" : undefined },
-    { label: "Optimized renderer (Sodium/Embeddium)", ok: inst.loader === "vanilla" ? null : renderer, hint: inst.loader === "vanilla" ? "Needs a mod loader" : undefined },
-    { label: "Game logic optimizations (Lithium)", ok: inst.loader === "vanilla" ? null : ids.has("lithium") || ids.has("canary") || ids.has("radium") },
-    { label: "Lower memory use (FerriteCore)", ok: inst.loader === "vanilla" ? null : ids.has("ferritecore") },
-    { label: "No renderer conflicts", ok: items ? !issues.some((i) => i.kind === "known_conflict" && i.severity === "error") : null },
-    { label: "Memory within a safe range", ok: advice ? (mem ? mem.maxMb <= advice.maxSafeMb && mem.maxMb >= 2048 : true) : null, hint: mem ? gb(mem.maxMb) : "Default" },
-    { label: "Correct Java for this version", ok: !(inst.javaPath || settings.javaPath) ? true : null, hint: inst.javaPath || settings.javaPath ? "Custom Java — check Settings" : "Automatic" },
-  ];
-  const done = checks.filter((c) => c.ok).length;
-  const applicable = checks.filter((c) => c.ok !== null).length;
-  return (
-    <Card className="p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold">Optimization checklist</h3>
-        <span className="text-[13px] text-muted tabular-nums">
-          {done}/{applicable}
-        </span>
-      </div>
-      <div className="h-1.5 rounded-full bg-line overflow-hidden mb-4">
-        <div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${applicable ? (done / applicable) * 100 : 0}%` }} />
-      </div>
-      <div className="space-y-2.5">
-        {checks.map((c) => (
-          <div key={c.label} className="flex items-start gap-2.5 text-[13px]">
-            <span className={cx("mt-0.5 h-4 w-4 rounded-full grid place-items-center shrink-0", c.ok ? "bg-accent text-accent-ink" : c.ok === null ? "bg-line" : "border border-line-strong")}>
-              {c.ok && <Icon.Check size={11} strokeWidth={3} />}
-            </span>
-            <div className="min-w-0">
-              <div className={c.ok === null ? "text-faint" : ""}>{c.label}</div>
-              {c.hint && <div className="text-[12px] text-faint">{c.hint}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Mod recommendations, conflicts, heavy mods
+// Performance mods to add
 // ---------------------------------------------------------------------------
 
 function PerfModRow({ s, inst }: { s: PerfModStatus; inst: Instance }) {
   const busy = useInstalling(inst.id, s.projectId ?? s.mod.slug);
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className={cx("h-9 w-9 rounded-lg grid place-items-center shrink-0", s.installed ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>
-        {s.installed ? <Icon.Check size={17} /> : <Icon.Zap size={17} />}
-      </div>
+    <div className="flex items-center gap-4 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">{s.mod.title}</span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[14px] font-medium">{s.mod.title}</span>
           <span className="text-[12px] text-faint capitalize">{s.mod.category}</span>
         </div>
-        <div className="text-[13px] text-muted leading-snug">{s.mod.what}</div>
+        <div className="text-[13px] text-muted leading-snug mt-0.5">{s.mod.what}</div>
       </div>
       {s.installed ? (
-        <Badge tone="accent">Installed</Badge>
+        <span className="text-[13px] text-accent w-28 text-right">Installed</span>
       ) : s.version ? (
-        <Button size="sm" variant="outline" loading={busy} icon={<Icon.Download size={14} />} onClick={() => void installProject(s.projectId!, inst)}>
-          {s.version.version_number.length > 16 ? "Install" : s.version.version_number}
+        <Button size="sm" loading={busy} onClick={() => void installProject(s.projectId!, inst)}>
+          Install
         </Button>
       ) : (
         <span className="text-[12px] text-faint w-28 text-right">Not available for {inst.gameVersion}</span>
@@ -357,8 +449,6 @@ function ModRecommendations({ inst }: { inst: Instance }) {
       .catch(() => setStatus([]));
   }, [inst.id, inst.loader, inst.gameVersion, items?.length]);
 
-  const ids = new Set((items ?? []).filter((m) => m.enabled).map((m) => m.meta?.id ?? ""));
-  const heavy = HEAVY_MODS.filter((h) => h.modIds.some((id) => ids.has(id)));
 
   async function fabricCopy() {
     setCreating(true);
@@ -376,7 +466,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
 
   return (
     <section>
-      <SectionTitle>Performance mods</SectionTitle>
+      <SectionTitle>Performance mods to add</SectionTitle>
       {inst.loader === "vanilla" ? (
         <Callout
           tone="info"
@@ -391,7 +481,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
         </Callout>
       ) : (
         <>
-          <Card className="divide-y divide-line overflow-hidden">
+          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
             {!status
               ? Array.from({ length: 4 }, (_, i) => (
                   <div key={i} className="p-4">
@@ -399,23 +489,8 @@ function ModRecommendations({ inst }: { inst: Instance }) {
                   </div>
                 ))
               : status.map((s) => <PerfModRow key={s.mod.slug} s={s} inst={inst} />)}
-          </Card>
+          </div>
           <p className="text-[12px] text-faint mt-2">Availability is checked live on Modrinth for Minecraft {inst.gameVersion} and {loaderLabel(inst)}. Required libraries are added automatically.</p>
-          {heavy.length > 0 && (
-            <div className="mt-4">
-              <div className="text-[13px] font-semibold mb-2">Mods with a known performance cost</div>
-              <div className="space-y-2">
-                {heavy.map((h) => (
-                  <div key={h.title} className="flex gap-3 rounded-xl bg-panel border border-line p-3 text-[13px]">
-                    <Icon.Alert size={16} className="text-warn mt-0.5 shrink-0" />
-                    <div>
-                      <span className="font-medium">{h.title}</span> <span className="text-muted">— {h.note}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
     </section>
