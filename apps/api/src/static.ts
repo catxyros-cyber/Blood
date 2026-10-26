@@ -66,7 +66,9 @@ export async function serveStatic(root: string, urlPath: string): Promise<Reply>
     raw: body,
     headers: {
       "Content-Type": TYPES[ext] ?? "application/octet-stream",
-      "Cache-Control": html ? "no-cache" : "public, max-age=3600",
+      // Pages, scripts and styles are re-checked on every load, so a server update shows at once
+      // (an hour-long cache once paired a new admin page with its old script). Images can wait.
+      "Cache-Control": html || ext === ".js" || ext === ".css" ? "no-cache" : "public, max-age=3600",
       ...(html ? { "Content-Security-Policy": WEBSITE_CSP } : {}),
     },
   };
