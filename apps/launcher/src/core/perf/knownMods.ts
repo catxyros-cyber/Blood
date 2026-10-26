@@ -140,21 +140,6 @@ export const KNOWN_CONFLICTS: KnownConflict[] = [
   },
 ];
 
-/**
- * Mods that are known to cost noticeable frame rate or memory by design (they
- * do more work, not because they're badly made). Shown as hints, never as
- * measurements.
- */
-export const HEAVY_MODS: { modIds: string[]; title: string; note: string }[] = [
-  { modIds: ["iris", "oculus"], title: "Shader loaders (Iris/Oculus)", note: "Shader packs are the biggest FPS cost in most setups. Try a lighter pack or turn shaders off to compare." },
-  { modIds: ["distanthorizons"], title: "Distant Horizons", note: "Renders far-away terrain; uses extra CPU, GPU memory and disk while generating levels of detail." },
-  { modIds: ["physicsmod"], title: "Physics Mod", note: "Simulates physics for blocks and entities; heavy on CPU during destruction and explosions." },
-  { modIds: ["immersive_portals", "imm_ptl_core"], title: "Immersive Portals", note: "Renders the world through portals, which can multiply rendering work." },
-  { modIds: ["lambdynlights", "dynamiclights"], title: "Dynamic lights", note: "Recomputes lighting around moving light sources; a small to moderate cost." },
-  { modIds: ["sound_physics_remastered"], title: "Sound Physics Remastered", note: "Ray-traces sound reflections on the CPU." },
-  { modIds: ["entity_model_features", "entity_texture_features"], title: "Entity Model/Texture Features", note: "Custom entity models and textures add rendering work in busy areas." },
-];
-
 /** OptiFine isn't a normal mod (no metadata); detect its jar by name. */
 export function looksLikeOptifine(fileName: string): boolean {
   return /optifine/i.test(fileName) && !/optifabric/i.test(fileName);
