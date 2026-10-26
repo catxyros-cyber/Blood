@@ -1,0 +1,391 @@
+[00:32:42] [main/INFO]: Loading Minecraft 1.21.10 with Fabric Loader 0.20.1
+[00:32:42] [main/INFO]: Fabric is preparing JARs on first launch, this may take a few seconds...
+[00:32:42] [main/INFO]: Loading 51 mods:
+	- bloomclient 0.2.26
+	- fabric-api 0.138.4+1.21.10
+	- fabric-api-base 1.0.0+14b92d896f
+	- fabric-api-lookup-api-v1 1.6.106+d17682156f
+	- fabric-biome-api-v1 16.1.0+c2417d4f6f
+	- fabric-block-api-v1 1.1.5+d17682156f
+	- fabric-block-view-api-v2 1.0.34+e4fd1b926f
+	- fabric-client-gametest-api-v1 4.2.13+14b92d896f
+	- fabric-command-api-v2 2.4.0+c0ab2d5d6f
+	- fabric-content-registries-v0 10.2.6+b6a242646f
+	- fabric-convention-tags-v1 2.1.49+7f945d5b6f
+	- fabric-convention-tags-v2 2.17.0+ff7bc77d6f
+	- fabric-crash-report-info-v1 0.3.18+33df5e6e6f
+	- fabric-data-attachment-api-v1 1.8.33+cd3b9e596f
+	- fabric-data-generation-api-v1 23.2.27+d8b85ef16f
+	- fabric-dimensions-v1 4.0.22+38b9cc196f
+	- fabric-entity-events-v1 2.1.13+fde3702c6f
+	- fabric-events-interaction-v0 4.0.36+5ba217126f
+	- fabric-game-rule-api-v1 1.1.1+e47eaae56f
+	- fabric-gametest-api-v1 3.1.21+33df5e6e6f
+	- fabric-item-api-v1 11.5.11+9bce411b6f
+	- fabric-item-group-api-v1 4.2.27+86b3ae576f
+	- fabric-key-binding-api-v1 1.1.1+b3ba9c486f
+	- fabric-lifecycle-events-v1 2.6.9+33df5e6e6f
+	- fabric-loot-api-v2 3.0.67+3f89f5a56f
+	- fabric-loot-api-v3 2.0.14+d17682156f
+	- fabric-message-api-v1 6.1.7+3154c1c86f
+	- fabric-model-loading-api-v1 6.0.5+3ffd6ef06f
+	- fabric-networking-api-v1 5.1.0+b095d8db6f
+	- fabric-object-builder-api-v1 21.1.28+9bce411b6f
+	- fabric-particles-v1 4.2.3+a0ee59a46f
+	- fabric-recipe-api-v1 8.2.0+39709ef06f
+	- fabric-registry-sync-v0 6.1.42+679c8c5c6f
+	- fabric-renderer-api-v1 7.2.3+9be2a36e6f
+	- fabric-renderer-indigo 4.1.4+9be2a36e6f
+	- fabric-rendering-fluids-v1 3.1.38+86b3ae576f
+	- fabric-rendering-v1 16.2.0+bee81f016f
+	- fabric-resource-conditions-api-v1 5.0.28+33df5e6e6f
+	- fabric-resource-loader-v0 3.3.1+d4d4122a6f
+	- fabric-resource-loader-v1 1.0.4+14959b836f
+	- fabric-screen-api-v1 3.1.0+9c82a7986f
+	- fabric-screen-handler-api-v1 1.3.151+d17682156f
+	- fabric-serialization-api-v1 1.0.0+d857c9766f
+	- fabric-sound-api-v1 1.0.45+328a75ba6f
+	- fabric-tag-api-v1 1.2.13+2fa446b26f
+	- fabric-transfer-api-v1 6.0.15+79ec2c126f
+	- fabric-transitive-access-wideners-v1 6.5.3+41eb43436f
+	- fabricloader 0.20.1
+	   \-- mixinextras 0.5.5
+	- java 25
+	- minecraft 1.21.10
+[00:32:42] [main/INFO]: SpongePowered MIXIN Subsystem Version=0.8.7 Source=file:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.5+mixin.0.8.7/cef8519a91129d0c21fa03bb9378f0e8ca810e5/sponge-mixin-0.17.5+mixin.0.8.7.jar Service=Knot/Fabric Env=CLIENT
+[00:32:42] [main/WARN]: Reference map 'bloomclient.refmap.json' for bloomclient.mixins.json could not be read. If this is a development environment you can ignore this message
+[00:32:43] [main/INFO]: Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.5.5).
+[00:32:44] [Datafixer Bootstrap/INFO]: 278 Datafixer optimizations took 508 milliseconds
+[00:32:49] [Render thread/INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[00:32:49] [Render thread/INFO]: Setting user: Player290
+[00:32:49] [Render thread/INFO]: MOTION Client 0.2.26 ready on Fabric
+[00:32:49] [Render thread/INFO]: [Indigo] Registering Indigo renderer!
+[00:32:49] [Render thread/INFO]: Backend library: LWJGL version 3.3.3-snapshot
+[00:32:49] [Download-2/ERROR]: Failed to fetch user properties
+com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
+	at knot/com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:59) ~[authlib-7.0.61.jar:?]
+	at knot/com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:150) ~[authlib-7.0.61.jar:?]
+	at knot/net.minecraft.class_310.method_55608(class_310.java:465) [client-intermediary.jar:?]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) [?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1474) [?:?]
+Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 401
+	at knot/com.mojang.authlib.minecraft.client.MinecraftClient.readInputStream(MinecraftClient.java:103) ~[authlib-7.0.61.jar:?]
+	at knot/com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:56) ~[authlib-7.0.61.jar:?]
+	at knot/com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:121) ~[authlib-7.0.61.jar:?]
+	... 5 more
+[00:32:50] [Render thread/INFO]: [STDERR]: [LWJGL] [ThreadLocalUtil] Unsupported JNI version detected, this may result in a crash. Please inform LWJGL developers.
+[00:32:50] [Render thread/INFO]: Using optional rendering extensions: GL_ARB_buffer_storage, GL_KHR_debug, GL_ARB_vertex_attrib_binding, GL_ARB_direct_state_access
+[00:32:50] [Render thread/ERROR]: Error while loading the narrator
+com.mojang.text2speech.Narrator$InitializeException: Failed to load library flite
+	at knot/com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:81) ~[text2speech-1.18.11.jar:?]
+	at knot/com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.18.11.jar:?]
+	at knot/com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) [text2speech-1.18.11.jar:?]
+	at knot/net.minecraft.class_333.<init>(class_333.java:20) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.<init>(class_310.java:705) [client-intermediary.jar:?]
+	at knot/net.minecraft.client.main.Main.main(Main.java:234) [client-intermediary.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+Caused by: java.lang.UnsatisfiedLinkError: Unable to load library 'flite':
+libflite.so: cannot open shared object file: No such file or directory
+libflite.so: cannot open shared object file: No such file or directory
+Native library (linux-x86-64/libflite.so) not found in resource path (/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.10.1/ada2141c0cc52ee8f5c48cd5fa4ce0e794f22236/asm-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.10.1/8d49f14d51f632cb1d87c88d1ceaf50db0d8af1b/asm-analysis-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/9.10.1/4229e4c55fd8e01c23f9fe9884075cc628aacc50/asm-commons-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.10.1/e244332a17564c1d1572449399a842de35881be2/asm-tree-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.10.1/7bb9d450e8d4cbf9f9e04096c44bbfe7fba80b15/asm-util-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.5+mixin.0.8.7/cef8519a91129d0c21fa03bb9378f0e8ca810e5/sponge-mixin-0.17.5+mixin.0.8.7.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-fabric/0.5.5/d1055b99c0ab08a8403fe2da3d79ca28e6340a76/mixinextras-fabric-0.5.5.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.13.4/858c6cc78e1f08a885b1613e1d817c829df70a6e/jackson-annotations-2.13.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.13.4/cf934c681294b97ef6d80082faeefbe1edadf56/jackson-core-2.13.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.4.2/325c06bdfeb628cfb80ebaaf1a26cc1eb558a585/jackson-databind-2.13.4.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.github.oshi/oshi-core/6.6.5/e1099981fd15dc4236c4499d82aba1276fb43a9a/oshi-core-6.6.5.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.github.stephenc.jcip/jcip-annotations/1.0-1/ef31541dd28ae2cefdd17c7ebf352d93e9058c63/jcip-annotations-1.0-1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.11.0/527175ca6d81050b53bdd4c457a6d6e017626b0e/gson-2.11.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.2/c4a06a64e650562f30b7bf9aaec1bfed43aca12b/failureaccess-1.0.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/33.3.1-jre/852f8b363da0111e819460021ca693cacca3e8db/guava-33.3.1-jre.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.ibm.icu/icu4j/76.1/215f3a8e936d4069344bd75f2b1368fd58112894/icu4j-76.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.microsoft.azure/msal4j/1.17.2/a6211e3d71d0388929babaa0ff0951b30d001852/msal4j-1.17.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/authlib/7.0.61/efee1e6b54e863108576eb3b3ae71144626aaefc/authlib-7.0.61.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/blocklist/1.0.10/5c685c5ffa94c4cd39496c7184c1d122e515ecef/blocklist-1.0.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/brigadier/1.3.10/d15b53a14cf20fdcaa98f731af5dda654452c010/brigadier-1.3.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/datafixerupper/8.0.16/67d4de6d7f95d89bcf5862995fb854ebaec02a34/datafixerupper-8.0.16.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/jtracy/1.0.36/20a63d06b621bfeb3cb21ef51b7fa40c0fc22021/jtracy-1.0.36.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/jtracy/1.0.36/8f2967c139b024bf80024a3eab63e906c3ee2e5b/jtracy-1.0.36-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/logging/1.5.10/9ab1202793717af9df9c1704d0a02892067001eb/logging-1.5.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/patchy/2.2.10/da05971b07cbb379d002cf7eaec6a2048211fefc/patchy-2.2.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/text2speech/1.18.11/e853a12cdd6ba4f4836e8f4bf3b37844a13482b6/text2speech-1.18.11.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/content-type/2.3/e3aa0be212d7a42839a8f3f506f5b990bcce0222/content-type-2.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/lang-tag/1.7/97c73ecd70bc7e8eefb26c5eea84f251a63f1031/lang-tag-1.7.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/nimbus-jose-jwt/9.40/42b1dfa0360e4062951b070bac52dd8d96fd7b38/nimbus-jose-jwt-9.40.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/oauth2-oidc-sdk/11.18/7c7ec4f4066625ff07a711ad856fa04da1ff9de/oauth2-oidc-sdk-11.18.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.17.1/973638b7149d333563584137ebf13a691bb60579/commons-codec-1.17.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.17.0/ddcc8433eb019fb48fe25207c0278143f3e1d7e2/commons-io-2.17.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.3.4/b9fc14968d63a8b8a8a2c1885fe3e90564239708/commons-logging-1.3.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-buffer/4.1.118.Final/7022990af1e0d449f9d5322035899745e19735c5/netty-buffer-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec-http/4.1.118.Final/eda08a71294afe78c779b85fd696bc13491507a8/netty-codec-http-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec/4.1.118.Final/307f665c08ce57333121de4f460479fc0c3c94d4/netty-codec-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-common/4.1.118.Final/4bb0f9899146484fa89f7b9bc27389d5b8e2ecde/netty-common-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-handler/4.1.118.Final/30ebb05b6b0fb071dbfcf713017c4a767a97bb9b/netty-handler-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-resolver/4.1.118.Final/28c378c19c1779eca1104b400452627f3ebc4aea/netty-resolver-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-classes-epoll/4.1.118.Final/376ce95507066f0e755d97c1c8bcd6c33f657617/netty-transport-classes-epoll-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.118.Final/82f94d0a9d837f6b6a580379373310ff7288c0f8/netty-transport-native-epoll-4.1.118.Final-linux-aarch_64.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.118.Final/7e6b89e3746acb7cf6f0aad993bbd058fc6d912e/netty-transport-native-epoll-4.1.118.Final-linux-x86_64.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-unix-common/4.1.118.Final/9da25a94e6a0edac90da0bc7894e5a54efcb866b/netty-transport-native-unix-common-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport/4.1.118.Final/5a27232e5d08218722d94ca14f0b1b4576e7711c/netty-transport-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/it.unimi.dsi/fastutil/8.5.15/1e885b40c9563ab0d3899b871fd0b30e958705dc/fastutil-8.5.15.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna-platform/5.15.0/86b502cad57d45da172b5e3231c537b042e296ef/jna-platform-5.15.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/5.15.0/1ee1d80ff44f08280188f7c0e740d57207841ac/jna-5.15.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.minidev/accessors-smart/2.5.1/19b820261eb2e7de7d5bde11d1c06e4501dd7e5f/accessors-smart-2.5.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.minidev/json-smart/2.5.1/4c11d2808d009132dfbbf947ebf37de6bf266c8e/json-smart-2.5.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.sf.jopt-simple/jopt-simple/5.0.4/4fdac2fbe92dfad86aa6e9301736f6b4342a3f5c/jopt-simple-5.0.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-compress/1.27.1/a19151084758e2fbb6b41eddaa88e7b8ff4e6599/commons-compress-1.27.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.17.0/b17d2136f0460dcc0d2016ceefca8723bdf4ee70/commons-lang3-3.17.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.14/1194890e6f56ec29177673f2f12d0b8e627dec98/httpclient-4.5.14.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.16/51cf043c87253c9f58b539c9f7e44c8894223850/httpcore-4.4.16.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.24.1/7ebeb12c20606373005af4232cd0ecca72613dda/log4j-api-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.24.1/c85285146f28d8c8962384f786e2dff04172fb43/log4j-core-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j2-impl/2.24.1/8e3ddc96464ef7f768823e7e001a52b23de8cd0a/log4j-slf4j2-impl-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.jcraft/jorbis/0.0.17/8872d22b293e8f5d7d56ff92be966e6dc28ebdc6/jorbis-0.0.17.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.joml/joml/1.10.8/fc0a71dad90a2cf41d82a76156a0e700af8e4f8d/joml-1.10.8.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/a0db6c84a8becc8ca05f9dbfa985edc348a824c7/lwjgl-freetype-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/149070a5480900347071b7074779531f25a6e3dc/lwjgl-freetype-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/efa1eb78c5ccd840e9f329717109b5e892d72f8e/lwjgl-glfw-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/a03684c5e4b1b1dbbe0d29dbbdc27b985b6840f2/lwjgl-glfw-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/b543467b7ff3c6920539a88ee602d34098628be5/lwjgl-jemalloc-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/4f86728bf449b1dd61251c4e0ac01df1389cb51e/lwjgl-jemalloc-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/daada81ceb5fc0c291fbfdd4433cb8d9423577f2/lwjgl-openal-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/3037360cc4595079bea240af250b6d1a527e0905/lwjgl-openal-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/2f6b0147078396a58979125a4c947664e98293a/lwjgl-opengl-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/62c70a4b00ca5391882b0f4b787c1588d24f1c86/lwjgl-opengl-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/25dd6161988d7e65f71d5065c99902402ee32746/lwjgl-stb-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/fd1271ccd9d85eff2fa31f3fd543e02ccfaf5041/lwjgl-stb-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/82d755ca94b102e9ca77283b9e2dc46d1b15fbe5/lwjgl-tinyfd-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/d8d58daa0c3e5fd906fee96f5fddbcbc07cc308b/lwjgl-tinyfd-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/29589b5f87ed335a6c7e7ee6a5775f81f97ecb84/lwjgl-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/1713758e3660ba66e1e954396fd18126038b33c0/lwjgl-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lz4/lz4-java/1.8.0/4b986a99445e49ea5fbf5d149c4b63f6ed6c6780/lz4-java-1.8.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.16/172931663a09a1fa515567af5fbef00897d3c04/slf4j-api-2.0.16.jar:/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-client.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/fabric-loader/0.20.1/7c7f9831e9f27b303d5d08decb5f4258a9f03296/fabric-loader-0.20.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/intermediary/1.21.10/547e56494b6ccd3f28fa497fafd9d24598f08cb5/intermediary-1.21.10.jar)
+	at knot/com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:325) ~[jna-5.15.0.jar:?]
+	at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:481) ~[jna-5.15.0.jar:?]
+	at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:423) ~[jna-5.15.0.jar:?]
+	at knot/com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:79) ~[text2speech-1.18.11.jar:?]
+	... 8 more
+	Suppressed: java.lang.UnsatisfiedLinkError: libflite.so: cannot open shared object file: No such file or directory
+		at knot/com.sun.jna.Native.open(Native Method) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:213) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:481) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:423) ~[jna-5.15.0.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:79) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) [text2speech-1.18.11.jar:?]
+		at knot/net.minecraft.class_333.<init>(class_333.java:20) [client-intermediary.jar:?]
+		at knot/net.minecraft.class_310.<init>(class_310.java:705) [client-intermediary.jar:?]
+		at knot/net.minecraft.client.main.Main.main(Main.java:234) [client-intermediary.jar:?]
+		at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+	Suppressed: java.lang.UnsatisfiedLinkError: libflite.so: cannot open shared object file: No such file or directory
+		at knot/com.sun.jna.Native.open(Native Method) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:226) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:481) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:423) ~[jna-5.15.0.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:79) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) [text2speech-1.18.11.jar:?]
+		at knot/net.minecraft.class_333.<init>(class_333.java:20) [client-intermediary.jar:?]
+		at knot/net.minecraft.class_310.<init>(class_310.java:705) [client-intermediary.jar:?]
+		at knot/net.minecraft.client.main.Main.main(Main.java:234) [client-intermediary.jar:?]
+		at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+	Suppressed: java.io.IOException: Native library (linux-x86-64/libflite.so) not found in resource path (/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.10.1/ada2141c0cc52ee8f5c48cd5fa4ce0e794f22236/asm-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.10.1/8d49f14d51f632cb1d87c88d1ceaf50db0d8af1b/asm-analysis-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/9.10.1/4229e4c55fd8e01c23f9fe9884075cc628aacc50/asm-commons-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.10.1/e244332a17564c1d1572449399a842de35881be2/asm-tree-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.10.1/7bb9d450e8d4cbf9f9e04096c44bbfe7fba80b15/asm-util-9.10.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.17.5+mixin.0.8.7/cef8519a91129d0c21fa03bb9378f0e8ca810e5/sponge-mixin-0.17.5+mixin.0.8.7.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.github.llamalad7/mixinextras-fabric/0.5.5/d1055b99c0ab08a8403fe2da3d79ca28e6340a76/mixinextras-fabric-0.5.5.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.13.4/858c6cc78e1f08a885b1613e1d817c829df70a6e/jackson-annotations-2.13.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.13.4/cf934c681294b97ef6d80082faeefbe1edadf56/jackson-core-2.13.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.13.4.2/325c06bdfeb628cfb80ebaaf1a26cc1eb558a585/jackson-databind-2.13.4.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.github.oshi/oshi-core/6.6.5/e1099981fd15dc4236c4499d82aba1276fb43a9a/oshi-core-6.6.5.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.github.stephenc.jcip/jcip-annotations/1.0-1/ef31541dd28ae2cefdd17c7ebf352d93e9058c63/jcip-annotations-1.0-1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.11.0/527175ca6d81050b53bdd4c457a6d6e017626b0e/gson-2.11.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.2/c4a06a64e650562f30b7bf9aaec1bfed43aca12b/failureaccess-1.0.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/33.3.1-jre/852f8b363da0111e819460021ca693cacca3e8db/guava-33.3.1-jre.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.ibm.icu/icu4j/76.1/215f3a8e936d4069344bd75f2b1368fd58112894/icu4j-76.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.microsoft.azure/msal4j/1.17.2/a6211e3d71d0388929babaa0ff0951b30d001852/msal4j-1.17.2.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/authlib/7.0.61/efee1e6b54e863108576eb3b3ae71144626aaefc/authlib-7.0.61.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/blocklist/1.0.10/5c685c5ffa94c4cd39496c7184c1d122e515ecef/blocklist-1.0.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/brigadier/1.3.10/d15b53a14cf20fdcaa98f731af5dda654452c010/brigadier-1.3.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/datafixerupper/8.0.16/67d4de6d7f95d89bcf5862995fb854ebaec02a34/datafixerupper-8.0.16.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/jtracy/1.0.36/20a63d06b621bfeb3cb21ef51b7fa40c0fc22021/jtracy-1.0.36.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/jtracy/1.0.36/8f2967c139b024bf80024a3eab63e906c3ee2e5b/jtracy-1.0.36-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/logging/1.5.10/9ab1202793717af9df9c1704d0a02892067001eb/logging-1.5.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/patchy/2.2.10/da05971b07cbb379d002cf7eaec6a2048211fefc/patchy-2.2.10.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.mojang/text2speech/1.18.11/e853a12cdd6ba4f4836e8f4bf3b37844a13482b6/text2speech-1.18.11.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/content-type/2.3/e3aa0be212d7a42839a8f3f506f5b990bcce0222/content-type-2.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/lang-tag/1.7/97c73ecd70bc7e8eefb26c5eea84f251a63f1031/lang-tag-1.7.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/nimbus-jose-jwt/9.40/42b1dfa0360e4062951b070bac52dd8d96fd7b38/nimbus-jose-jwt-9.40.jar:/home/runner/.gradle/caches/modules-2/files-2.1/com.nimbusds/oauth2-oidc-sdk/11.18/7c7ec4f4066625ff07a711ad856fa04da1ff9de/oauth2-oidc-sdk-11.18.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.17.1/973638b7149d333563584137ebf13a691bb60579/commons-codec-1.17.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.17.0/ddcc8433eb019fb48fe25207c0278143f3e1d7e2/commons-io-2.17.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.3.4/b9fc14968d63a8b8a8a2c1885fe3e90564239708/commons-logging-1.3.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-buffer/4.1.118.Final/7022990af1e0d449f9d5322035899745e19735c5/netty-buffer-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec-http/4.1.118.Final/eda08a71294afe78c779b85fd696bc13491507a8/netty-codec-http-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec/4.1.118.Final/307f665c08ce57333121de4f460479fc0c3c94d4/netty-codec-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-common/4.1.118.Final/4bb0f9899146484fa89f7b9bc27389d5b8e2ecde/netty-common-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-handler/4.1.118.Final/30ebb05b6b0fb071dbfcf713017c4a767a97bb9b/netty-handler-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-resolver/4.1.118.Final/28c378c19c1779eca1104b400452627f3ebc4aea/netty-resolver-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-classes-epoll/4.1.118.Final/376ce95507066f0e755d97c1c8bcd6c33f657617/netty-transport-classes-epoll-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.118.Final/82f94d0a9d837f6b6a580379373310ff7288c0f8/netty-transport-native-epoll-4.1.118.Final-linux-aarch_64.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.118.Final/7e6b89e3746acb7cf6f0aad993bbd058fc6d912e/netty-transport-native-epoll-4.1.118.Final-linux-x86_64.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-unix-common/4.1.118.Final/9da25a94e6a0edac90da0bc7894e5a54efcb866b/netty-transport-native-unix-common-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport/4.1.118.Final/5a27232e5d08218722d94ca14f0b1b4576e7711c/netty-transport-4.1.118.Final.jar:/home/runner/.gradle/caches/modules-2/files-2.1/it.unimi.dsi/fastutil/8.5.15/1e885b40c9563ab0d3899b871fd0b30e958705dc/fastutil-8.5.15.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna-platform/5.15.0/86b502cad57d45da172b5e3231c537b042e296ef/jna-platform-5.15.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/5.15.0/1ee1d80ff44f08280188f7c0e740d57207841ac/jna-5.15.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.minidev/accessors-smart/2.5.1/19b820261eb2e7de7d5bde11d1c06e4501dd7e5f/accessors-smart-2.5.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.minidev/json-smart/2.5.1/4c11d2808d009132dfbbf947ebf37de6bf266c8e/json-smart-2.5.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.sf.jopt-simple/jopt-simple/5.0.4/4fdac2fbe92dfad86aa6e9301736f6b4342a3f5c/jopt-simple-5.0.4.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-compress/1.27.1/a19151084758e2fbb6b41eddaa88e7b8ff4e6599/commons-compress-1.27.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.17.0/b17d2136f0460dcc0d2016ceefca8723bdf4ee70/commons-lang3-3.17.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.14/1194890e6f56ec29177673f2f12d0b8e627dec98/httpclient-4.5.14.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.16/51cf043c87253c9f58b539c9f7e44c8894223850/httpcore-4.4.16.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.24.1/7ebeb12c20606373005af4232cd0ecca72613dda/log4j-api-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.24.1/c85285146f28d8c8962384f786e2dff04172fb43/log4j-core-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j2-impl/2.24.1/8e3ddc96464ef7f768823e7e001a52b23de8cd0a/log4j-slf4j2-impl-2.24.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.jcraft/jorbis/0.0.17/8872d22b293e8f5d7d56ff92be966e6dc28ebdc6/jorbis-0.0.17.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.joml/joml/1.10.8/fc0a71dad90a2cf41d82a76156a0e700af8e4f8d/joml-1.10.8.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/a0db6c84a8becc8ca05f9dbfa985edc348a824c7/lwjgl-freetype-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-freetype/3.3.3/149070a5480900347071b7074779531f25a6e3dc/lwjgl-freetype-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/efa1eb78c5ccd840e9f329717109b5e892d72f8e/lwjgl-glfw-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.3/a03684c5e4b1b1dbbe0d29dbbdc27b985b6840f2/lwjgl-glfw-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/b543467b7ff3c6920539a88ee602d34098628be5/lwjgl-jemalloc-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.3/4f86728bf449b1dd61251c4e0ac01df1389cb51e/lwjgl-jemalloc-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/daada81ceb5fc0c291fbfdd4433cb8d9423577f2/lwjgl-openal-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.3/3037360cc4595079bea240af250b6d1a527e0905/lwjgl-openal-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/2f6b0147078396a58979125a4c947664e98293a/lwjgl-opengl-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.3/62c70a4b00ca5391882b0f4b787c1588d24f1c86/lwjgl-opengl-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/25dd6161988d7e65f71d5065c99902402ee32746/lwjgl-stb-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.3/fd1271ccd9d85eff2fa31f3fd543e02ccfaf5041/lwjgl-stb-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/82d755ca94b102e9ca77283b9e2dc46d1b15fbe5/lwjgl-tinyfd-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.3/d8d58daa0c3e5fd906fee96f5fddbcbc07cc308b/lwjgl-tinyfd-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/29589b5f87ed335a6c7e7ee6a5775f81f97ecb84/lwjgl-3.3.3.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.3/1713758e3660ba66e1e954396fd18126038b33c0/lwjgl-3.3.3-natives-linux.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.lz4/lz4-java/1.8.0/4b986a99445e49ea5fbf5d149c4b63f6ed6c6780/lz4-java-1.8.0.jar:/home/runner/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.16/172931663a09a1fa515567af5fbef00897d3c04/slf4j-api-2.0.16.jar:/home/runner/.gradle/caches/fabric-loom/1.21.10/minecraft-client.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/fabric-loader/0.20.1/7c7f9831e9f27b303d5d08decb5f4258a9f03296/fabric-loader-0.20.1.jar:/home/runner/.gradle/caches/modules-2/files-2.1/net.fabricmc/intermediary/1.21.10/547e56494b6ccd3f28fa497fafd9d24598f08cb5/intermediary-1.21.10.jar)
+		at knot/com.sun.jna.Native.extractFromResourcePath(Native.java:1141) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:297) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:481) ~[jna-5.15.0.jar:?]
+		at knot/com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:423) ~[jna-5.15.0.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:79) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.18.11.jar:?]
+		at knot/com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) [text2speech-1.18.11.jar:?]
+		at knot/net.minecraft.class_333.<init>(class_333.java:20) [client-intermediary.jar:?]
+		at knot/net.minecraft.class_310.<init>(class_310.java:705) [client-intermediary.jar:?]
+		at knot/net.minecraft.client.main.Main.main(Main.java:234) [client-intermediary.jar:?]
+		at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+		at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+[00:32:50] [Download-1/INFO]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
+[00:32:50] [Download-1/ERROR]: Failed to fetch Realms feature flags
+net.minecraft.class_4355: Realms authentication error with message 'java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC'
+	at knot/net.minecraft.class_4341.method_20998(class_4341.java:536) ~[client-intermediary.jar:?]
+	at knot/net.minecraft.class_4341.method_68466(class_4341.java:189) [client-intermediary.jar:?]
+	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1789) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090) [?:?]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614) [?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1474) [?:?]
+[00:32:50] [Render thread/INFO]: Reloading ResourceManager: vanilla, fabric, bloomclient, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-client-gametest-api-v1, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-gametest-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader
+[00:32:51] [Worker-Main-1/INFO]: Found unifont_pua-16.0.03.hex, loading
+[00:32:51] [Worker-Main-3/INFO]: Found unifont_all_no_pua-16.0.03.hex, loading
+[00:32:51] [Worker-Main-3/INFO]: Found unifont_jp_patch-16.0.03.hex, loading
+[00:32:52] [Render thread/ERROR]: Error starting SoundSystem. Turning off sounds & music
+java.lang.IllegalStateException: Failed to open OpenAL device
+	at knot/net.minecraft.class_4225.method_38501(class_4225.java:297) ~[client-intermediary.jar:?]
+	at knot/net.minecraft.class_4225.method_19661(class_4225.java:154) ~[client-intermediary.jar:?]
+	at knot/net.minecraft.class_1140.method_4846(class_1140.java:118) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1140.method_4837(class_1140.java:108) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1144.method_18182(class_1144.java:122) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1144.method_18788(class_1144.java:41) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_4080.method_18790(class_4080.java:15) [client-intermediary.jar:?]
+	at java.base/java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:739) [?:?]
+	at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:503) [?:?]
+	at knot/net.minecraft.class_4014.method_67574(class_4014.java:60) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_18859(class_1255.java:168) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_4093.method_18859(class_4093.java:23) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_16075(class_1255.java:142) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_5383(class_1255.java:123) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1523(class_310.java:1340) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1514$mixinextras$wrapped$280(class_310.java:969) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.mixinextras$bridge$method_1514$mixinextras$wrapped$280$281(class_310.java) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.wrapMethod$zci000$fabric-client-gametest-api-v1$onRun(class_310.java:5121) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1514(class_310.java) [client-intermediary.jar:?]
+	at knot/net.minecraft.client.main.Main.main(Main.java:250) [client-intermediary.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+[00:32:52] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 128x64x0 minecraft:textures/atlas/decorated_pot.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 2048x1024x0 minecraft:textures/atlas/armor_trims.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/shield_patterns.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/chest.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/banner_patterns.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/beds.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 1024x1024x0 minecraft:textures/atlas/gui.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 64x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 256x256x0 minecraft:textures/atlas/signs.png-atlas
+[00:32:52] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/shulker_boxes.png-atlas
+[00:32:55] [Test thread/INFO]: [STDOUT]: [MOTION smoke] start
+[00:32:57] [ForkJoinPool.commonPool-worker-1/WARN]: MOTION: couldn't load your skin (java.util.concurrent.CompletionException: java.lang.IllegalStateException: profile HTTP 204), will retry
+[00:33:02] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 2 reached during a single frame. New capacity will be 4.
+[00:33:02] [Test thread/INFO]: [STDOUT]: [MOTION smoke] title screen ok
+[00:33:04] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 4 reached during a single frame. New capacity will be 8.
+[00:33:13] [Test thread/INFO]: [STDOUT]: [MOTION smoke] menu ok
+[00:33:15] [Render thread/INFO]: Loaded 1461 recipes
+[00:33:15] [Render thread/INFO]: Loaded 1574 advancements
+[00:33:15] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_424@3237dc35
+[00:33:15] [Render thread/INFO]: Applied 0 biome modifications to 0 of 65 new biomes in 1.139 ms
+[00:33:15] [Server thread/INFO]: Starting integrated minecraft server version 1.21.10
+[00:33:15] [Server thread/INFO]: Generating keypair
+[00:33:15] [Server thread/INFO]: Selecting global world spawn...
+[00:33:16] [Server thread/INFO]: Loading 0 persistent chunks...
+[00:33:16] [Server thread/INFO]: Preparing spawn area: 16%
+[00:33:16] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:16] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:16] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:16] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:16] [Server thread/INFO]: Loading 48 chunks for player spawn...
+[00:33:16] [Server thread/INFO]: Preparing spawn area: 16%
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Server thread/INFO]: Preparing spawn area: 16%
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Server thread/INFO]: Preparing spawn area: 16%
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Server thread/INFO]: Time elapsed: 1824 ms
+[00:33:17] [Render thread/INFO]: World loading finished: null screen: net.minecraft.class_3928@78053fb
+[00:33:17] [Server thread/INFO]: Player290[local:E:ff62a448] logged in with entity id 1 at (8.5, -60.0, 0.5)
+[00:33:17] [Server thread/INFO]: Player290 joined the game
+[00:33:17] [Server thread/INFO]: Changing view distance to 5, from 10
+[00:33:17] [Render thread/INFO]: Loaded 2 advancements
+[00:33:17] [Server thread/INFO]: Changing simulation distance to 12, from 0
+[00:33:18] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:18] [Render thread/INFO]: MOTION capes: no server address from the launcher (-Dbloodclient.api), capes and tags are off
+[00:33:18] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 8 reached during a single frame. New capacity will be 16.
+[00:33:18] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:18] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:18] [Server thread/WARN]: Can't keep up! Is the server overloaded? Running 2118ms or 42 ticks behind
+[00:33:18] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 16 reached during a single frame. New capacity will be 32.
+[00:33:19] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:19] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:19] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:19] [Render thread/INFO]: World loading finished: ClientLevel screen: net.minecraft.class_3928@78053fb
+[00:33:19] [Render thread/INFO]: World loading finished: ClientLevel screen: null
+[00:33:19] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 32 reached during a single frame. New capacity will be 64.
+[00:33:20] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 64 reached during a single frame. New capacity will be 128.
+[00:33:24] [Render thread/INFO]: Resizing Dynamic Transforms UBO, capacity limit of 128 reached during a single frame. New capacity will be 256.
+[00:33:25] [Test thread/INFO]: [STDOUT]: [MOTION smoke] world ok
+[00:33:32] [ForkJoinPool.commonPool-worker-1/WARN]: MOTION: couldn't load your skin (java.util.concurrent.CompletionException: java.lang.IllegalStateException: profile HTTP 204), will retry
+[00:33:34] [Server thread/INFO]: Gave 1 [Diamond Sword] to Player290
+[00:33:34] [Server thread/INFO]: Summoned new Pig
+[00:33:37] [Server thread/WARN]: Can't keep up! Is the server overloaded? Running 3880ms or 77 ticks behind
+[00:33:39] [Server thread/INFO]: Saving and pausing game...
+[00:33:39] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[00:33:39] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[00:33:39] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[00:33:40] [Render thread/INFO]: Reloading ResourceManager: vanilla, fabric, bloomclient, fabric-api, fabric-api-base, fabric-api-lookup-api-v1, fabric-biome-api-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-client-gametest-api-v1, fabric-command-api-v2, fabric-content-registries-v0, fabric-convention-tags-v1, fabric-convention-tags-v2, fabric-crash-report-info-v1, fabric-data-attachment-api-v1, fabric-data-generation-api-v1, fabric-dimensions-v1, fabric-entity-events-v1, fabric-events-interaction-v0, fabric-game-rule-api-v1, fabric-gametest-api-v1, fabric-item-api-v1, fabric-item-group-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-loot-api-v2, fabric-loot-api-v3, fabric-message-api-v1, fabric-model-loading-api-v1, fabric-networking-api-v1, fabric-object-builder-api-v1, fabric-particles-v1, fabric-recipe-api-v1, fabric-registry-sync-v0, fabric-renderer-api-v1, fabric-renderer-indigo, fabric-rendering-fluids-v1, fabric-rendering-v1, fabric-resource-conditions-api-v1, fabric-resource-loader-v0, fabric-resource-loader-v1, fabric-screen-api-v1, fabric-screen-handler-api-v1, fabric-serialization-api-v1, fabric-sound-api-v1, fabric-tag-api-v1, fabric-transfer-api-v1, fabric-transitive-access-wideners-v1, fabricloader
+[00:33:41] [Worker-Main-3/INFO]: Found unifont_all_no_pua-16.0.03.hex, loading
+[00:33:41] [Worker-Main-2/INFO]: Found unifont_pua-16.0.03.hex, loading
+[00:33:41] [Worker-Main-3/INFO]: Found unifont_jp_patch-16.0.03.hex, loading
+[00:33:42] [Render thread/ERROR]: Error starting SoundSystem. Turning off sounds & music
+java.lang.IllegalStateException: Failed to open OpenAL device
+	at knot/net.minecraft.class_4225.method_38501(class_4225.java:297) ~[client-intermediary.jar:?]
+	at knot/net.minecraft.class_4225.method_19661(class_4225.java:154) ~[client-intermediary.jar:?]
+	at knot/net.minecraft.class_1140.method_4846(class_1140.java:118) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1140.method_4837(class_1140.java:108) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1144.method_18182(class_1144.java:122) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1144.method_18788(class_1144.java:41) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_4080.method_18790(class_4080.java:15) [client-intermediary.jar:?]
+	at java.base/java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:739) [?:?]
+	at java.base/java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:503) [?:?]
+	at knot/net.minecraft.class_4014.method_67574(class_4014.java:60) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_18859(class_1255.java:168) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_4093.method_18859(class_4093.java:23) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_16075(class_1255.java:142) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_1255.method_5383(class_1255.java:123) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1523(class_310.java:1340) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1514$mixinextras$wrapped$280(class_310.java:969) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.mixinextras$bridge$method_1514$mixinextras$wrapped$280$281(class_310.java) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.wrapMethod$zci000$fabric-client-gametest-api-v1$onRun(class_310.java:5121) [client-intermediary.jar:?]
+	at knot/net.minecraft.class_310.method_1514(class_310.java) [client-intermediary.jar:?]
+	at knot/net.minecraft.client.main.Main.main(Main.java:250) [client-intermediary.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:517) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+[00:33:42] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/particles.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 128x64x0 minecraft:textures/atlas/decorated_pot.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 2048x1024x0 minecraft:textures/atlas/armor_trims.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/paintings.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/shield_patterns.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/chest.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x512x0 minecraft:textures/atlas/banner_patterns.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/beds.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 1024x1024x0 minecraft:textures/atlas/gui.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 64x64x0 minecraft:textures/atlas/map_decorations.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 256x256x0 minecraft:textures/atlas/signs.png-atlas
+[00:33:42] [Render thread/INFO]: Created: 512x256x0 minecraft:textures/atlas/shulker_boxes.png-atlas
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2450
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_7788
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_8931
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_5684
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_7789
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11389$1
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_5235$class_5241$1
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11389$2
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.server.Main
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_8076
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_5945
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2456
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2454
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_55$class_56
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_412
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_5369
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2474
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3981
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11389
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2408
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2405
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_8074
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3853$class_4162
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_5235$class_5241
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3176
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2408$class_7405
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_4243
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_9316
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3495
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_6568
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_6306
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_481
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_10090$class_10091
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2447
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_1258
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_2826$class_6869
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_4983
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3178
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_8600
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11993
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_10243
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_4916$class_10407
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11644$class_11647
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_3806
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_4916
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11644$class_11648
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_4916$class_10406
+[00:33:52] [Test thread/INFO]: Force-loading class net.minecraft.class_11791
+[00:33:52] [Test thread/INFO]: [STDOUT]: [MOTION smoke] mixin audit done
+[00:33:52] [Test thread/INFO]: [STDOUT]: [MOTION smoke] render errors: none
+[00:33:52] [Test thread/INFO]: [STDOUT]: [MOTION smoke] hooks fired: [attack, avatarState, cape, clouds, crosshair, displayName, fog, frame, freeLook, loadingOverlay, loadingScreen, matrices, mouseButton, postEffects, reload, screenBackground, scroll, skin, sky, swing, timeOfDay, titleScreen, turnPlayer, weather, zoomFov]
+[00:33:52] [Test thread/INFO]: [STDOUT]: [MOTION smoke] hooks NOT fired: [tabName]
+[00:33:52] [Server thread/INFO]: Player290 lost connection: Disconnected
+[00:33:52] [Server thread/INFO]: Player290 left the game
+[00:33:52] [Server thread/INFO]: Stopping singleplayer server as player logged out
+[00:33:52] [Server thread/INFO]: Stopping server
+[00:33:52] [Server thread/INFO]: Saving players
+[00:33:52] [Server thread/INFO]: Saving worlds
+[00:33:52] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[00:33:52] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[00:33:52] [Server thread/INFO]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[00:33:52] [Server thread/INFO]: ThreadedAnvilChunkStorage (New World): All chunks are saved
+[00:33:52] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[00:33:52] [Server thread/INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[00:33:52] [Server thread/INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[00:33:53] [ForkJoinPool.commonPool-worker-1/INFO]: MOTION FPS: saved a session (18.1 FPS average, 1% low 4.1)
+[00:33:53] [Test thread/INFO]: [STDOUT]: [MOTION smoke] done
+[00:33:53] [Test thread/ERROR]: Client gametests failed with an exception
+java.lang.AssertionError: Client gametest dev.bloom.client.smoke.SmokeTest did not finish on the title screen
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.lambda$setupAndCheckFinalGameTestState$6(FabricClientGameTestRunner.java:118) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.context.ClientGameTestContextImpl.lambda$runOnClient$18(ClientGameTestContextImpl.java:521) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runTaskOnThisThread(ThreadingImpl.java:216) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at Async Stack Trace..(Unknown Source) ~[?:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runTaskOnOtherThread(ThreadingImpl.java:208) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runOnClient(ThreadingImpl.java:185) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.context.ClientGameTestContextImpl.runOnClient(ClientGameTestContextImpl.java:521) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.setupAndCheckFinalGameTestState(FabricClientGameTestRunner.java:112) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.lambda$start$0(FabricClientGameTestRunner.java:55) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.lambda$runTestThread$1(ThreadingImpl.java:142) [fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at java.base/java.lang.Thread.run(Thread.java:1474) [?:?]
+[00:33:53] [Render thread/ERROR]: Minecraft has crashed!
+net.fabricmc.loader.impl.FormattedException: java.lang.AssertionError: Client gametest dev.bloom.client.smoke.SmokeTest did not finish on the title screen
+	at net.fabricmc.loader.impl.FormattedException.ofLocalized(FormattedException.java:63) ~[fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:519) ~[fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:72) [fabric-loader-0.20.1.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) [fabric-loader-0.20.1.jar:?]
+Caused by: java.lang.AssertionError: Client gametest dev.bloom.client.smoke.SmokeTest did not finish on the title screen
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.lambda$setupAndCheckFinalGameTestState$6(FabricClientGameTestRunner.java:118) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.context.ClientGameTestContextImpl.lambda$runOnClient$18(ClientGameTestContextImpl.java:521) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runTaskOnThisThread(ThreadingImpl.java:216) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at Async Stack Trace..(Unknown Source) ~[?:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runTaskOnOtherThread(ThreadingImpl.java:208) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.runOnClient(ThreadingImpl.java:185) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.context.ClientGameTestContextImpl.runOnClient(ClientGameTestContextImpl.java:521) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.setupAndCheckFinalGameTestState(FabricClientGameTestRunner.java:112) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.FabricClientGameTestRunner.lambda$start$0(FabricClientGameTestRunner.java:55) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at knot/net.fabricmc.fabric.impl.client.gametest.threading.ThreadingImpl.lambda$runTestThread$1(ThreadingImpl.java:142) ~[fabric-client-gametest-api-v1-4.2.13+14b92d896f.jar:?]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[?:?]
