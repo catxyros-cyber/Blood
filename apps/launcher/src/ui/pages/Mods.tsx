@@ -241,9 +241,6 @@ function ClientBanner({ inst, client, running, onChanged }: { inst: Instance; cl
   const versions = client.bundle ? supportedLabels(client.bundle).join(", ") : "—";
   return (
     <Card className="p-4 flex items-center gap-4 cut-corner">
-      <div className={cx("h-11 w-11 rounded-xl grid place-items-center shrink-0", client.enabled ? "bg-accent/15 text-accent glow-accent" : "bg-raised text-muted")}>
-        <Icon.Motion size={22} />
-      </div>
       <div className="min-w-0 flex-1">
         <div className="font-semibold flex items-center gap-2 flex-wrap">
           MOTION Client

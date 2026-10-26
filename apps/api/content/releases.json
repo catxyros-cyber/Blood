@@ -1,5 +1,10 @@
 [
   {
+    "version": "1.0.32",
+    "date": "2026-10-26",
+    "notes": "Performance: a new Fixes list finds what costs frame rate in each installation (duplicate mods, shaders, Flashback and other heavy mods, VSync, FPS limits, render distance, memory) and fixes each with one click. MOTION Client now measures your real FPS while you play, so the Performance page shows your average and 1% lows before and after each change. A plainer, cleaner look in the launcher and the in-game menu.\n\nMOTION Client 0.2.26."
+  },
+  {
     "version": "1.0.31",
     "date": "2026-10-25",
     "notes": "Updates now replace the copy of MOTION you open (no more old version coming back after a restart). Your 3D character on Home, Play buttons on recent installations and smoother page entrances. Mods are no longer checked before launch: problems show in the game log instead of blocking you.\n\nMOTION Client 0.2.25: sharp HD text in every MOTION menu and the HUD, a title screen with your theme's landscape where your character walks in, and fuller wings that show their whole artwork."

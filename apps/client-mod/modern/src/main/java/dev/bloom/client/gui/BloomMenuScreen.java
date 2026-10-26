@@ -356,6 +356,12 @@ public class BloomMenuScreen extends Screen implements Host {
                     Ui.panelBorder(g, b[0], b[1], b[2], b[3], Theme.alpha(p.border(), t));
                     overviewColumns.get(i).render(g, mx, my, dt);
                 }
+                // Rows scrolled past a column's edge fade out instead of being cut through their text.
+                g.nextStratum();
+                for (int[] b : overviewBounds) {
+                    g.fillGradient(b[0] + 1, b[1] + b[3] - 18, b[0] + b[2] - 1, b[1] + b[3] - 1,
+                            Theme.alpha(p.window() & 0xFFFFFF, 0f), Theme.alpha(p.window(), t));
+                }
             } else {
                 Ui.shadow(g, wx + 12, wy + 46, ww - 24, wh - 68, t * 0.8f);
                 Ui.panel(g, wx + 12, wy + 46, ww - 24, wh - 68, Theme.alpha(p.window(), t));
