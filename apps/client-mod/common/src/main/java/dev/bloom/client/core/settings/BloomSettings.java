@@ -80,7 +80,7 @@ public final class BloomSettings {
             "Full: all animations. Reduced: quick, subtle animations. Performance: no animations or decorative effects in MOTION menus.",
             "full", ChoiceSetting.of("full", "Full", "reduced", "Reduced", "performance", "Performance"), "animation", "motion");
     public static final BoolSetting REDUCE_MOTION = bool("ui.reduceMotion", GENERAL, "Interface", "Reduce motion",
-            "Turns off sliding and scaling animations in MOTION menus and the decorative petals in the menu background.", false, "accessibility", "animation");
+            "Turns off sliding and scaling animations in MOTION menus.", false, "accessibility", "animation");
     public static final BoolSetting SMOOTH_TEXT = bool("ui.smoothText", GENERAL, "Interface", "Smooth text",
             "Sharp, anti-aliased text in MOTION's menus and title screen at any GUI scale. Off uses Minecraft's pixel font.", true, "font", "hd", "text", "crisp");
     public static final NumberSetting MENU_DIM = num("ui.menuDim", GENERAL, "Interface", "Menu backdrop",

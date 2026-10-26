@@ -3,7 +3,8 @@ import { BUILT_IN_PROFILES } from "../../core/bloomclient/catalog";
 import type { SettingsView } from "../../core/bloomclient/settingsFile";
 import { readSettings as readBloomSettings, status as bloomStatus, type ClientStatus } from "../../services/bloomClient";
 import type { Instance } from "../../core/instances/model";
-import { recommendMemory } from "../../core/perf/memory";
+import { beforeAfter } from "../../core/perf/doctor";
+import { runDoctor, type DoctorReport } from "../../services/doctor";
 import { PRESETS } from "../../core/perf/presets";
 import { activeAccount } from "../../services/accounts";
 import { app, errorMessage, navigate, updateSettings } from "../../services/app";
@@ -16,7 +17,6 @@ import { Badge, Button, Card, cx, formatBytes, gb, Menu, Modal, ProgressBar, Sec
 import { Icon } from "../icons";
 import { InstanceIcon, loaderLabel, NewInstanceModal } from "../instanceParts";
 import { Markdown } from "../markdown";
-import { BloodMark } from "../icons";
 import { native } from "../../services/native";
 import { UpgradeCard } from "../premiumParts";
 import { LicenseCard } from "../licenseCard";
@@ -130,7 +130,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
               align="left"
               trigger={
                 <button type="button" className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium cursor-pointer hover:border-white/25 transition-colors" title="Switch Minecraft version">
-                  <Icon.Cube size={13} /> Minecraft {inst.gameVersion} <Icon.ChevronDown size={12} className="opacity-70" />
+                  Minecraft {inst.gameVersion} <Icon.ChevronDown size={12} className="opacity-70" />
                 </button>
               }
               items={[
@@ -148,9 +148,7 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
             <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[13px] font-medium">{loaderLabel(inst)}</span>
             {inst.modpack && <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[13px] font-medium">{inst.modpack.name}</span>}
             {client?.enabled && (
-              <span className="chip rounded-md h-7 px-2.5 inline-flex items-center gap-1.5 text-[13px] font-medium">
-                <Icon.Motion size={13} className="text-accent" /> MOTION Client {client.installedVersion}
-              </span>
+              <span className="chip rounded-md h-7 px-2.5 inline-flex items-center text-[13px] font-medium">MOTION Client {client.installedVersion}</span>
             )}
           </div>
           <div className="rise-in" style={{ "--d": "60ms" } as CSSProperties}>
@@ -176,9 +174,9 @@ function Hero({ inst, onCreate }: { inst: Instance; onCreate: () => void }) {
           </div>
           <div className="rise-in flex flex-wrap items-center gap-2 mt-6" style={{ "--d": "120ms" } as CSSProperties}>
             <PlayButton inst={inst} />
-            <HeroAction icon={<Icon.Hud size={16} />} label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} />
-            <HeroAction icon={<Icon.Puzzle size={16} />} label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
-            <HeroAction icon={<Icon.Gauge size={16} />} label="Optimize" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
+            <HeroAction label="MOTION Mods" onClick={() => navigate({ page: "mods", instanceId: inst.id })} />
+            <HeroAction label="Mods" onClick={() => navigate({ page: "instance", id: inst.id, tab: "content" })} />
+            <HeroAction label="Performance" onClick={() => navigate({ page: "performance", instanceId: inst.id })} />
           </div>
           <JumpBackIn inst={inst} />
           <LiveStats instanceId={inst.id} />
@@ -285,14 +283,13 @@ function JumpBackIn({ inst }: { inst: Instance }) {
   );
 }
 
-function HeroAction({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
+function HeroAction({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="h-12 px-4 rounded-[10px] inline-flex items-center gap-2 text-[14px] font-medium transition-colors cursor-pointer border border-white/10 bg-black/35 hover:bg-black/50 hover:border-white/20"
+      className="h-12 px-4 rounded-[10px] inline-flex items-center text-[14px] font-medium transition-colors cursor-pointer border border-white/10 bg-black/35 hover:bg-black/50 hover:border-white/20"
     >
-      <span className="text-fg/70">{icon}</span>
       {label}
     </button>
   );
@@ -335,7 +332,6 @@ function BloomClientCard({ inst }: { inst: Instance }) {
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2 mb-3">
-        <BloodMark size={18} />
         <div className="font-semibold text-[14px]">MOTION Client</div>
         <span className="flex-1" />
         {st?.enabled && <Badge tone="accent">v{st.installedVersion}</Badge>}
@@ -371,25 +367,23 @@ function BloomClientCard({ inst }: { inst: Instance }) {
               </div>
             )}
             <div className="grid grid-cols-2 gap-2 mt-3">
-              <Button variant="primary" icon={<Icon.Hud size={15} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
+              <Button variant="primary" onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
                 MOTION Mods
               </Button>
-              <Button icon={<Icon.Paint size={15} />} onClick={() => navigate({ page: "customize", instanceId: inst.id })}>
-                Visuals
-              </Button>
+              <Button onClick={() => navigate({ page: "customize", instanceId: inst.id })}>Visuals</Button>
             </div>
           </>
         ) : st.support.ok ? (
           <>
             <div className="text-[13px] text-muted leading-relaxed">Built-in HUD (FPS, coordinates, armor, potions, keystrokes and more), a custom crosshair and visual options. Client-side only.</div>
-            <Button className="mt-3 w-full" variant="primary" icon={<Icon.Plus size={15} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
+            <Button className="mt-3 w-full" variant="primary" onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
               Add to this installation
             </Button>
           </>
         ) : (
           <>
             <div className="text-[13px] text-muted leading-relaxed">{st.support.message}</div>
-            <Button className="mt-3 w-full" icon={<Icon.Hud size={15} />} onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
+            <Button className="mt-3 w-full" onClick={() => navigate({ page: "mods", instanceId: inst.id })}>
               Learn more
             </Button>
           </>
@@ -436,62 +430,50 @@ function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="inline-flex items-center h-5 px-1.5 rounded border border-line-strong bg-raised text-[12px] font-mono text-fg">{children}</kbd>;
 }
 
-function Recommendations({ inst }: { inst: Instance }) {
-  const system = useStore(app, (s) => s.system);
-  const settings = useStore(app, (s) => s.settings);
-  const [mods, setMods] = useState<string[] | null>(null);
+/** What the performance doctor found, and the latest measured frame rate. */
+function PerformanceSummary({ inst }: { inst: Instance }) {
+  const [report, setReport] = useState<DoctorReport | null>(null);
   useEffect(() => {
-    if (inst.loader === "vanilla") return setMods([]);
-    listContent(inst, "mods")
-      .then((m) => {
-        setMods(m.filter((x) => x.enabled).map((x) => x.meta?.id ?? ""));
-      })
-      .catch(() => setMods([]));
+    let live = true;
+    setReport(null);
+    runDoctor(inst)
+      .then((r) => live && setReport(r))
+      .catch(() => live && setReport(null));
+    return () => {
+      live = false;
+    };
   }, [inst]);
-  const tips: { title: string; body: string; action?: { label: string; run: () => void } }[] = [];
-  if (inst.loader === "vanilla") {
-    tips.push({
-      title: "Use Fabric for performance mods",
-      body: "Sodium, Lithium and friends need a mod loader. Create a Fabric installation of the same version.",
-      action: { label: "Open Performance", run: () => navigate({ page: "performance", instanceId: inst.id }) },
-    });
-  } else if (mods && !mods.includes("sodium") && !mods.includes("embeddium")) {
-    tips.push({
-      title: "Sodium isn't installed",
-      body: "A modern rendering engine is usually the single biggest frame-rate improvement. MOTION checks Modrinth for a compatible version.",
-      action: { label: "See performance mods", run: () => navigate({ page: "performance", instanceId: inst.id }) },
-    });
-  }
-  if (!inst.performancePreset) {
-    tips.push({
-      title: "Pick a performance preset",
-      body: "Presets change video settings in one click and are backed up so you can undo them.",
-      action: { label: "Choose preset", run: () => navigate({ page: "performance", instanceId: inst.id }) },
-    });
-  }
-  if (system) {
-    const advice = recommendMemory(system.totalMemory / 1_048_576, { modded: inst.loader !== "vanilla", modCount: mods?.length ?? 0 });
-    const mem = inst.memory ?? settings.memory;
-    if (mem && mem.maxMb > advice.maxSafeMb) {
-      tips.push({ title: "Memory allocation is very high", body: `${gb(mem.maxMb)} leaves little for Windows on this PC. ${advice.reason}` });
-    } else if (!mem) {
-      tips.push({ title: `Suggested memory: ${gb(advice.recommendedMb)}`, body: advice.reason });
-    }
-  }
-  if (tips.length === 0) tips.push({ title: "Looking good", body: "No obvious improvements for this installation. Real-world FPS still depends on your hardware, world and settings." });
+  const latest = report ? beforeAfter(report.sessions)?.latest : undefined;
+  const top = report?.findings.slice(0, 3) ?? [];
   return (
-    <Card className="divide-y divide-line">
-      {tips.slice(0, 2).map((t) => (
-        <div key={t.title} className="p-4">
-          <div className="font-semibold text-[14px]">{t.title}</div>
-          <div className="text-[13px] text-muted mt-1 leading-relaxed">{t.body}</div>
-          {t.action && (
-            <button type="button" onClick={t.action.run} className="text-[13px] font-medium text-accent mt-2 hover:underline cursor-pointer">
-              {t.action.label}
-            </button>
-          )}
-        </div>
-      ))}
+    <Card className="p-4">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <div className="font-semibold text-[14px]">Performance</div>
+        {latest && (
+          <span className="text-[13px] text-muted">
+            <span className="text-fg font-semibold tabular-nums">{Math.round(latest.avgFps)}</span> FPS last session
+          </span>
+        )}
+      </div>
+      {!report ? (
+        <Skeleton className="h-14 rounded-lg" />
+      ) : top.length === 0 ? (
+        <p className="text-[13px] text-muted leading-relaxed">Nothing slowing this installation down.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {top.map((f) => (
+            <li key={f.id} className="flex items-baseline gap-2 text-[13px]">
+              <span className={cx("h-1.5 w-1.5 rounded-full shrink-0 translate-y-[-1px]", f.impact === "high" ? "bg-danger" : f.impact === "medium" ? "bg-warn" : "bg-faint")} />
+              <span className="truncate">{f.title}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {report && report.findings.length > 0 && (
+        <Button className="mt-3 w-full" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>
+          {report.findings.length === 1 ? "Fix it" : `See all ${report.findings.length} fixes`}
+        </Button>
+      )}
     </Card>
   );
 }
@@ -637,13 +619,7 @@ export function HomePage() {
           <LauncherStatus />
           {inst && <InstallationCard inst={inst} />}
           {inst && <BloomClientCard inst={inst} />}
-          {inst && (
-            <section>
-              <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate({ page: "performance", instanceId: inst.id })}>Open</Button>}>Performance tips</SectionTitle>
-              <Recommendations inst={inst} />
-              <p className="text-[12px] text-faint mt-3 leading-relaxed">Real-world FPS depends on your hardware, settings, world and mods.</p>
-            </section>
-          )}
+          {inst && <PerformanceSummary inst={inst} />}
           <TeamCard />
           <LicenseCard compact />
           <UpgradeCard />

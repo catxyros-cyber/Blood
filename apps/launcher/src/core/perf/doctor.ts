@@ -25,6 +25,7 @@ export type DoctorAction =
   | { kind: "settings"; patch: Partial<VideoSettings> }
   | { kind: "shaders-off" }
   | { kind: "memory"; maxMb: number }
+  | { kind: "motion-look"; profile: string }
   | { kind: "install"; slug: string };
 
 export interface Finding {
@@ -67,7 +68,18 @@ export interface DoctorInput {
   shadersOn: boolean;
   /** Allocated maximum heap and what MOTION recommends for this PC (MiB). */
   memory?: { maxMb: number | null; recommendedMb: number; maxSafeMb: number };
+  /** MOTION Client, when it's on: its current look and which of its costly effects are on. */
+  motion?: { profileName: string | null; effects: string[] };
 }
+
+/** MOTION Client settings that cost frame rate every frame, and how to name them. */
+export const MOTION_EFFECTS: [key: string, label: string][] = [
+  ["post.enabled", "shader effects"],
+  ["petals.enabled", "petals"],
+  ["leaves.enabled", "falling leaves"],
+  ["fireflies.enabled", "fireflies"],
+  ["dust.enabled", "floating motes"],
+];
 
 /** Version-ish comparison: "2.6.26" > "2.6.25", "0.8.15-beta" < "0.8.15". */
 function newer(a: string, b: string): number {
@@ -95,7 +107,7 @@ export function diagnose(input: DoctorInput): Finding[] {
       id: `duplicate:${id}`,
       impact: "high",
       title: `Two copies of ${keep.name}`,
-      detail: `${copies.map((c) => c.fileName).join(" and ")} are both enabled. Keep ${keep.version} and disable the other.`,
+      detail: `Versions ${copies.map((c) => c.version).join(" and ")} are both enabled, and Minecraft can only use one. Keep ${keep.version}.`,
       action: { kind: "disable", fileNames: extra.map((e) => e.fileName) },
       actionLabel: extra.length > 1 ? `Disable ${extra.length} older` : "Disable older copy",
     });
@@ -122,6 +134,19 @@ export function diagnose(input: DoctorInput): Finding[] {
       detail: c.why,
       action: { kind: "disable", fileNames: found.map((m) => m.fileName) },
       actionLabel: "Disable",
+    });
+  }
+
+  const motion = input.motion;
+  if (motion && motion.effects.length) {
+    const list = motion.effects.length === 1 ? motion.effects[0]! : `${motion.effects.slice(0, -1).join(", ")} and ${motion.effects[motion.effects.length - 1]}`;
+    out.push({
+      id: "motion-look",
+      impact: motion.effects.includes("shader effects") ? "medium" : "low",
+      title: `MOTION's ${motion.profileName ?? "current"} look has ${list} on`,
+      detail: "They're extra work every frame. The Clean PvP look turns them off and keeps your HUD, capes, wings and crosshair.",
+      action: { kind: "motion-look", profile: "competitive" },
+      actionLabel: "Use Clean PvP",
     });
   }
 

@@ -417,22 +417,19 @@ function CustomEditor({ inst, open, onClose, onApply }: { inst: Instance; open: 
 function PerfModRow({ s, inst }: { s: PerfModStatus; inst: Instance }) {
   const busy = useInstalling(inst.id, s.projectId ?? s.mod.slug);
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
-      <div className={cx("h-9 w-9 rounded-lg grid place-items-center shrink-0", s.installed ? "bg-accent/15 text-accent" : "bg-raised text-muted")}>
-        {s.installed ? <Icon.Check size={17} /> : <Icon.Zap size={17} />}
-      </div>
+    <div className="flex items-center gap-4 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">{s.mod.title}</span>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[14px] font-medium">{s.mod.title}</span>
           <span className="text-[12px] text-faint capitalize">{s.mod.category}</span>
         </div>
-        <div className="text-[13px] text-muted leading-snug">{s.mod.what}</div>
+        <div className="text-[13px] text-muted leading-snug mt-0.5">{s.mod.what}</div>
       </div>
       {s.installed ? (
-        <Badge tone="accent">Installed</Badge>
+        <span className="text-[13px] text-accent w-28 text-right">Installed</span>
       ) : s.version ? (
-        <Button size="sm" variant="outline" loading={busy} icon={<Icon.Download size={14} />} onClick={() => void installProject(s.projectId!, inst)}>
-          {s.version.version_number.length > 16 ? "Install" : s.version.version_number}
+        <Button size="sm" loading={busy} onClick={() => void installProject(s.projectId!, inst)}>
+          Install
         </Button>
       ) : (
         <span className="text-[12px] text-faint w-28 text-right">Not available for {inst.gameVersion}</span>
@@ -469,7 +466,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
 
   return (
     <section>
-      <SectionTitle>Performance mods</SectionTitle>
+      <SectionTitle>Performance mods to add</SectionTitle>
       {inst.loader === "vanilla" ? (
         <Callout
           tone="info"
@@ -484,7 +481,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
         </Callout>
       ) : (
         <>
-          <Card className="divide-y divide-line overflow-hidden">
+          <div className="rounded-xl border border-line divide-y divide-line overflow-hidden">
             {!status
               ? Array.from({ length: 4 }, (_, i) => (
                   <div key={i} className="p-4">
@@ -492,7 +489,7 @@ function ModRecommendations({ inst }: { inst: Instance }) {
                   </div>
                 ))
               : status.map((s) => <PerfModRow key={s.mod.slug} s={s} inst={inst} />)}
-          </Card>
+          </div>
           <p className="text-[12px] text-faint mt-2">Availability is checked live on Modrinth for Minecraft {inst.gameVersion} and {loaderLabel(inst)}. Required libraries are added automatically.</p>
         </>
       )}

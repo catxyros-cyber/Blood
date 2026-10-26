@@ -4,10 +4,12 @@
  */
 
 import type { Instance } from "../core/instances/model";
-import { diagnose, parseFpsSessions, type DoctorMod, type Finding, type FpsSession } from "../core/perf/doctor";
+import { BUILT_IN_PROFILES, DEFAULT_PROFILE } from "../core/bloomclient/catalog";
+import { diagnose, MOTION_EFFECTS, parseFpsSessions, type DoctorMod, type Finding, type FpsSession } from "../core/perf/doctor";
 import { recommendMemory } from "../core/perf/memory";
 import { PRESETS, readVideoSettings, type VideoSettings } from "../core/perf/presets";
 import { app, P, path } from "./app";
+import { readSettings, status as clientStatus, writeSettings } from "./bloomClient";
 import { listContent, toggleContent, type ContentItem } from "./content";
 import { instanceGameDir, updateInstance } from "./instances";
 import { applyPreset } from "./performance";
@@ -33,14 +35,30 @@ async function shadersOn(inst: Instance): Promise<boolean> {
   return false;
 }
 
+/** Looks MOTION Client has that the launcher's picker doesn't list. */
+const GAME_ONLY_LOOKS: Record<string, string> = { blood_moon: "Blood Red", cherry_blossom: "Cherry Blossom" };
+
+/** MOTION Client's current look and its costly effects that are on (undefined when it's off). */
+async function motionLook(inst: Instance): Promise<{ profileName: string | null; effects: string[] } | undefined> {
+  if (!(await clientStatus(inst)).enabled) return undefined;
+  const view = await readSettings(inst);
+  // Before the first launch the file has no values yet; there's nothing measured to suggest.
+  if (!Object.keys(view.settings).length) return undefined;
+  const effects = MOTION_EFFECTS.filter(([key]) => view.settings[key] === true).map(([, label]) => label);
+  const id = view.activeProfile ?? DEFAULT_PROFILE;
+  const name = BUILT_IN_PROFILES.find((p) => p.id === id)?.name ?? GAME_ONLY_LOOKS[id] ?? null;
+  return { profileName: name, effects };
+}
+
 export async function runDoctor(inst: Instance): Promise<DoctorReport> {
   const p = P();
   const dir = instanceGameDir(inst);
-  const [mods, optionsText, shaders, sessionsText] = await Promise.all([
+  const [mods, optionsText, shaders, sessionsText, motion] = await Promise.all([
     inst.loader === "vanilla" ? Promise.resolve([] as ContentItem[]) : listContent(inst, "mods").catch(() => [] as ContentItem[]),
     p.readText(path(dir, "options.txt")).catch(() => null),
     shadersOn(inst).catch(() => false),
     p.readText(path(dir, ".bloom", "fps-sessions.json")).catch(() => null),
+    motionLook(inst).catch(() => undefined),
   ]);
   const video = optionsText ? readVideoSettings(optionsText, PRESETS[1]!.video) : null;
   const system = app.get().system;
@@ -55,6 +73,7 @@ export async function runDoctor(inst: Instance): Promise<DoctorReport> {
     video,
     shadersOn: shaders,
     memory: advice ? { maxMb: mem?.maxMb ?? null, recommendedMb: advice.recommendedMb, maxSafeMb: advice.maxSafeMb } : undefined,
+    motion,
   });
   return { findings, sessions: parseFpsSessions(sessionsText), video, mods };
 }
@@ -88,6 +107,10 @@ export async function applyFinding(inst: Instance, report: DoctorReport, finding
     case "memory": {
       const cur = inst.memory ?? app.get().settings.memory;
       await updateInstance(inst.id, { memory: { minMb: Math.min(cur?.minMb ?? 1024, a.maxMb), maxMb: a.maxMb } });
+      return;
+    }
+    case "motion-look": {
+      await writeSettings(inst, { profile: a.profile });
       return;
     }
     case "install":

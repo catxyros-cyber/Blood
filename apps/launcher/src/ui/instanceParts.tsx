@@ -9,25 +9,76 @@ import { availableLoaderVersions, loaderSupports, minecraftVersions } from "../s
 import { Button, Callout, cx, Field, Modal, Select, Spinner, TextInput, Toggle } from "./components";
 import { Icon } from "./icons";
 
-const LOADER_COLORS: Record<LoaderId, string> = {
-  vanilla: "bg-emerald-400/12 text-emerald-200",
-  fabric: "bg-amber-300/12 text-amber-100",
-  quilt: "bg-violet-400/12 text-violet-200",
-  neoforge: "bg-orange-400/12 text-orange-200",
-  forge: "bg-sky-400/12 text-sky-200",
-};
+/** A small hash for deterministic pixel noise. */
+function hash(x: number, y: number, seed: number): number {
+  let h = (x * 374761393 + y * 668265263 + seed * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+}
+
+function shade(hex: number, k: number): string {
+  const c = (v: number) => Math.max(0, Math.min(255, Math.round(v * k)));
+  return `rgb(${c((hex >> 16) & 255)},${c((hex >> 8) & 255)},${c(hex & 255)})`;
+}
+
+/**
+ * A 16×16 block face for installations without their own icon, by loader: a grass block side
+ * for vanilla, light planks for Fabric, woven purple for Quilt, dark planks for NeoForge, stone
+ * for Forge. The name seeds the noise, so two installations never look identical.
+ */
+function blockPixels(loader: LoaderId, seed: number): string[] {
+  const px: string[] = [];
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const n = hash(x, y, seed);
+      let c: string;
+      if (loader === "vanilla") {
+        const grassDepth = 3 + (hash(x, 99, seed) > 0.6 ? 1 : 0) + (hash(x, 98, seed) > 0.85 ? 1 : 0);
+        c = y < grassDepth ? shade(0x5d9b3a, 0.82 + n * 0.3) : shade(0x8a5a3b, 0.78 + n * 0.32);
+      } else if (loader === "fabric" || loader === "neoforge") {
+        const base = loader === "fabric" ? 0xc8a46a : 0x5b3b22;
+        const row = Math.floor(y / 4);
+        const seam = y % 4 === 3 || x === ((row * 7 + seed) & 15);
+        c = shade(base, seam ? 0.68 : 0.88 + n * 0.2 - (y % 4 === 0 ? 0.04 : 0));
+      } else if (loader === "quilt") {
+        const weave = ((x >> 1) + (y >> 1)) % 2 === 0;
+        c = shade(weave ? 0x8f5fd6 : 0x6f45b0, 0.86 + n * 0.22);
+      } else {
+        c = shade(0x7e7e80, 0.8 + n * 0.3);
+      }
+      px.push(c);
+    }
+  }
+  return px;
+}
+
+const iconCache = new Map<string, string>();
+
+function blockIconUrl(loader: LoaderId, name: string): string {
+  const key = `${loader}:${name}`;
+  let url = iconCache.get(key);
+  if (!url) {
+    let seed = 7;
+    for (const ch of name) seed = (seed * 31 + ch.charCodeAt(0)) | 0;
+    const px = blockPixels(loader, seed);
+    const rects = px.map((c, i) => `<rect x="${i % 16}" y="${Math.floor(i / 16)}" width="1" height="1" fill="${c}"/>`).join("");
+    url = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">${rects}</svg>`)}`;
+    iconCache.set(key, url);
+  }
+  return url;
+}
 
 export function InstanceIcon({ inst, size = 44, className }: { inst: Pick<Instance, "icon" | "name" | "loader">; size?: number; className?: string }) {
-  if (inst.icon) {
-    return <img src={inst.icon} alt="" width={size} height={size} draggable={false} className={cx("rounded-lg object-cover shrink-0 bg-raised", className)} style={{ width: size, height: size }} />;
-  }
   return (
-    <div
-      className={cx("rounded-lg shrink-0 grid place-items-center border border-white/5 font-display font-semibold", LOADER_COLORS[inst.loader], className)}
-      style={{ width: size, height: size, fontSize: size * 0.4 }}
-    >
-      {inst.name.trim().charAt(0).toUpperCase() || "?"}
-    </div>
+    <img
+      src={inst.icon || blockIconUrl(inst.loader, inst.name)}
+      alt=""
+      width={size}
+      height={size}
+      draggable={false}
+      className={cx("rounded-md object-cover shrink-0", !inst.icon && "pixelated", className)}
+      style={{ width: size, height: size, imageRendering: inst.icon ? undefined : "pixelated" }}
+    />
   );
 }
 

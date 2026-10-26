@@ -67,3 +67,10 @@ test("fps sessions: capped and damaged logs", () => {
   assert.deepEqual(parseFpsSessions("not json"), []);
   assert.deepEqual(parseFpsSessions(null), []);
 });
+
+test("doctor: MOTION Client's costly effects suggest the Clean PvP look", () => {
+  const f = diagnose({ mods: [], video: null, shadersOn: false, motion: { profileName: "Blood Red", effects: ["shader effects", "petals"] } });
+  assert.equal(f[0]!.title, "MOTION's Blood Red look has shader effects and petals on");
+  assert.deepEqual(f[0]!.action, { kind: "motion-look", profile: "competitive" });
+  assert.deepEqual(diagnose({ mods: [], video: null, shadersOn: false, motion: { profileName: "Clean PvP", effects: [] } }), []);
+});
