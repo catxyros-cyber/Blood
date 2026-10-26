@@ -1,0 +1,30 @@
+  duration_ms: 1.285927
+  type: 'test'
+  ...
+# Subtest: merging creates and updates but never deletes
+ok 95 - merging creates and updates but never deletes
+  ---
+  duration_ms: 0.526283
+  type: 'test'
+  ...
+# Subtest: fuzzy: characters must appear in order
+ok 96 - fuzzy: characters must appear in order
+  ---
+  duration_ms: 0.53825
+  type: 'test'
+  ...
+# Subtest: fuzzy: substrings and word starts rank first
+ok 97 - fuzzy: substrings and word starts rank first
+  ---
+  duration_ms: 0.543479
+  type: 'test'
+  ...
+1..97
+# tests 97
+# suites 0
+# pass 97
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1419.093287

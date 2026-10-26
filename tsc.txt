@@ -1,0 +1,4 @@
+
+> @bloom/launcher@1.0.31 typecheck
+> tsc --noEmit -p tsconfig.json
+
