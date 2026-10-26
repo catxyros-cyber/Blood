@@ -310,6 +310,7 @@ tasks.register('runProductionClientGameTest', net.fabricmc.loom.task.prod.Client
     jvmArgs.add('-Dmotion.smoke=true')
     jvmArgs.add('-Dmotion.smoke.avatar=sahur')
     jvmArgs.add('-Dmotion.smoke.wings=angel')
+    jvmArgs.add('-Dmotion.fps.minSeconds=2')
     // CI provides a 24-bit display with GLX (26.3's SDL window needs one); otherwise Loom starts Xvfb.
     useXVFB = System.getenv('DISPLAY') == null
 }

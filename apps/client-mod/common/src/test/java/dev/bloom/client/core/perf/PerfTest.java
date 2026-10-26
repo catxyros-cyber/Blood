@@ -82,4 +82,56 @@ public class PerfTest {
         w.update(false, 1f, 90f, 0f, 0f, 100);
         assertEquals(0, w.speed(), 0);
     }
+
+    @Test
+    public void fpsSessionAverageAndLows() {
+        FpsSession s = new FpsSession();
+        for (int i = 0; i < 990; i++) s.frame(5.0); // 200 FPS
+        for (int i = 0; i < 10; i++) s.frame(20.0); // ten 50 FPS stutters: exactly the slowest 1%
+        assertEquals(1000, s.frames());
+        assertEquals(1000.0 / (990 * 5.0 + 10 * 20.0) * 1000, s.averageFps(), 0.5);
+        assertEquals(50.0, s.lowFps(0.01), 0.5);
+        s.frame(250.0); // a frame slower than the histogram range is still counted exactly
+        assertEquals(4.0, s.lowFps(0.0005), 0.01);
+    }
+
+    @Test
+    public void fpsRecorderCountsOnlyGameplayAndSplitsOnContextChange() {
+        FpsRecorder r = new FpsRecorder();
+        java.util.Map<String, Object> ctx = java.util.Map.of("renderDistance", 12, "vsync", false);
+        assertNull(r.update(ctx, 0));
+        long t = 0;
+        // 40 s of gameplay at 100 FPS, with a menu open in the middle that must not count.
+        for (int i = 0; i < 4000; i++) {
+            r.frame(t, true);
+            t += 10_000_000L;
+        }
+        for (int i = 0; i < 500; i++) {
+            r.frame(t, false);
+            t += 100_000_000L; // slow frames behind a menu
+        }
+        com.google.gson.JsonObject done = r.update(java.util.Map.of("renderDistance", 16, "vsync", false), 50_000);
+        assertNotNull(done);
+        assertEquals(100.0, done.get("avgFps").getAsDouble(), 0.5);
+        assertEquals(40, done.get("seconds").getAsLong());
+        assertEquals(12, done.get("renderDistance").getAsInt());
+        // A short session isn't kept.
+        r.frame(t, true);
+        r.frame(t + 10_000_000L, true);
+        assertNull(r.finish(60_000));
+    }
+
+    @Test
+    public void fpsLogKeepsTheNewestSessions() throws Exception {
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("fpslog");
+        java.nio.file.Path file = dir.resolve(".bloom/fps-sessions.json");
+        for (int i = 0; i < FpsRecorder.KEEP + 5; i++) {
+            com.google.gson.JsonObject e = new com.google.gson.JsonObject();
+            e.addProperty("n", i);
+            FpsRecorder.append(file, e);
+        }
+        com.google.gson.JsonArray a = com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(file)).getAsJsonObject().getAsJsonArray("sessions");
+        assertEquals(FpsRecorder.KEEP, a.size());
+        assertEquals(FpsRecorder.KEEP + 4, a.get(a.size() - 1).getAsJsonObject().get("n").getAsInt());
+    }
 }

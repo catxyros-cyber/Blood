@@ -43,6 +43,20 @@ public final class BloomFabric implements ClientModInitializer {
                 return FabricLoader.getInstance().getModContainer(BloomClient.MOD_ID)
                         .map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("dev");
             }
+
+            @Override
+            public java.util.List<String> mods() {
+                java.util.List<String> out = new java.util.ArrayList<>();
+                for (var c : FabricLoader.getInstance().getAllMods()) {
+                    // Only real mods: not Minecraft, Java, the loader or the Fabric API's sub-modules.
+                    if (c.getContainingMod().isPresent()) continue;
+                    String id = c.getMetadata().getId();
+                    if (id.equals("minecraft") || id.equals("java") || id.equals("fabricloader")) continue;
+                    out.add(id + " " + c.getMetadata().getVersion().getFriendlyString());
+                }
+                out.sort(null);
+                return out;
+            }
         });
         for (KeyMapping key : BloomKeys.ALL) KeyBindingHelper.registerKeyBinding(key);
         ClientTickEvents.END_CLIENT_TICK.register(client -> BloomClient.get().tick(client));
